@@ -1,0 +1,1587 @@
+const WA_NUMBER = window.WA_NUMBER || '5582999004440';
+const ITEMS = window.ITEMS || {};
+
+const CART_STORAGE_KEY = 'webcardapio:cart';
+const PROFILE_STORAGE_KEY = 'webcardapio:profiles';
+const CUSTOM_MENU_STORAGE_PREFIX = 'webcardapio:custom-menu:';
+const ITEM_ALIAS = {
+  'prato-dia-2': 'prato-dia',
+  'x-tudo-dest': 'x-tudo'
+};
+const DEFAULT_STORE_NAME = 'Web Cardapio';
+
+const TEMPLATE_THEMES = {
+  clean: {
+    '--bg': '#F7F5F0',
+    '--surface': '#FFFFFF',
+    '--text': '#1A1A18',
+    '--text-muted': '#7A7870',
+    '--text-hint': '#B0AEA8',
+    '--border': 'rgba(26,26,24,0.10)',
+    '--border-md': 'rgba(26,26,24,0.18)',
+    '--accent': '#1A1A18',
+    '--accent-fg': '#FFFFFF',
+    '--green': '#1A6644',
+    '--green-bg': '#E8F5EE',
+    '--amber': '#7A4D00',
+    '--amber-bg': '#FEF3DC',
+    '--blue': '#0C4478',
+    '--blue-bg': '#E6F0FB'
+  },
+  dark: {
+    '--bg': '#101214',
+    '--surface': '#1a1f24',
+    '--text': '#f2f5f7',
+    '--text-muted': '#a8b0b7',
+    '--text-hint': '#7d8790',
+    '--border': 'rgba(255,255,255,0.10)',
+    '--border-md': 'rgba(255,255,255,0.18)',
+    '--accent': '#f2f5f7',
+    '--accent-fg': '#101214',
+    '--green': '#6fd49e',
+    '--green-bg': 'rgba(111,212,158,0.17)',
+    '--amber': '#f3c76e',
+    '--amber-bg': 'rgba(243,199,110,0.16)',
+    '--blue': '#80bfff',
+    '--blue-bg': 'rgba(128,191,255,0.16)'
+  },
+  red: {
+    '--bg': '#fff4f1',
+    '--surface': '#ffffff',
+    '--text': '#2b1613',
+    '--text-muted': '#8b5d56',
+    '--text-hint': '#c39f98',
+    '--border': 'rgba(192,57,43,0.16)',
+    '--border-md': 'rgba(192,57,43,0.28)',
+    '--accent': '#c0392b',
+    '--accent-fg': '#ffffff',
+    '--green': '#2e7d32',
+    '--green-bg': '#e9f8ec',
+    '--amber': '#a86500',
+    '--amber-bg': '#fff2db',
+    '--blue': '#0e5fa3',
+    '--blue-bg': '#e7f2ff'
+  },
+  green: {
+    '--bg': '#f4fbf5',
+    '--surface': '#ffffff',
+    '--text': '#18351f',
+    '--text-muted': '#4f7558',
+    '--text-hint': '#8fb198',
+    '--border': 'rgba(27,94,32,0.12)',
+    '--border-md': 'rgba(27,94,32,0.22)',
+    '--accent': '#1b5e20',
+    '--accent-fg': '#ffffff',
+    '--green': '#1b5e20',
+    '--green-bg': '#e4f5e8',
+    '--amber': '#8f6b00',
+    '--amber-bg': '#fff7dc',
+    '--blue': '#1d5f9e',
+    '--blue-bg': '#e8f3ff'
+  }
+};
+
+const SECTION_LABELS_BY_SEGMENT = {
+  restaurante: {
+    pratos: 'Pratos',
+    lanches: 'Lanches',
+    bebidas: 'Bebidas',
+    sobremesas: 'Sobremesas',
+    porcoes: 'Porcoes'
+  },
+  hamburgueria: {
+    pratos: 'Combos',
+    lanches: 'Burgers',
+    bebidas: 'Bebidas',
+    sobremesas: 'Sobremesas',
+    porcoes: 'Porcoes'
+  },
+  pizzaria: {
+    pratos: 'Pizzas',
+    lanches: 'Combos',
+    bebidas: 'Bebidas',
+    sobremesas: 'Doces',
+    porcoes: 'Entradas'
+  },
+  cafe: {
+    pratos: 'Pratos',
+    lanches: 'Salgados',
+    bebidas: 'Cafes',
+    sobremesas: 'Doces',
+    porcoes: 'Extras'
+  },
+  bar: {
+    pratos: 'Petiscos',
+    lanches: 'Sanduiches',
+    bebidas: 'Drinks',
+    sobremesas: 'Sobremesas',
+    porcoes: 'Porcoes'
+  },
+  outro: {
+    pratos: 'Pratos',
+    lanches: 'Lanches',
+    bebidas: 'Bebidas',
+    sobremesas: 'Sobremesas',
+    porcoes: 'Porcoes'
+  }
+};
+
+const SEGMENT_OVERRIDES = {
+  hamburgueria: {
+    'prato-dia': { name: 'Burger da casa', desc: 'Pao brioche, blend 160g, queijo, molho especial e fritas.', price: 33.9 },
+    'combo-familia': { name: 'Combo galera', desc: '4 burgers + 2 porcoes + 1,5L para dividir.' },
+    'x-tudo': { name: 'X-bacon duplo', desc: '2 carnes, bacon crocante, cheddar e cebola caramelizada.', price: 36.0 },
+    'file-madeira': { name: 'Smash artesanal', desc: 'Dois smashs de 90g com queijo e maionese da casa.', price: 31.9 }
+  },
+  pizzaria: {
+    'prato-dia': { name: 'Pizza promocao', desc: 'Brotinho sabor do dia com borda recheada.', price: 29.9 },
+    'combo-familia': { name: 'Combo pizza familia', desc: '2 pizzas grandes + refri 2L.' },
+    'x-tudo': { name: 'Calzone especial', desc: 'Massa artesanal com mussarela, presunto e oregano.', price: 34.9 },
+    'moqueca': { name: 'Pizza camarao premium', desc: 'Molho da casa, camarao, catupiry e manjericao.', price: 74.0 }
+  },
+  cafe: {
+    'prato-dia': { name: 'Brunch do dia', desc: 'Pao artesanal, ovos mexidos, salada e cafe filtrado.', price: 27.5 },
+    'x-tudo': { name: 'Croissant recheado', desc: 'Croissant na chapa com queijo, peito de peru e folhas.', price: 21.0 },
+    'suco': { name: 'Cafe especial 300ml', desc: 'Graos selecionados, extraido na hora.', price: 14.0 },
+    'petit': { name: 'Torta do dia', desc: 'Fatia artesanal servida com chantilly.', price: 17.0 }
+  },
+  bar: {
+    'prato-dia': { name: 'Petisco do dia', desc: 'Petisco especial com molho da casa para compartilhar.', price: 31.9 },
+    'combo-familia': { name: 'Balde + porcao', desc: 'Balde de long neck + porcao de fritas.' },
+    'cerveja': { name: 'Long neck premium', desc: 'Escolha entre IPA, Pilsen e Lager.', price: 19.9 },
+    'limonada': { name: 'Drink sem alcool', desc: 'Refrescante com limao siciliano e hortela.', price: 18.0 }
+  }
+};
+
+const cart = {};
+const urlParams = new URLSearchParams(window.location.search);
+
+function decodeConfigPayload(rawValue) {
+  if (!rawValue) {
+    return null;
+  }
+
+  try {
+    return JSON.parse(decodeURIComponent(escape(atob(rawValue))));
+  } catch {
+    return null;
+  }
+}
+
+function readStoredProfile(slug) {
+  if (!slug) {
+    return null;
+  }
+
+  try {
+    const raw = localStorage.getItem(PROFILE_STORAGE_KEY);
+    if (!raw) {
+      return null;
+    }
+
+    const profiles = JSON.parse(raw);
+    return profiles && typeof profiles === 'object' ? profiles[slug] : null;
+  } catch {
+    return null;
+  }
+}
+
+function normalizeStoreSlug(value) {
+  return String(value || '')
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/\s+/g, '-')
+    .replace(/[^a-z0-9-]/g, '')
+    .replace(/-+/g, '-')
+    .replace(/^-|-$/g, '');
+}
+
+function buildRuntimeConfig() {
+  const slug = normalizeStoreSlug((urlParams.get('store') || '').trim());
+  const configFromUrl = decodeConfigPayload(urlParams.get('cfg')) || {};
+  const configFromStorage = readStoredProfile(slug) || {};
+  const fallbackStore = normalizeStoreSlug(configFromUrl.store || configFromStorage.store || '');
+
+  return {
+    store: slug || fallbackStore || '',
+    storeName: (urlParams.get('storeName') || '').trim() || configFromUrl.storeName || configFromStorage.storeName || '',
+    wa: (urlParams.get('wa') || '').trim() || configFromUrl.wa || configFromStorage.wa || '',
+    tpl: (urlParams.get('tpl') || '').trim() || configFromUrl.tpl || configFromStorage.tpl || '',
+    plan: (urlParams.get('plan') || '').trim() || configFromUrl.plan || configFromStorage.plan || '',
+    segmento: (urlParams.get('segmento') || '').trim() || configFromUrl.segmento || configFromStorage.segmento || '',
+    logoUrl: configFromUrl.logoUrl || configFromStorage.logoUrl || '',
+    coverUrl: configFromUrl.coverUrl || configFromStorage.coverUrl || '',
+    items: Array.isArray(configFromUrl.items) ? configFromUrl.items : (Array.isArray(configFromStorage.items) ? configFromStorage.items : [])
+  };
+}
+
+function normalizePlan(rawPlan) {
+  const value = String(rawPlan || '').trim().toLowerCase();
+  if (value === 'pro' || value === 'business') {
+    return value;
+  }
+  return 'basico';
+}
+
+const runtimeConfig = buildRuntimeConfig();
+const customMenuStorageKey = CUSTOM_MENU_STORAGE_PREFIX + (runtimeConfig.store || 'default');
+
+function isStoredOwnerSlug(slug) {
+  if (!slug) {
+    return false;
+  }
+
+  const normalizedSlug = normalizeStoreSlug(slug);
+  if (!normalizedSlug) {
+    return false;
+  }
+
+  try {
+    const raw = localStorage.getItem('webcardapio:owner-slugs');
+    if (!raw) {
+      return false;
+    }
+
+    const map = JSON.parse(raw);
+    return Boolean(map && typeof map === 'object' && (map[normalizedSlug] || map[slug]));
+  } catch {
+    return false;
+  }
+}
+
+const editorEnabled = (urlParams.get('editor') || '').trim() === '1';
+const ownerKeyEnabled = (urlParams.get('ownerKey') || '').trim().length > 0;
+const ownerModeEnabled = (urlParams.get('owner') || '').trim() === '1' || ownerKeyEnabled || isStoredOwnerSlug(runtimeConfig.store);
+const currentPlan = normalizePlan(runtimeConfig.plan);
+const canUseProFeatures = currentPlan === 'pro' || currentPlan === 'business';
+const canUseBusinessFeatures = currentPlan === 'business';
+const canEdit = ownerModeEnabled || (editorEnabled && canUseProFeatures);
+let removeMode = false;
+let editMode = false;
+let customMenuState = { added: [], removed: [], updated: {} };
+let currentAddPreset = 'item';
+let editingItemId = null;
+let ownerFilter = 'todos';
+let ownerView = 'cardapio';
+
+const DEFAULT_API_BASE = 'http://localhost:3001';
+
+function getApiBaseUrl() {
+  const fromQuery = (urlParams.get('api') || '').trim();
+  const fromStorage = (localStorage.getItem('webcardapio:api-base') || '').trim();
+  const base = fromQuery || fromStorage || DEFAULT_API_BASE;
+  return base.replace(/\/+$/, '');
+}
+
+function getOwnerKey() {
+  return (urlParams.get('ownerKey') || '').trim();
+}
+
+function getPublicMenuUrl() {
+  const clean = new URL(window.location.href);
+  clean.searchParams.delete('owner');
+  clean.searchParams.delete('editor');
+  clean.searchParams.delete('ownerKey');
+  return clean.toString();
+}
+
+function sanitizeCustomMenuState(input) {
+  return {
+    added: Array.isArray(input?.added) ? input.added : [],
+    removed: Array.isArray(input?.removed) ? input.removed : [],
+    updated: input?.updated && typeof input.updated === 'object' ? input.updated : {}
+  };
+}
+
+async function fetchRemoteMenuData() {
+  if (!runtimeConfig.store) {
+    return;
+  }
+
+  try {
+    const response = await fetch(`${getApiBaseUrl()}/api/menu/${encodeURIComponent(runtimeConfig.store)}`);
+    if (!response.ok) {
+      return;
+    }
+
+    const payload = await response.json();
+    const remoteData = payload?.data;
+    if (!remoteData || typeof remoteData !== 'object') {
+      return;
+    }
+
+    const settings = remoteData.settings && typeof remoteData.settings === 'object' ? remoteData.settings : {};
+
+    if (typeof settings.storeName === 'string' && settings.storeName.trim()) {
+      runtimeConfig.storeName = settings.storeName.trim();
+    }
+    if (typeof settings.wa === 'string' && settings.wa.trim()) {
+      runtimeConfig.wa = settings.wa.trim();
+      configuredWaNumber = runtimeConfig.wa.replace(/\D/g, '') || configuredWaNumber;
+    }
+    if (typeof settings.tpl === 'string' && settings.tpl.trim()) {
+      runtimeConfig.tpl = settings.tpl.trim();
+    }
+    if (typeof settings.segmento === 'string' && settings.segmento.trim()) {
+      runtimeConfig.segmento = settings.segmento.trim();
+    }
+    if (typeof settings.logoUrl === 'string') {
+      runtimeConfig.logoUrl = settings.logoUrl.trim();
+    }
+    if (typeof settings.coverUrl === 'string') {
+      runtimeConfig.coverUrl = settings.coverUrl.trim();
+    }
+
+    if (Array.isArray(remoteData.items)) {
+      runtimeConfig.items = remoteData.items;
+    }
+
+    if (remoteData.customMenuState && typeof remoteData.customMenuState === 'object') {
+      customMenuState = sanitizeCustomMenuState(remoteData.customMenuState);
+    }
+  } catch {
+    // Keep local behavior when API is offline.
+  }
+}
+
+async function syncRemoteMenuData() {
+  if (!ownerModeEnabled || !runtimeConfig.store) {
+    return;
+  }
+
+  const ownerKey = getOwnerKey();
+  if (!ownerKey) {
+    return;
+  }
+
+  const payload = {
+    ownerKey,
+    title: getConfiguredStoreName(),
+    data: {
+      settings: {
+        storeName: getConfiguredStoreName(),
+        wa: configuredWaNumber,
+        tpl: getConfiguredTemplate(),
+        segmento: getConfiguredSegment(),
+        logoUrl: runtimeConfig.logoUrl || '',
+        coverUrl: runtimeConfig.coverUrl || ''
+      },
+      customMenuState: sanitizeCustomMenuState(customMenuState)
+    }
+  };
+
+  try {
+    await fetch(`${getApiBaseUrl()}/api/public/menu/${encodeURIComponent(runtimeConfig.store)}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+  } catch {
+    // Keep local behavior when API is offline.
+  }
+}
+
+function getConfiguredWhatsAppNumber() {
+  const waFromUrl = (runtimeConfig.wa || '').replace(/\D/g, '');
+  if (waFromUrl.length >= 12 && waFromUrl.length <= 13) {
+    return waFromUrl;
+  }
+  return WA_NUMBER;
+}
+
+let configuredWaNumber = getConfiguredWhatsAppNumber();
+
+function getConfiguredTemplate() {
+  const tpl = (runtimeConfig.tpl || '').trim().toLowerCase();
+  return Object.prototype.hasOwnProperty.call(TEMPLATE_THEMES, tpl) ? tpl : 'clean';
+}
+
+function getConfiguredSegment() {
+  const segment = (runtimeConfig.segmento || '').trim().toLowerCase();
+  return Object.prototype.hasOwnProperty.call(SECTION_LABELS_BY_SEGMENT, segment) ? segment : 'restaurante';
+}
+
+function humanizeSlug(slug) {
+  return slug
+    .split('-')
+    .filter(Boolean)
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(' ');
+}
+
+function getConfiguredStoreName() {
+  const explicitName = (runtimeConfig.storeName || '').trim();
+  if (explicitName) {
+    return explicitName;
+  }
+
+  const slug = (runtimeConfig.store || '').trim();
+  if (slug) {
+    return humanizeSlug(slug);
+  }
+
+  return DEFAULT_STORE_NAME;
+}
+
+function formatBRL(value) {
+  return 'R$ ' + Number(value).toFixed(2).replace('.', ',');
+}
+
+function escapeHtml(text) {
+  return String(text)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+function applyTemplateTheme(template) {
+  const rootStyle = document.documentElement.style;
+  const theme = TEMPLATE_THEMES[template] || TEMPLATE_THEMES.clean;
+
+  Object.entries(theme).forEach(([cssVar, cssValue]) => {
+    rootStyle.setProperty(cssVar, cssValue);
+  });
+}
+
+function applyBranding(storeName, segment) {
+  const heading = document.querySelector('.hero-info h1');
+  if (heading) {
+    heading.textContent = storeName;
+  }
+
+  const subtitle = document.querySelector('.hero-info p');
+  if (subtitle) {
+    subtitle.textContent = 'Pedidos online no WhatsApp';
+  }
+
+  const segmentLabel = {
+    restaurante: 'Restaurante',
+    hamburgueria: 'Hamburgueria',
+    pizzaria: 'Pizzaria',
+    cafe: 'Cafe / Confeitaria',
+    bar: 'Bar / Boteco',
+    outro: 'Negocio local'
+  }[segment] || 'Negocio local';
+
+  const badge = document.querySelector('.badge-open');
+  if (badge) {
+    badge.textContent = segmentLabel + ' aberto agora';
+  }
+}
+
+function applyMediaBranding() {
+  const logoUrl = (runtimeConfig.logoUrl || '').trim();
+  const coverUrl = (runtimeConfig.coverUrl || '').trim();
+
+  if (logoUrl) {
+    const logoContainer = document.querySelector('.logo');
+    if (logoContainer) {
+      logoContainer.innerHTML = '';
+      const image = document.createElement('img');
+      image.src = logoUrl;
+      image.alt = 'Logo do estabelecimento';
+      logoContainer.appendChild(image);
+    }
+  }
+
+  if (coverUrl) {
+    const hero = document.querySelector('.hero');
+    if (hero) {
+      hero.style.backgroundImage = `linear-gradient(rgba(12,16,20,0.55), rgba(12,16,20,0.55)), url('${coverUrl}')`;
+      hero.style.backgroundSize = 'cover';
+      hero.style.backgroundPosition = 'center';
+    }
+  }
+}
+
+function applySearchFilter(term) {
+  const normalized = String(term || '').trim().toLowerCase();
+  document.querySelectorAll('.card').forEach((card) => {
+    const name = (card.querySelector('.card-name')?.textContent || '').toLowerCase();
+    const desc = (card.querySelector('.card-desc')?.textContent || '').toLowerCase();
+    const match = !normalized || name.includes(normalized) || desc.includes(normalized);
+    card.classList.toggle('search-hidden', !match);
+  });
+}
+
+function updatePlanStats() {
+  if (!canUseProFeatures) {
+    return;
+  }
+
+  const uniqueItemIds = Array.from(new Set(Object.keys(ITEMS).map((id) => canonicalItemId(id))));
+  const prices = uniqueItemIds
+    .map((id) => ITEMS[id]?.price)
+    .filter((price) => typeof price === 'number' && Number.isFinite(price));
+
+  const totalItems = uniqueItemIds.length;
+  const avgPrice = prices.length ? (prices.reduce((sum, value) => sum + value, 0) / prices.length) : 0;
+
+  const totalEl = document.getElementById('pro-stat-total');
+  const avgEl = document.getElementById('pro-stat-avg');
+
+  if (totalEl) totalEl.textContent = `${totalItems} itens`;
+  if (avgEl) avgEl.textContent = `Ticket medio ${formatBRL(avgPrice)}`;
+}
+
+function applyPlanFeatures() {
+  const shell = document.getElementById('plan-feature-shell');
+  if (!shell) {
+    return;
+  }
+
+  if (!canUseProFeatures || canEdit) {
+    shell.innerHTML = '';
+    return;
+  }
+
+  shell.innerHTML = `
+    <div class="plan-shell">
+      <span class="plan-pill ${currentPlan}">${currentPlan === 'business' ? 'Business' : 'Pro'}</span>
+      <div class="plan-panel">
+        <div class="plan-row">
+          <input id="pro-search" class="plan-search" type="search" placeholder="Buscar item no cardapio...">
+          <span class="plan-chip">${canEdit ? 'Painel do dono' : 'Painel inteligente'}</span>
+        </div>
+        <div class="plan-row">
+          <span class="plan-chip" id="pro-stat-total">0 itens</span>
+          <span class="plan-chip" id="pro-stat-avg">Ticket medio R$ 0,00</span>
+          ${canUseBusinessFeatures ? '<select id="business-unit" class="plan-select"><option value="Matriz">Matriz</option><option value="Centro">Unidade Centro</option><option value="Shopping">Unidade Shopping</option></select><button class="plan-action" id="business-open-toggle">Pausar pedidos</button>' : ''}
+        </div>
+      </div>
+    </div>`;
+
+  const searchInput = document.getElementById('pro-search');
+  if (searchInput) {
+    searchInput.addEventListener('input', (event) => {
+      applySearchFilter(event.target.value);
+    });
+  }
+
+  if (canUseBusinessFeatures) {
+    const deliveryMode = document.getElementById('delivery-mode');
+    const unitSelect = document.getElementById('business-unit');
+    if (unitSelect) {
+      unitSelect.addEventListener('change', () => {
+        const unit = unitSelect.value;
+        if (deliveryMode) {
+          deliveryMode.textContent = `${unit} · Entrega e retirada`;
+        }
+      });
+    }
+
+    const openToggle = document.getElementById('business-open-toggle');
+    const badge = document.querySelector('.badge-open');
+    if (openToggle && badge) {
+      let paused = false;
+      openToggle.addEventListener('click', () => {
+        paused = !paused;
+        badge.textContent = paused ? 'Fechado no momento' : 'Aberto agora';
+        openToggle.textContent = paused ? 'Retomar pedidos' : 'Pausar pedidos';
+      });
+    }
+
+    const poweredBy = document.getElementById('powered-by');
+    if (poweredBy) {
+      poweredBy.style.display = 'none';
+    }
+  }
+
+  updatePlanStats();
+}
+
+function resolveItemSection(itemId) {
+  const related = relatedItemIds(itemId);
+  for (const relatedId of related) {
+    const ctrl = document.getElementById('ctrl-' + relatedId);
+    const sec = ctrl?.closest('.sec');
+    if (sec) {
+      return sec.id.replace('sec-', '');
+    }
+  }
+  return 'pratos';
+}
+
+function sectionLabel(section) {
+  const labels = {
+    destaques: 'Destaque',
+    pratos: 'Prato',
+    lanches: 'Lanche',
+    bebidas: 'Bebida',
+    sobremesas: 'Sobremesa',
+    porcoes: 'Porcao'
+  };
+  return labels[section] || 'Item';
+}
+
+function collectOwnerItems() {
+  const unique = new Set(Object.keys(ITEMS).map((id) => canonicalItemId(id)));
+  return Array.from(unique)
+    .filter((id) => ITEMS[id])
+    .map((id) => ({
+      id,
+      name: ITEMS[id].name,
+      price: ITEMS[id].price,
+      section: resolveItemSection(id)
+    }))
+    .sort((a, b) => a.name.localeCompare(b.name, 'pt-BR'));
+}
+
+function formatWhatsForOwner() {
+  const digits = configuredWaNumber || '';
+  if (digits.length < 12) return digits;
+  return `${digits.slice(2, 4)} ${digits.slice(4, 9)}-${digits.slice(9)}`;
+}
+
+function ownerMainContent(items, filteredItems, isOpen, deliveryLabel) {
+  if (ownerView === 'templates') {
+    return `
+      <div class="owner-top">
+        <h3 class="owner-title">Templates</h3>
+        <div class="owner-actions">
+          <button class="owner-btn">Aplicar template</button>
+        </div>
+      </div>
+      <div class="owner-template-grid">
+        <div class="owner-template-card active"><strong>Dark premium</strong><p>Ativo no momento</p></div>
+        <div class="owner-template-card"><strong>Clean moderno</strong><p>Visual claro para restaurantes</p></div>
+        <div class="owner-template-card"><strong>Vermelho bold</strong><p>Ideal para pizzarias</p></div>
+      </div>`;
+  }
+
+  if (ownerView === 'pedidos') {
+    return `
+      <div class="owner-top">
+        <h3 class="owner-title">Pedidos recentes</h3>
+        <div class="owner-actions">
+          <button class="owner-btn" id="owner-view-menu">Ver cardapio</button>
+          <button class="owner-btn" id="owner-refresh">Atualizar</button>
+          <button class="owner-more" aria-label="Mais opcoes">•••</button>
+        </div>
+      </div>
+      <div class="owner-stats-grid">
+        <div class="owner-stat-card"><p>Pedidos hoje</p><strong>14</strong><span>+3 vs ontem</span></div>
+        <div class="owner-stat-card"><p>Acessos hoje</p><strong>87</strong><span>+12% esta semana</span></div>
+        <div class="owner-stat-card"><p>Conversao</p><strong>16%</strong><span>acesso > pedido</span></div>
+      </div>
+      <p class="owner-section-title">Atividade recente</p>
+      <div class="owner-activity-list">
+        <div class="owner-activity-item"><span class="dot-green"></span><span>Pedido via WhatsApp — 2x X-tudo + 1x Limonada</span><small>ha 4 min</small></div>
+        <div class="owner-activity-item"><span class="dot-green"></span><span>Pedido via WhatsApp — 1x Wrap + 2x Suco natural</span><small>ha 18 min</small></div>
+        <div class="owner-activity-item"><span class="dot-blue"></span><span>Acesso ao cardapio — usuario novo</span><small>ha 22 min</small></div>
+        <div class="owner-activity-item"><span class="dot-green"></span><span>Pedido via WhatsApp — 3x X-tudo especial</span><small>ha 31 min</small></div>
+        <div class="owner-activity-item"><span class="dot-blue"></span><span>Acesso ao cardapio — usuario recorrente</span><small>ha 45 min</small></div>
+      </div>
+      <p class="owner-section-title">Exemplo de mensagem gerada automaticamente:</p>
+      <pre class="owner-message-box">Ola! Gostaria de fazer um pedido:\n\n• 2x X-tudo especial — R$ 64,00\n• 1x Limonada suica — R$ 16,00\n\n*Total: R$ 80,00*\n\nPode confirmar meu pedido? 😊</pre>`;
+  }
+
+  if (ownerView === 'plano') {
+    return `
+      <div class="owner-top">
+        <h3 class="owner-title">Plano</h3>
+      </div>
+      <div class="owner-plan-card">
+        <h4>Plano ${currentPlan.toUpperCase()}</h4>
+        <p>Recursos ativos: painel do dono, editor completo, filtros e ${canUseBusinessFeatures ? 'multi-unidades' : 'painel inteligente'}.</p>
+      </div>`;
+  }
+
+  return `
+    <div class="owner-top">
+      <h3 class="owner-title">Meu cardapio</h3>
+      <div class="owner-actions">
+        <button class="owner-btn" id="owner-view-menu">Ver cardapio</button>
+        <button class="owner-btn" id="owner-save">Salvar alteracoes</button>
+      </div>
+    </div>
+    <div class="owner-grid">
+      <div class="owner-field"><label>Nome do estabelecimento</label><input id="owner-store-name" value="${escapeHtml(getConfiguredStoreName())}"></div>
+      <div class="owner-field"><label>WhatsApp (com DDD)</label><input id="owner-whats" value="${escapeHtml(formatWhatsForOwner())}"></div>
+      <div class="owner-field"><label>Status</label><select id="owner-status"><option value="aberto" ${isOpen ? 'selected' : ''}>Aberto agora</option><option value="fechado" ${!isOpen ? 'selected' : ''}>Fechado no momento</option></select></div>
+      <div class="owner-field"><label>Modalidade</label><select id="owner-delivery"><option value="Entrega e retirada" ${deliveryLabel.includes('Entrega e retirada') ? 'selected' : ''}>Entrega e retirada</option><option value="Somente retirada" ${deliveryLabel.includes('Somente retirada') ? 'selected' : ''}>Somente retirada</option><option value="Somente entrega" ${deliveryLabel.includes('Somente entrega') ? 'selected' : ''}>Somente entrega</option></select></div>
+    </div>
+    <div class="owner-filter">
+      <button class="owner-chip ${ownerFilter === 'todos' ? 'active' : ''}" data-owner-filter="todos">Todos</button>
+      <button class="owner-chip ${ownerFilter === 'lanches' ? 'active' : ''}" data-owner-filter="lanches">Lanches</button>
+      <button class="owner-chip ${ownerFilter === 'bebidas' ? 'active' : ''}" data-owner-filter="bebidas">Bebidas</button>
+      <button class="owner-chip ${ownerFilter === 'sobremesas' ? 'active' : ''}" data-owner-filter="sobremesas">Sobremesas</button>
+    </div>
+    <div class="owner-list">
+      ${filteredItems.map((item) => `
+        <div class="owner-row">
+          <span class="owner-row-name">${escapeHtml(item.name)}</span>
+          <span class="owner-row-tag">${sectionLabel(item.section)}</span>
+          <span class="owner-row-price">${formatBRL(item.price)}</span>
+          <div>
+            <button class="owner-icon-btn" data-owner-edit="${item.id}">✎</button>
+            <button class="owner-icon-btn" data-owner-remove="${item.id}">×</button>
+          </div>
+        </div>
+      `).join('')}
+    </div>
+    <button class="owner-add" id="owner-add-item">+ Adicionar item</button>`;
+}
+
+function renderOwnerDashboard() {
+  if (!canEdit) {
+    return;
+  }
+
+  const shell = document.getElementById('owner-dashboard-shell');
+  if (!shell) {
+    return;
+  }
+
+  const items = collectOwnerItems();
+  const filteredItems = ownerFilter === 'todos' ? items : items.filter((item) => item.section === ownerFilter);
+  const publicUrl = getPublicMenuUrl();
+  const isOpen = (document.querySelector('.badge-open')?.textContent || '').toLowerCase().includes('aberto');
+  const deliveryLabel = document.getElementById('delivery-mode')?.textContent || 'Entrega e retirada';
+  const mainHtml = ownerMainContent(items, filteredItems, isOpen, deliveryLabel);
+
+  shell.innerHTML = `
+    <section class="owner-dash">
+      <div class="owner-dash-grid">
+        <aside class="owner-dash-side">
+          <div class="owner-brand">Web Cardapio</div>
+          <span class="owner-plan">Plano ${currentPlan} ativo</span>
+          <div class="owner-nav">
+            <button class="owner-nav-item ${ownerView === 'cardapio' ? 'active' : ''}" data-owner-view="cardapio">Meu cardapio</button>
+            <button class="owner-nav-item ${ownerView === 'templates' ? 'active' : ''}" data-owner-view="templates">Templates</button>
+            <button class="owner-nav-item ${ownerView === 'pedidos' ? 'active' : ''}" data-owner-view="pedidos">Pedidos recentes</button>
+            <button class="owner-nav-item ${ownerView === 'plano' ? 'active' : ''}" data-owner-view="plano">Plano</button>
+          </div>
+          <div class="owner-public-link">
+            <p>Seu link publico</p>
+            <a href="${publicUrl}" target="_blank" rel="noopener noreferrer">${publicUrl}</a>
+          </div>
+        </aside>
+        <div class="owner-dash-main">
+          ${mainHtml}
+        </div>
+      </div>
+    </section>`;
+
+  shell.querySelectorAll('[data-owner-view]').forEach((button) => {
+    button.addEventListener('click', () => {
+      ownerView = button.getAttribute('data-owner-view') || 'cardapio';
+      renderOwnerDashboard();
+    });
+  });
+
+  shell.querySelectorAll('[data-owner-filter]').forEach((button) => {
+    button.addEventListener('click', () => {
+      ownerFilter = button.getAttribute('data-owner-filter') || 'todos';
+      renderOwnerDashboard();
+    });
+  });
+
+  shell.querySelectorAll('[data-owner-edit]').forEach((button) => {
+    button.addEventListener('click', () => {
+      openEditItemModal(button.getAttribute('data-owner-edit'));
+    });
+  });
+
+  shell.querySelectorAll('[data-owner-remove]').forEach((button) => {
+    button.addEventListener('click', () => {
+      removeMenuItem(button.getAttribute('data-owner-remove'));
+    });
+  });
+
+  document.getElementById('owner-add-item')?.addEventListener('click', () => openAddItemModal('item'));
+
+  document.getElementById('owner-view-menu')?.addEventListener('click', () => {
+    window.scrollTo({ top: document.querySelector('.hero')?.offsetHeight || 0, behavior: 'smooth' });
+  });
+
+  document.getElementById('owner-save')?.addEventListener('click', () => {
+    const ownerStoreName = (document.getElementById('owner-store-name')?.value || '').trim();
+    const ownerWhats = (document.getElementById('owner-whats')?.value || '').replace(/\D/g, '');
+
+    if (ownerStoreName) {
+      runtimeConfig.storeName = ownerStoreName;
+      applyBranding(ownerStoreName, getConfiguredSegment());
+    }
+
+    if (ownerWhats.length >= 12 && ownerWhats.length <= 13) {
+      configuredWaNumber = ownerWhats;
+      runtimeConfig.wa = ownerWhats;
+    }
+
+    saveCustomMenuState();
+    const btn = document.getElementById('owner-save');
+    if (!btn) return;
+    const prev = btn.textContent;
+    btn.textContent = 'Salvo';
+    setTimeout(() => {
+      btn.textContent = prev;
+    }, 1000);
+  });
+
+  document.getElementById('owner-status')?.addEventListener('change', (event) => {
+    const badge = document.querySelector('.badge-open');
+    if (badge) {
+      badge.textContent = event.target.value === 'aberto' ? 'Aberto agora' : 'Fechado no momento';
+    }
+  });
+
+  document.getElementById('owner-delivery')?.addEventListener('change', (event) => {
+    const deliveryMode = document.getElementById('delivery-mode');
+    if (deliveryMode) deliveryMode.textContent = event.target.value;
+  });
+}
+
+function applySectionLabels(segment) {
+  const labels = SECTION_LABELS_BY_SEGMENT[segment] || SECTION_LABELS_BY_SEGMENT.restaurante;
+  Object.entries(labels).forEach(([sec, label]) => {
+    const navBtn = document.querySelector(`.nav-btn[data-sec="${sec}"]`);
+    if (navBtn) {
+      navBtn.textContent = label;
+    }
+  });
+}
+
+function updateItemData(itemId, patch) {
+  relatedItemIds(itemId).forEach((id) => {
+    if (!ITEMS[id]) {
+      return;
+    }
+
+    if (patch.name) {
+      ITEMS[id].name = patch.name;
+    }
+    if (typeof patch.price === 'number') {
+      ITEMS[id].price = patch.price;
+    }
+  });
+}
+
+function applyItemOverride(itemId, patch) {
+  const ctrl = document.getElementById('ctrl-' + itemId);
+  if (!ctrl) {
+    return;
+  }
+
+  const card = ctrl.closest('.card');
+  if (!card) {
+    return;
+  }
+
+  if (patch.name) {
+    const nameEl = card.querySelector('.card-name');
+    if (nameEl) {
+      nameEl.textContent = patch.name;
+    }
+  }
+
+  if (patch.desc) {
+    const descEl = card.querySelector('.card-desc');
+    if (descEl) {
+      descEl.textContent = patch.desc;
+    }
+  }
+
+  if (typeof patch.price === 'number') {
+    const priceEl = card.querySelector('.price');
+    if (priceEl) {
+      priceEl.textContent = formatBRL(patch.price);
+    }
+  }
+
+  updateItemData(itemId, patch);
+}
+
+function applySegmentCatalog(segment) {
+  const overrides = SEGMENT_OVERRIDES[segment] || {};
+  Object.entries(overrides).forEach(([itemId, patch]) => {
+    applyItemOverride(itemId, patch);
+  });
+}
+
+function applyCustomCatalogFromConfig() {
+  if (!Array.isArray(runtimeConfig.items)) {
+    return;
+  }
+
+  runtimeConfig.items.forEach((itemPatch) => {
+    if (!itemPatch || typeof itemPatch !== 'object' || !itemPatch.id) {
+      return;
+    }
+
+    applyItemOverride(itemPatch.id, itemPatch);
+  });
+}
+
+function loadCustomMenuState() {
+  try {
+    const raw = localStorage.getItem(customMenuStorageKey);
+    if (!raw) {
+      return;
+    }
+
+    const parsed = JSON.parse(raw);
+    if (!parsed || typeof parsed !== 'object') {
+      return;
+    }
+
+    customMenuState = {
+      added: Array.isArray(parsed.added) ? parsed.added : [],
+      removed: Array.isArray(parsed.removed) ? parsed.removed : [],
+      updated: parsed.updated && typeof parsed.updated === 'object' ? parsed.updated : {}
+    };
+  } catch {
+    customMenuState = { added: [], removed: [], updated: {} };
+  }
+}
+
+function saveCustomMenuState() {
+  localStorage.setItem(customMenuStorageKey, JSON.stringify(customMenuState));
+  syncRemoteMenuData();
+}
+
+function sectionContainer(section) {
+  return document.querySelector(`#sec-${section} .section`);
+}
+
+function cardMarkup(item) {
+  return `
+    <button class="edit-item-btn" onclick="openEditItemModal('${item.id}')">Editar</button>
+    <button class="remove-item-btn" onclick="removeMenuItem('${item.id}')">Remover</button>
+    <div class="card-img">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2"><circle cx="12" cy="12" r="9"/><path d="M8 12h8"/></svg>
+    </div>
+    <div class="card-body">
+      <p class="card-name">${escapeHtml(item.name)}</p>
+      <p class="card-desc">${escapeHtml(item.desc)}</p>
+      <div class="card-bottom">
+        <span class="price">${formatBRL(item.price)}</span>
+        <div id="ctrl-${item.id}"></div>
+      </div>
+    </div>`;
+}
+
+function addCardToSection(item) {
+  const target = sectionContainer(item.section);
+  if (!target) {
+    return;
+  }
+
+  const card = document.createElement('div');
+  card.className = 'card';
+  card.innerHTML = cardMarkup(item);
+  target.appendChild(card);
+}
+
+function removeCardsByItemId(id) {
+  document.querySelectorAll(`#ctrl-${id}`).forEach((ctrl) => {
+    const card = ctrl.closest('.card');
+    if (card) {
+      card.remove();
+    }
+  });
+}
+
+function decorateDefaultCardsForRemove() {
+  document.querySelectorAll('.card').forEach((card) => {
+    const ctrl = card.querySelector('[id^="ctrl-"]');
+    if (!ctrl) {
+      return;
+    }
+
+    const itemId = ctrl.id.replace('ctrl-', '');
+
+    if (!card.querySelector('.edit-item-btn')) {
+      const editButton = document.createElement('button');
+      editButton.className = 'edit-item-btn';
+      editButton.textContent = 'Editar';
+      editButton.onclick = () => openEditItemModal(itemId);
+      card.appendChild(editButton);
+    }
+
+    if (!card.querySelector('.remove-item-btn')) {
+      const removeButton = document.createElement('button');
+      removeButton.className = 'remove-item-btn';
+      removeButton.textContent = 'Remover';
+      removeButton.onclick = () => removeMenuItem(itemId);
+      card.appendChild(removeButton);
+    }
+  });
+}
+
+function normalizeSection(input) {
+  const value = (input || '').toLowerCase().trim();
+  const accepted = ['destaques', 'pratos', 'lanches', 'bebidas', 'sobremesas', 'porcoes'];
+  if (accepted.includes(value)) {
+    return value;
+  }
+  return null;
+}
+
+function openAddItemModal(preset = 'item') {
+  if (!canEdit) {
+    return;
+  }
+
+  editingItemId = null;
+  currentAddPreset = preset;
+
+  const defaults = {
+    item: { section: 'pratos', name: 'Novo item', price: '24.90', desc: 'Novo item do cardapio' },
+    combo: { section: 'lanches', name: 'Combo da casa', price: '39.90', desc: 'Combo especial com acompanhamento' },
+    drink: { section: 'bebidas', name: 'Bebida especial', price: '12.00', desc: 'Bebida gelada para acompanhar' }
+  };
+
+  const presetData = defaults[preset] || defaults.item;
+  const sectionEl = document.getElementById('editor-section');
+  const nameEl = document.getElementById('editor-name');
+  const priceEl = document.getElementById('editor-price');
+  const descEl = document.getElementById('editor-desc');
+  const titleEl = document.getElementById('editor-modal-title');
+  const submitBtn = document.querySelector('.editor-btn-primary');
+
+  if (sectionEl) sectionEl.value = presetData.section;
+  if (nameEl) nameEl.value = presetData.name;
+  if (priceEl) priceEl.value = presetData.price;
+  if (descEl) descEl.value = presetData.desc;
+  if (titleEl) {
+    titleEl.textContent = preset === 'combo' ? 'Adicionar combo' : (preset === 'drink' ? 'Adicionar bebida' : 'Adicionar item');
+  }
+  if (submitBtn) {
+    submitBtn.textContent = 'Salvar item';
+  }
+
+  const modal = document.getElementById('editor-modal');
+  if (modal) {
+    modal.classList.add('open');
+    modal.setAttribute('aria-hidden', 'false');
+  }
+}
+
+function openEditItemModal(itemId) {
+  if (!canEdit) {
+    return;
+  }
+
+  const ctrl = document.getElementById('ctrl-' + itemId);
+  const card = ctrl ? ctrl.closest('.card') : null;
+  if (!card) {
+    return;
+  }
+
+  editingItemId = itemId;
+
+  const sectionEl = card.closest('.sec');
+  const section = sectionEl ? sectionEl.id.replace('sec-', '') : 'pratos';
+  const name = (card.querySelector('.card-name')?.textContent || '').trim();
+  const desc = (card.querySelector('.card-desc')?.textContent || '').trim();
+  const priceText = (card.querySelector('.price')?.textContent || '').replace('R$', '').trim().replace('.', '').replace(',', '.');
+
+  const sectionInput = document.getElementById('editor-section');
+  const nameInput = document.getElementById('editor-name');
+  const priceInput = document.getElementById('editor-price');
+  const descInput = document.getElementById('editor-desc');
+  const titleEl = document.getElementById('editor-modal-title');
+  const submitBtn = document.querySelector('.editor-btn-primary');
+
+  if (sectionInput) sectionInput.value = normalizeSection(section) || 'pratos';
+  if (nameInput) nameInput.value = name;
+  if (priceInput) priceInput.value = Number.isFinite(Number(priceText)) ? Number(priceText).toFixed(2) : '';
+  if (descInput) descInput.value = desc;
+  if (titleEl) titleEl.textContent = 'Editar item';
+  if (submitBtn) submitBtn.textContent = 'Salvar alteracoes';
+
+  const modal = document.getElementById('editor-modal');
+  if (modal) {
+    modal.classList.add('open');
+    modal.setAttribute('aria-hidden', 'false');
+  }
+}
+
+function closeAddItemModal() {
+  const modal = document.getElementById('editor-modal');
+  if (modal) {
+    modal.classList.remove('open');
+    modal.setAttribute('aria-hidden', 'true');
+  }
+  editingItemId = null;
+}
+
+function submitAddItemModal() {
+  const sectionValue = (document.getElementById('editor-section')?.value || '').trim();
+  const nameValue = (document.getElementById('editor-name')?.value || '').trim();
+  const priceRaw = (document.getElementById('editor-price')?.value || '').replace(',', '.').trim();
+  const descValue = (document.getElementById('editor-desc')?.value || '').trim();
+
+  const section = normalizeSection(sectionValue);
+  if (!section) {
+    alert('Categoria invalida.');
+    return;
+  }
+
+  if (!nameValue) {
+    alert('Nome do item e obrigatorio.');
+    return;
+  }
+
+  const price = Number(priceRaw);
+  if (!Number.isFinite(price) || price <= 0) {
+    alert('Preco invalido.');
+    return;
+  }
+
+  if (editingItemId) {
+    updateMenuItem(editingItemId, {
+      section,
+      name: nameValue,
+      price,
+      desc: descValue || 'Novo item do cardapio'
+    });
+  } else {
+    addCustomItem({
+      section,
+      name: nameValue,
+      price,
+      desc: descValue || 'Novo item do cardapio'
+    });
+  }
+
+  closeAddItemModal();
+}
+
+function updateMenuItem(itemId, patch) {
+  const key = canonicalItemId(itemId);
+  const related = relatedItemIds(itemId);
+
+  related.forEach((relatedId) => {
+    const ctrl = document.getElementById('ctrl-' + relatedId);
+    const card = ctrl ? ctrl.closest('.card') : null;
+    if (!card) {
+      return;
+    }
+
+    if (patch.name) {
+      const nameEl = card.querySelector('.card-name');
+      if (nameEl) nameEl.textContent = patch.name;
+    }
+    if (patch.desc) {
+      const descEl = card.querySelector('.card-desc');
+      if (descEl) descEl.textContent = patch.desc;
+    }
+    if (typeof patch.price === 'number') {
+      const priceEl = card.querySelector('.price');
+      if (priceEl) priceEl.textContent = formatBRL(patch.price);
+    }
+
+    const newSectionContainer = sectionContainer(patch.section);
+    if (newSectionContainer && card.parentElement !== newSectionContainer) {
+      newSectionContainer.appendChild(card);
+    }
+
+    if (ITEMS[relatedId]) {
+      if (patch.name) ITEMS[relatedId].name = patch.name;
+      if (typeof patch.price === 'number') ITEMS[relatedId].price = patch.price;
+    }
+  });
+
+  if (key.startsWith('custom-')) {
+    customMenuState.added = customMenuState.added.map((item) => {
+      if (item.id !== key) return item;
+      return {
+        ...item,
+        section: patch.section,
+        name: patch.name,
+        desc: patch.desc,
+        price: patch.price
+      };
+    });
+  } else {
+    customMenuState.updated[key] = {
+      section: patch.section,
+      name: patch.name,
+      desc: patch.desc,
+      price: patch.price
+    };
+  }
+
+  saveCustomMenuState();
+  updateCartBar();
+}
+
+function setupEditorModalInteractions() {
+  const modal = document.getElementById('editor-modal');
+  if (!modal) {
+    return;
+  }
+
+  modal.addEventListener('click', (event) => {
+    if (event.target === modal) {
+      closeAddItemModal();
+    }
+  });
+
+  document.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape' && modal.classList.contains('open')) {
+      closeAddItemModal();
+    }
+  });
+}
+
+function addCustomItem(itemInput) {
+  const id = `custom-${Date.now()}-${Math.floor(Math.random() * 10000)}`;
+  const item = {
+    id,
+    section: itemInput.section,
+    name: itemInput.name,
+    price: itemInput.price,
+    desc: itemInput.desc
+  };
+
+  ITEMS[id] = { name: item.name, price: item.price };
+  addCardToSection(item);
+  renderCtrl(id);
+
+  customMenuState.removed = customMenuState.removed.filter((removedId) => removedId !== id);
+  customMenuState.added.push(item);
+  saveCustomMenuState();
+  updatePlanStats();
+  renderOwnerDashboard();
+}
+
+function removeMenuItem(id) {
+  const key = canonicalItemId(id);
+  const related = relatedItemIds(key);
+
+  related.forEach((itemId) => {
+    removeCardsByItemId(itemId);
+    delete ITEMS[itemId];
+  });
+
+  delete cart[key];
+  saveCart();
+  updateCartBar();
+
+  const wasCustom = key.startsWith('custom-');
+  if (wasCustom) {
+    customMenuState.added = customMenuState.added.filter((item) => item.id !== key);
+  } else if (!customMenuState.removed.includes(key)) {
+    customMenuState.removed.push(key);
+  }
+
+  saveCustomMenuState();
+  renderOwnerDashboard();
+}
+
+function toggleRemoveMode() {
+  if (!canEdit) {
+    return;
+  }
+
+  removeMode = !removeMode;
+  document.body.classList.toggle('remove-mode', removeMode);
+  const btn = document.getElementById('btn-remove-mode');
+  if (btn) {
+    btn.classList.toggle('active', removeMode);
+    btn.textContent = removeMode ? 'Concluir remocao' : 'Remover itens';
+  }
+}
+
+function toggleEditMode() {
+  if (!canEdit) {
+    return;
+  }
+
+  editMode = !editMode;
+  document.body.classList.toggle('edit-mode', editMode);
+
+  const btn = document.getElementById('btn-edit-mode');
+  if (btn) {
+    btn.classList.toggle('active', editMode);
+    btn.textContent = editMode ? 'Concluir edicao' : 'Editar itens';
+  }
+}
+
+function addGenericItemPrompt() {
+  openAddItemModal('item');
+}
+
+function addComboPrompt() {
+  openAddItemModal('combo');
+}
+
+function addDrinkPrompt() {
+  openAddItemModal('drink');
+}
+
+function applySavedMenuCustomizations() {
+  customMenuState.removed.forEach((itemId) => {
+    const related = relatedItemIds(itemId);
+    related.forEach((relatedId) => {
+      removeCardsByItemId(relatedId);
+      delete ITEMS[relatedId];
+    });
+  });
+
+  customMenuState.added.forEach((item) => {
+    if (!item || !item.id || !item.section || !item.name || !item.price) {
+      return;
+    }
+
+    if (ITEMS[item.id]) {
+      return;
+    }
+
+    ITEMS[item.id] = { name: item.name, price: Number(item.price) };
+    addCardToSection(item);
+  });
+
+  Object.entries(customMenuState.updated || {}).forEach(([itemId, patch]) => {
+    if (!patch || typeof patch !== 'object') {
+      return;
+    }
+
+    updateMenuItem(itemId, {
+      section: normalizeSection(patch.section) || 'pratos',
+      name: patch.name || ITEMS[itemId]?.name || 'Item',
+      desc: patch.desc || 'Descricao do item',
+      price: typeof patch.price === 'number' ? patch.price : (ITEMS[itemId]?.price || 0)
+    });
+  });
+
+  updatePlanStats();
+  renderOwnerDashboard();
+}
+
+function canonicalItemId(id) {
+  if (ITEM_ALIAS[id]) {
+    return ITEM_ALIAS[id];
+  }
+
+  return id.replace(/-2$/, '');
+}
+
+function relatedItemIds(id) {
+  const key = canonicalItemId(id);
+  return Object.keys(ITEMS).filter((itemId) => canonicalItemId(itemId) === key);
+}
+
+function renderCtrl(id) {
+  const el = document.getElementById('ctrl-' + id);
+  if (!el) return;
+
+  const qty = cart[canonicalItemId(id)] || 0;
+  if (qty === 0) {
+    el.innerHTML = `<button class="btn-add" onclick="add('${id}')">+</button>`;
+    return;
+  }
+
+  el.innerHTML = `
+    <div class="qty-ctrl">
+      <button onclick="remove('${id}')">−</button>
+      <span>${qty}</span>
+      <button onclick="add('${id}')">+</button>
+    </div>`;
+}
+
+function add(id) {
+  const key = canonicalItemId(id);
+  cart[key] = (cart[key] || 0) + 1;
+
+  relatedItemIds(id).forEach((itemId) => renderCtrl(itemId));
+  saveCart();
+  updateCartBar();
+}
+
+function remove(id) {
+  const key = canonicalItemId(id);
+  if (cart[key] > 0) {
+    cart[key]--;
+  }
+
+  if (cart[key] <= 0) {
+    delete cart[key];
+  }
+
+  relatedItemIds(id).forEach((itemId) => renderCtrl(itemId));
+  saveCart();
+  updateCartBar();
+}
+
+function clearCart() {
+  Object.keys(cart).forEach((id) => delete cart[id]);
+  Object.keys(ITEMS).forEach((id) => renderCtrl(id));
+  saveCart();
+  updateCartBar();
+}
+
+function updateCartBar() {
+  let count = 0;
+  let total = 0;
+
+  for (const [id, qty] of Object.entries(cart)) {
+    if (qty > 0 && ITEMS[id]) {
+      count += qty;
+      total += qty * ITEMS[id].price;
+    }
+  }
+
+  const bar = document.getElementById('cart-bar');
+  if (count > 0) {
+    bar.classList.add('visible');
+    document.getElementById('cart-count').textContent = count + (count === 1 ? ' item selecionado' : ' itens selecionados');
+    document.getElementById('cart-total').textContent = 'R$ ' + total.toFixed(2).replace('.', ',');
+  } else {
+    bar.classList.remove('visible');
+  }
+
+  updatePlanStats();
+}
+
+function saveCart() {
+  localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(cart));
+}
+
+function loadCart() {
+  try {
+    const raw = localStorage.getItem(CART_STORAGE_KEY);
+    if (!raw) return;
+
+    const parsed = JSON.parse(raw);
+    if (!parsed || typeof parsed !== 'object') return;
+
+    Object.entries(parsed).forEach(([id, qty]) => {
+      if (ITEMS[id] && Number.isInteger(qty) && qty > 0) {
+        cart[id] = qty;
+      }
+    });
+  } catch {
+    localStorage.removeItem(CART_STORAGE_KEY);
+  }
+}
+
+function sendToWhatsApp() {
+  const entries = Object.entries(cart).filter(([id, qty]) => qty > 0 && ITEMS[id]);
+  let msg = 'Olá! Gostaria de fazer um pedido:\n\n';
+
+  if (entries.length > 0) {
+    let total = 0;
+
+    entries.forEach(([id, qty]) => {
+      const item = ITEMS[id];
+      const subtotal = item.price * qty;
+      total += subtotal;
+      msg += `• ${qty}x ${item.name} — R$ ${subtotal.toFixed(2).replace('.', ',')}\n`;
+    });
+
+    msg += `\n*Total: R$ ${total.toFixed(2).replace('.', ',')}*`;
+    msg += '\n\nPode confirmar meu pedido? 😊';
+  } else {
+    msg += 'Quero ver o cardápio completo e fazer um pedido.';
+  }
+
+  window.open('https://wa.me/' + configuredWaNumber + '?text=' + encodeURIComponent(msg), '_blank');
+}
+
+function setupNavigation() {
+  const allSections = new Set(Array.from(document.querySelectorAll('.sec')).map((sec) => sec.id.replace('sec-', '')));
+
+  function setActiveSection(sectionId, updateHash = true) {
+    if (!allSections.has(sectionId)) {
+      return;
+    }
+
+    document.querySelectorAll('.nav-btn').forEach((b) => b.classList.toggle('active', b.dataset.sec === sectionId));
+    document.querySelectorAll('.sec').forEach((s) => {
+      s.classList.toggle('active', s.id === 'sec-' + sectionId);
+    });
+
+    const activeBtn = document.querySelector(`.nav-btn[data-sec="${sectionId}"]`);
+    if (activeBtn) {
+      activeBtn.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+    }
+
+    if (updateHash && window.location.hash !== '#' + sectionId) {
+      window.history.replaceState(null, '', '#' + sectionId);
+    }
+  }
+
+  function sectionFromHash() {
+    const hash = window.location.hash.replace('#', '').trim();
+    return allSections.has(hash) ? hash : null;
+  }
+
+  document.querySelectorAll('.nav-btn').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      setActiveSection(btn.dataset.sec);
+    });
+  });
+
+  window.addEventListener('hashchange', () => {
+    const fromHash = sectionFromHash();
+    if (fromHash) {
+      setActiveSection(fromHash, false);
+    }
+  });
+
+  const initialSection = sectionFromHash() || 'destaques';
+  setActiveSection(initialSection, false);
+}
+
+async function init() {
+  loadCustomMenuState();
+  await fetchRemoteMenuData();
+
+  const template = getConfiguredTemplate();
+  const segment = getConfiguredSegment();
+  const storeName = getConfiguredStoreName();
+
+  applyTemplateTheme(template);
+  applyBranding(storeName, segment);
+  applyMediaBranding();
+  applyPlanFeatures();
+  applySectionLabels(segment);
+  applySegmentCatalog(segment);
+  applyCustomCatalogFromConfig();
+  applySavedMenuCustomizations();
+
+  if (canEdit) {
+    document.body.classList.add('editor-enabled');
+
+    // Owner links should open the management dashboard, while customer links stay on public menu.
+    if (ownerModeEnabled) {
+      document.body.classList.add('owner-dashboard-enabled');
+      renderOwnerDashboard();
+    }
+  }
+
+  decorateDefaultCardsForRemove();
+  setupEditorModalInteractions();
+
+  loadCart();
+  setupNavigation();
+  Object.keys(ITEMS).forEach((id) => renderCtrl(id));
+  updateCartBar();
+
+  window.__MENU_APP_READY__ = true;
+}
+
+window.add = add;
+window.remove = remove;
+window.sendToWhatsApp = sendToWhatsApp;
+window.clearCart = clearCart;
+window.toggleRemoveMode = toggleRemoveMode;
+window.toggleEditMode = toggleEditMode;
+window.addGenericItemPrompt = addGenericItemPrompt;
+window.addComboPrompt = addComboPrompt;
+window.addDrinkPrompt = addDrinkPrompt;
+window.openAddItemModal = openAddItemModal;
+window.openEditItemModal = openEditItemModal;
+window.closeAddItemModal = closeAddItemModal;
+window.submitAddItemModal = submitAddItemModal;
+window.removeMenuItem = removeMenuItem;
+
+window.__MENU_APP_READY__ = 'booting';
+init();

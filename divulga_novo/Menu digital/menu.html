@@ -1,0 +1,531 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Web Cardápio</title>
+<meta name="theme-color" content="#0f111a">
+<link rel="icon" type="image/svg+xml" href="../favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<div class="hero">
+  <div class="hero-top">
+    <div class="logo">
+      <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.5" stroke-linecap="round">
+        <path d="M3 6h18M3 12h18M3 18h18"/>
+      </svg>
+    </div>
+    <div class="hero-info">
+      <h1>Web Cardápio</h1>
+      <p>Peça com facilidade direto pelo WhatsApp</p>
+    </div>
+  </div>
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+    <span class="badge-open">Aberto agora</span>
+    <span id="delivery-mode" style="font-size:12px;color:var(--text-hint);">Entrega e retirada</span>
+  </div>
+  <nav class="nav">
+    <button class="nav-btn active" data-sec="destaques">Destaques</button>
+    <button class="nav-btn" data-sec="pratos">Pratos</button>
+    <button class="nav-btn" data-sec="lanches">Lanches</button>
+    <button class="nav-btn" data-sec="bebidas">Bebidas</button>
+    <button class="nav-btn" data-sec="sobremesas">Sobremesas</button>
+    <button class="nav-btn" data-sec="porcoes">Porções</button>
+  </nav>
+  <div id="plan-feature-shell"></div>
+</div>
+
+<div class="content">
+
+  <div id="owner-dashboard-shell"></div>
+
+  <div class="menu-editor-bar">
+    <p class="menu-editor-label">Edicao rapida</p>
+    <div class="menu-editor-actions">
+      <button class="menu-editor-btn" onclick="openAddItemModal('item')">+ Item</button>
+      <button class="menu-editor-btn" onclick="openAddItemModal('combo')">+ Combo</button>
+      <button class="menu-editor-btn" onclick="openAddItemModal('drink')">+ Bebida</button>
+      <button class="menu-editor-btn menu-editor-edit" onclick="toggleEditMode()" id="btn-edit-mode">Editar itens</button>
+      <button class="menu-editor-btn menu-editor-danger" onclick="toggleRemoveMode()" id="btn-remove-mode">Remover itens</button>
+    </div>
+  </div>
+
+  <!-- DESTAQUES -->
+  <div id="sec-destaques" class="sec active">
+    <div class="section">
+      <div class="section-header">
+        <h2>Destaques</h2>
+        <p>Os mais pedidos do momento</p>
+      </div>
+
+      <div class="card">
+        <div class="card-img">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2"><path d="M12 3C8.686 3 6 5.686 6 9c0 2.21.896 4.21 2.343 5.657L12 21l3.657-6.343A7.965 7.965 0 0 0 18 9c0-3.314-2.686-6-6-6z"/><circle cx="12" cy="9" r="2.5"/></svg>
+        </div>
+        <div class="card-body">
+          <p class="card-name">Prato do dia</p>
+          <div class="card-tags"><span class="tag tag-dest">Chef indica</span></div>
+          <p class="card-desc">Frango grelhado, arroz, feijão, salada e farofa. Acompanha suco da fruta do dia.</p>
+          <div class="card-bottom">
+            <div><span class="price-old">R$ 34,00</span><span class="price">R$ 28,90</span></div>
+            <div id="ctrl-prato-dia"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-img">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2"><rect x="3" y="11" width="18" height="8" rx="2"/><path d="M7 11V8a5 5 0 0 1 10 0v3"/></svg>
+        </div>
+        <div class="card-body">
+          <p class="card-name">Combo família</p>
+          <div class="card-tags"><span class="tag tag-novo">Novo</span></div>
+          <p class="card-desc">2 pratos + 2 bebidas + sobremesa. Ideal para dividir, serve 4 pessoas.</p>
+          <div class="card-bottom">
+            <span class="price">R$ 79,90</span>
+            <div id="ctrl-combo-familia"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-img">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2"><path d="M4 7h16M4 17h16"/><rect x="3" y="6" width="18" height="12" rx="3"/></svg>
+        </div>
+        <div class="card-body">
+          <p class="card-name">X-tudo especial</p>
+          <div class="card-tags"><span class="tag tag-dest">Mais pedido</span></div>
+          <p class="card-desc">Hambúrguer 180g, queijo, bacon, alface, tomate e molho da casa.</p>
+          <div class="card-bottom">
+            <span class="price">R$ 32,00</span>
+            <div id="ctrl-x-tudo-dest"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PRATOS -->
+  <div id="sec-pratos" class="sec">
+    <div class="section">
+      <div class="section-header">
+        <h2>Pratos principais</h2>
+        <p>Feitos na hora, com ingredientes frescos</p>
+      </div>
+
+      <div class="card">
+        <div class="card-img">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2"><path d="M4 19h16M4 15h16M8 15V5m4 10V8m4 7V3"/></svg>
+        </div>
+        <div class="card-body">
+          <p class="card-name">Filé ao molho madeira</p>
+          <div class="card-tags"><span class="tag tag-dest">Chef indica</span></div>
+          <p class="card-desc">Filé mignon, molho madeira artesanal, arroz branco e batata sauté.</p>
+          <div class="card-bottom">
+            <span class="price">R$ 52,00</span>
+            <div id="ctrl-file-madeira"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-img">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2"><circle cx="12" cy="12" r="9"/><path d="M9 12c0-1.657 1.343-3 3-3s3 1.343 3 3-1.343 3-3 3"/></svg>
+        </div>
+        <div class="card-body">
+          <p class="card-name">Moqueca de camarão</p>
+          <div class="card-tags"><span class="tag tag-veg">Frutos do mar</span></div>
+          <p class="card-desc">Camarão fresco, leite de coco, pimentões coloridos e coentro. Serve 2 pessoas.</p>
+          <div class="card-bottom">
+            <span class="price">R$ 68,00</span>
+            <div id="ctrl-moqueca"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-img">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4"/></svg>
+        </div>
+        <div class="card-body">
+          <p class="card-name">Risoto de funghi</p>
+          <div class="card-tags"><span class="tag tag-veg">Vegetariano</span></div>
+          <p class="card-desc">Arroz arbóreo, cogumelos frescos variados, parmesão e manjericão.</p>
+          <div class="card-bottom">
+            <span class="price">R$ 44,00</span>
+            <div id="ctrl-risoto"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-img">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2"><path d="M12 3C8.686 3 6 5.686 6 9c0 2.21.896 4.21 2.343 5.657L12 21l3.657-6.343A7.965 7.965 0 0 0 18 9c0-3.314-2.686-6-6-6z"/></svg>
+        </div>
+        <div class="card-body">
+          <p class="card-name">Prato do dia</p>
+          <div class="card-tags"><span class="tag tag-dest">Chef indica</span></div>
+          <p class="card-desc">Frango grelhado, arroz, feijão, salada e farofa. Acompanha suco da fruta do dia.</p>
+          <div class="card-bottom">
+            <div><span class="price-old">R$ 34,00</span><span class="price">R$ 28,90</span></div>
+            <div id="ctrl-prato-dia-2"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- LANCHES -->
+  <div id="sec-lanches" class="sec">
+    <div class="section">
+      <div class="section-header">
+        <h2>Lanches</h2>
+        <p>Artesanais, pão fresquinho todos os dias</p>
+      </div>
+
+      <div class="card">
+        <div class="card-img">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2"><path d="M4 7h16M4 17h16"/><rect x="3" y="6" width="18" height="12" rx="3"/></svg>
+        </div>
+        <div class="card-body">
+          <p class="card-name">X-tudo especial</p>
+          <div class="card-tags"><span class="tag tag-dest">Mais pedido</span></div>
+          <p class="card-desc">Hambúrguer 180g, queijo cheddar, bacon crocante, alface, tomate e molho da casa.</p>
+          <div class="card-bottom">
+            <span class="price">R$ 32,00</span>
+            <div id="ctrl-x-tudo"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-img">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2"><circle cx="12" cy="12" r="9"/><path d="M8 12h8M12 8v8"/></svg>
+        </div>
+        <div class="card-body">
+          <p class="card-name">Wrap frango crispy</p>
+          <div class="card-tags"><span class="tag tag-novo">Novo</span></div>
+          <p class="card-desc">Frango empanado artesanal, cream cheese, rúcula fresca e tomate seco.</p>
+          <div class="card-bottom">
+            <span class="price">R$ 26,00</span>
+            <div id="ctrl-wrap"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-img">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2"><rect x="3" y="8" width="18" height="10" rx="3"/><path d="M7 8V6a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v2"/></svg>
+        </div>
+        <div class="card-body">
+          <p class="card-name">Combo duplo</p>
+          <p class="card-desc">2 hambúrgueres 120g + batata pequena + 2 refrigerantes. Para dividir.</p>
+          <div class="card-bottom">
+            <div><span class="price-old">R$ 56,00</span><span class="price">R$ 46,00</span></div>
+            <div id="ctrl-combo-duplo"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- BEBIDAS -->
+  <div id="sec-bebidas" class="sec">
+    <div class="section">
+      <div class="section-header">
+        <h2>Bebidas</h2>
+        <p>Geladas e naturais, na medida certa</p>
+      </div>
+
+      <div class="card">
+        <div class="card-img">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2"><path d="M8 3h8l1 17H7L8 3z"/><path d="M6 8h12"/></svg>
+        </div>
+        <div class="card-body">
+          <p class="card-name">Suco natural 500ml</p>
+          <div class="card-tags"><span class="tag tag-veg">Natural</span></div>
+          <p class="card-desc">Laranja, maracujá, acerola ou limão. Feito na hora, sem adição de açúcar.</p>
+          <div class="card-bottom">
+            <span class="price">R$ 12,00</span>
+            <div id="ctrl-suco"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-img">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2"><path d="M7 3h10l2 7H5L7 3z"/><path d="M5 10v9a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-9"/></svg>
+        </div>
+        <div class="card-body">
+          <p class="card-name">Cerveja artesanal 350ml</p>
+          <p class="card-desc">IPA, Pilsen ou Weiss. Servida gelada na temperatura certa.</p>
+          <div class="card-bottom">
+            <span class="price">R$ 18,00</span>
+            <div id="ctrl-cerveja"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-img">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2"><path d="M12 3v2m0 14v2M5.636 5.636l1.414 1.414m10.314 10.314 1.414 1.414M3 12h2m14 0h2"/><circle cx="12" cy="12" r="4"/></svg>
+        </div>
+        <div class="card-body">
+          <p class="card-name">Limonada suíça</p>
+          <div class="card-tags"><span class="tag tag-dest">Favorita</span></div>
+          <p class="card-desc">Limão, leite condensado, creme de leite e gelo. 500ml.</p>
+          <div class="card-bottom">
+            <span class="price">R$ 16,00</span>
+            <div id="ctrl-limonada"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SOBREMESAS -->
+  <div id="sec-sobremesas" class="sec">
+    <div class="section">
+      <div class="section-header">
+        <h2>Sobremesas</h2>
+        <p>O fim perfeito pra qualquer refeição</p>
+      </div>
+
+      <div class="card">
+        <div class="card-img">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2"><path d="M12 2l2 7h7l-5.5 4 2 7L12 16l-5.5 4 2-7L3 9h7z"/></svg>
+        </div>
+        <div class="card-body">
+          <p class="card-name">Petit gâteau</p>
+          <div class="card-tags"><span class="tag tag-dest">Destaque</span></div>
+          <p class="card-desc">Bolinho de chocolate com recheio quente, sorvete de creme e calda de morango.</p>
+          <div class="card-bottom">
+            <span class="price">R$ 22,00</span>
+            <div id="ctrl-petit"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-img">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2"><circle cx="12" cy="12" r="9"/><path d="M9 9h6v6H9z"/></svg>
+        </div>
+        <div class="card-body">
+          <p class="card-name">Brownie com sorvete</p>
+          <p class="card-desc">Brownie quentinho de chocolate belga com 2 bolas de sorvete à escolha.</p>
+          <div class="card-bottom">
+            <span class="price">R$ 19,00</span>
+            <div id="ctrl-brownie"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PORÇÕES -->
+  <div id="sec-porcoes" class="sec">
+    <div class="section">
+      <div class="section-header">
+        <h2>Porções</h2>
+        <p>Para compartilhar com a galera</p>
+      </div>
+
+      <div class="card">
+        <div class="card-img">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M9 9h6M9 12h6M9 15h4"/></svg>
+        </div>
+        <div class="card-body">
+          <p class="card-name">Batata frita crocante</p>
+          <div class="card-tags"><span class="tag tag-dest">Popular</span></div>
+          <p class="card-desc">400g de batata palito frita com cheddar e bacon. Serve até 3 pessoas.</p>
+          <div class="card-bottom">
+            <span class="price">R$ 34,00</span>
+            <div id="ctrl-batata"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-img">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2"><circle cx="12" cy="12" r="9"/><path d="M8.5 8.5l7 7M15.5 8.5l-7 7"/></svg>
+        </div>
+        <div class="card-body">
+          <p class="card-name">Isca de frango</p>
+          <p class="card-desc">300g de frango empanado temperado com molho da casa. Serve 2 pessoas.</p>
+          <div class="card-bottom">
+            <span class="price">R$ 28,00</span>
+            <div id="ctrl-isca"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-img">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2"><path d="M12 3C8 3 5 7 5 12h14c0-5-3-9-7-9z"/><rect x="3" y="12" width="18" height="3" rx="1"/></svg>
+        </div>
+        <div class="card-body">
+          <p class="card-name">Tábua de frios</p>
+          <div class="card-tags"><span class="tag tag-novo">Novo</span></div>
+          <p class="card-desc">Queijos, presunto, salame, torradas e azeitonas. Para 4 pessoas.</p>
+          <div class="card-bottom">
+            <span class="price">R$ 58,00</span>
+            <div id="ctrl-tabua"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <button class="btn-wa" onclick="sendToWhatsApp()">
+    <svg viewBox="0 0 24 24" fill="currentColor">
+      <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/>
+      <path d="M12 0C5.373 0 0 5.373 0 12c0 2.122.551 4.116 1.515 5.847L.057 23.547a.5.5 0 0 0 .604.635l5.882-1.542A11.944 11.944 0 0 0 12 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 22c-1.885 0-3.656-.493-5.193-1.359l-.37-.217-3.84 1.007 1.026-3.748-.237-.386A9.951 9.951 0 0 1 2 12C2 6.477 6.477 2 12 2s10 4.477 10 10-4.477 10-10 10z"/>
+    </svg>
+    Fazer pedido pelo WhatsApp
+  </button>
+
+  <p class="powered" id="powered-by">Feito com <a href="#">Web Cardápio</a> — seu cardápio digital</p>
+
+</div>
+
+<div class="editor-modal" id="editor-modal" aria-hidden="true">
+  <div class="editor-modal-card" role="dialog" aria-modal="true" aria-labelledby="editor-modal-title">
+    <h3 id="editor-modal-title">Adicionar item</h3>
+    <div class="editor-form-row">
+      <label for="editor-section">Categoria</label>
+      <select id="editor-section">
+        <option value="destaques">Destaques</option>
+        <option value="pratos">Pratos</option>
+        <option value="lanches">Lanches</option>
+        <option value="bebidas">Bebidas</option>
+        <option value="sobremesas">Sobremesas</option>
+        <option value="porcoes">Porcoes</option>
+      </select>
+    </div>
+    <div class="editor-form-row">
+      <label for="editor-name">Nome</label>
+      <input id="editor-name" type="text" placeholder="Nome do item">
+    </div>
+    <div class="editor-form-row">
+      <label for="editor-price">Preco</label>
+      <input id="editor-price" type="number" min="0" step="0.01" placeholder="24.90">
+    </div>
+    <div class="editor-form-row">
+      <label for="editor-desc">Descricao</label>
+      <textarea id="editor-desc" rows="3" placeholder="Descricao curta do item"></textarea>
+    </div>
+    <div class="editor-form-actions">
+      <button class="editor-btn editor-btn-ghost" onclick="closeAddItemModal()">Cancelar</button>
+      <button class="editor-btn editor-btn-primary" onclick="submitAddItemModal()">Salvar item</button>
+    </div>
+  </div>
+</div>
+
+<!-- CART BAR -->
+<div class="cart-bar" id="cart-bar">
+  <div class="cart-info">
+    <p id="cart-count">0 itens</p>
+    <p class="cart-total" id="cart-total">R$ 0,00</p>
+    <button class="cart-clear" onclick="clearCart()">Limpar</button>
+  </div>
+  <button class="btn-order" onclick="sendToWhatsApp()">
+    <svg viewBox="0 0 24 24" fill="currentColor">
+      <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/>
+      <path d="M12 0C5.373 0 0 5.373 0 12c0 2.122.551 4.116 1.515 5.847L.057 23.547a.5.5 0 0 0 .604.635l5.882-1.542A11.944 11.944 0 0 0 12 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 22c-1.885 0-3.656-.493-5.193-1.359l-.37-.217-3.84 1.007 1.026-3.748-.237-.386A9.951 9.951 0 0 1 2 12C2 6.477 6.477 2 12 2s10 4.477 10 10-4.477 10-10 10z"/>
+    </svg>
+    Pedir agora
+  </button>
+</div>
+
+<script src="menu-data.js"></script>
+<script src="menu-app.js"></script>
+<script>
+  (function () {
+    function initFallbackMenu() {
+      if (window.__MENU_APP_READY__) {
+        return;
+      }
+
+      const items = window.ITEMS || {};
+      const cart = {};
+      const params = new URLSearchParams(window.location.search);
+      const wa = (params.get('wa') || window.WA_NUMBER || '5582999004440').replace(/\D/g, '');
+
+      function renderCtrl(id) {
+        const host = document.getElementById('ctrl-' + id);
+        if (!host) return;
+        const qty = cart[id] || 0;
+        if (!qty) {
+          host.innerHTML = '<button class="btn-add" onclick="add(\'' + id + '\')">+</button>';
+          return;
+        }
+        host.innerHTML = '<div class="qty-ctrl"><button onclick="remove(\'' + id + '\')">−</button><span>' + qty + '</span><button onclick="add(\'' + id + '\')">+</button></div>';
+      }
+
+      function rerenderAll() {
+        Object.keys(items).forEach(renderCtrl);
+      }
+
+      window.add = function (id) {
+        cart[id] = (cart[id] || 0) + 1;
+        renderCtrl(id);
+      };
+
+      window.remove = function (id) {
+        if (!cart[id]) return;
+        cart[id] -= 1;
+        if (cart[id] <= 0) delete cart[id];
+        renderCtrl(id);
+      };
+
+      window.sendToWhatsApp = function () {
+        const entries = Object.entries(cart).filter(function (entry) {
+          return entry[1] > 0 && items[entry[0]];
+        });
+        let msg = 'Ola! Gostaria de fazer um pedido:\n\n';
+        if (!entries.length) {
+          msg += 'Quero ver o cardapio completo e fazer um pedido.';
+        } else {
+          let total = 0;
+          entries.forEach(function (entry) {
+            const id = entry[0];
+            const qty = entry[1];
+            const subtotal = (items[id].price || 0) * qty;
+            total += subtotal;
+            msg += '• ' + qty + 'x ' + items[id].name + ' - R$ ' + subtotal.toFixed(2).replace('.', ',') + '\n';
+          });
+          msg += '\n*Total: R$ ' + total.toFixed(2).replace('.', ',') + '*';
+        }
+        window.open('https://wa.me/' + wa + '?text=' + encodeURIComponent(msg), '_blank');
+      };
+
+      document.querySelectorAll('.nav-btn').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          const target = btn.getAttribute('data-sec');
+          document.querySelectorAll('.nav-btn').forEach(function (b) {
+            b.classList.toggle('active', b === btn);
+          });
+          document.querySelectorAll('.sec').forEach(function (sec) {
+            sec.classList.toggle('active', sec.id === 'sec-' + target);
+          });
+        });
+      });
+
+      rerenderAll();
+      window.__MENU_FALLBACK_READY__ = true;
+    }
+
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', initFallbackMenu);
+    } else {
+      initFallbackMenu();
+    }
+  })();
+</script>
+</body>
+</html>
