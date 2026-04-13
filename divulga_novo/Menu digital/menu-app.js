@@ -252,11 +252,21 @@ function isStoredOwnerSlug(slug) {
 
 const editorEnabled = (urlParams.get('editor') || '').trim() === '1';
 const ownerKeyEnabled = (urlParams.get('ownerKey') || '').trim().length > 0;
-const ownerModeEnabled = (urlParams.get('owner') || '').trim() === '1' || ownerKeyEnabled || isStoredOwnerSlug(runtimeConfig.store);
-const currentPlan = normalizePlan(runtimeConfig.plan);
+// owner mode: URL param OR stored JWT token OR stored slug
+const _storedToken = localStorage.getItem('webcardapio:owner-token');
+const ownerModeEnabled = (urlParams.get('owner') || '').trim() === '1' || ownerKeyEnabled || isStoredOwnerSlug(runtimeConfig.store) || Boolean(_storedToken && runtimeConfig.store);
+// plan: URL param > JWT payload > default
+function _parsePlanFromToken(token) {
+  try {
+    const payload = JSON.parse(atob(token.split('.')[1]));
+    return payload.plan || null;
+  } catch { return null; }
+}
+const _planFromToken = _storedToken ? _parsePlanFromToken(_storedToken) : null;
+const currentPlan = normalizePlan(runtimeConfig.plan || _planFromToken || (ownerModeEnabled ? 'pro' : 'basico'));
 const canUseProFeatures = currentPlan === 'pro' || currentPlan === 'business';
 const canUseBusinessFeatures = currentPlan === 'business';
-const canEdit = ownerModeEnabled || (editorEnabled && canUseProFeatures);
+const canEdit = ownerModeEnabled;
 let removeMode = false;
 let editMode = false;
 let customMenuState = { added: [], removed: [], updated: {} };
@@ -295,9 +305,7 @@ function sanitizeCustomMenuState(input) {
 }
 
 async function fetchRemoteMenuData() {
-  if (!runtimeConfig.store) {
-    return;
-  }
+  if (!runtimeConfig.store) return;
 
   try {
     const response = await fetch(`${getApiBaseUrl()}/api/menu/${encodeURIComponent(runtimeConfig.store)}`);
@@ -346,39 +354,43 @@ async function fetchRemoteMenuData() {
 }
 
 async function syncRemoteMenuData() {
-  if (!ownerModeEnabled || !runtimeConfig.store) {
-    return;
-  }
+  if (!ownerModeEnabled || !runtimeConfig.store) return;
 
+  const token    = localStorage.getItem('webcardapio:owner-token');
   const ownerKey = getOwnerKey();
-  if (!ownerKey) {
-    return;
-  }
+  const apiBase  = getApiBaseUrl();
+  const slug     = runtimeConfig.store;
 
-  const payload = {
-    ownerKey,
-    title: getConfiguredStoreName(),
-    data: {
-      settings: {
-        storeName: getConfiguredStoreName(),
-        wa: configuredWaNumber,
-        tpl: getConfiguredTemplate(),
-        segmento: getConfiguredSegment(),
-        logoUrl: runtimeConfig.logoUrl || '',
-        coverUrl: runtimeConfig.coverUrl || ''
-      },
-      customMenuState: sanitizeCustomMenuState(customMenuState)
-    }
+  const data = {
+    settings: {
+      storeName: getConfiguredStoreName(),
+      wa:        configuredWaNumber,
+      tpl:       getConfiguredTemplate(),
+      segmento:  getConfiguredSegment(),
+      logoUrl:   runtimeConfig.logoUrl || '',
+      coverUrl:  runtimeConfig.coverUrl || ''
+    },
+    customMenuState: sanitizeCustomMenuState(customMenuState)
   };
 
   try {
-    await fetch(`${getApiBaseUrl()}/api/public/menu/${encodeURIComponent(runtimeConfig.store)}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
-    });
+    if (token) {
+      // JWT route — authenticated save
+      await fetch(`${apiBase}/api/menu/${encodeURIComponent(slug)}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+        body: JSON.stringify({ title: getConfiguredStoreName(), data })
+      });
+    } else if (ownerKey) {
+      // fallback ownerKey route
+      await fetch(`${apiBase}/api/public/menu/${encodeURIComponent(slug)}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ownerKey, title: getConfiguredStoreName(), data })
+      });
+    }
   } catch {
-    // Keep local behavior when API is offline.
+    // offline — keep local state
   }
 }
 
@@ -638,17 +650,79 @@ function formatWhatsForOwner() {
 
 function ownerMainContent(items, filteredItems, isOpen, deliveryLabel) {
   if (ownerView === 'templates') {
+    const tpls = [
+      { id:'clean',  label:'Clean & moderno', desc:'Restaurante, café',    bg:'#F7F5F0', accent:'#1a1a18' },
+      { id:'dark',   label:'Dark premium',    desc:'Bar, hamburgueria',    bg:'#1a1a18', accent:'#fff' },
+      { id:'red',    label:'Vermelho & bold', desc:'Pizzaria, delivery',   bg:'#FFF0F0', accent:'#C0392B' },
+      { id:'green',  label:'Verde natural',   desc:'Açaí, saudável',      bg:'#F0FFF4', accent:'#1B5E20' },
+      { id:'yellow', label:'Amarelo vibrante',desc:'Lanchonete',           bg:'#FFFDE7', accent:'#F57F17' },
+    ];
+    const cur = getConfiguredTemplate();
     return `
       <div class="owner-top">
         <h3 class="owner-title">Templates</h3>
-        <div class="owner-actions">
-          <button class="owner-btn">Aplicar template</button>
-        </div>
+        <p style="font-size:.82rem;color:#888;margin-top:4px">Troque o visual sem perder os itens.</p>
       </div>
       <div class="owner-template-grid">
-        <div class="owner-template-card active"><strong>Dark premium</strong><p>Ativo no momento</p></div>
-        <div class="owner-template-card"><strong>Clean moderno</strong><p>Visual claro para restaurantes</p></div>
-        <div class="owner-template-card"><strong>Vermelho bold</strong><p>Ideal para pizzarias</p></div>
+        ${tpls.map(t => `
+          <div class="owner-template-card ${t.id === cur ? 'active' : ''}" data-tpl-id="${t.id}" style="cursor:pointer">
+            <div style="height:52px;background:${t.bg};border-radius:6px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;margin-bottom:8px">
+              <div style="width:28px;height:4px;background:${t.accent};border-radius:2px;opacity:.9"></div>
+              <div style="width:36px;height:2px;background:${t.accent};border-radius:2px;opacity:.5"></div>
+            </div>
+            <strong>${t.label}</strong>
+            <p>${t.desc}</p>
+            ${t.id === cur ? '<span class="tpl-active-badge">Ativo</span>' : ''}
+          </div>`).join('')}
+      </div>`;
+  }
+
+  if (ownerView === 'aparencia' && canUseProFeatures) {
+    return `
+      <div class="owner-top">
+        <h3 class="owner-title">Aparência</h3>
+        <div class="owner-actions">
+          <button class="owner-btn" id="owner-save-brand">Salvar</button>
+        </div>
+      </div>
+      <div class="owner-grid">
+        <div class="owner-field full"><label>URL da logo (link direto para imagem)</label><input id="brand-logo" placeholder="https://..." value="${escapeHtml(runtimeConfig.logoUrl||'')}"></div>
+        <div class="owner-field full"><label>URL da foto de capa</label><input id="brand-cover" placeholder="https://..." value="${escapeHtml(runtimeConfig.coverUrl||'')}"></div>
+      </div>
+      <p style="font-size:.78rem;color:#aaa;margin-top:8px">Dica: use o Google Fotos ou Imgur para hospedar suas imagens e copie o link direto.</p>`;
+  }
+
+  if (ownerView === 'relatorios' && canUseBusinessFeatures) {
+    return `
+      <div class="owner-top">
+        <h3 class="owner-title">Relatórios</h3>
+      </div>
+      <div class="owner-stats-grid" style="grid-template-columns:repeat(2,1fr)">
+        <div class="owner-stat-card"><p>Pedidos esta semana</p><strong>94</strong><span>+18% vs semana anterior</span></div>
+        <div class="owner-stat-card"><p>Ticket médio</p><strong>R$ 47,30</strong><span>baseado nos últimos 30 dias</span></div>
+        <div class="owner-stat-card"><p>Item mais pedido</p><strong>X-tudo especial</strong><span>38% dos pedidos</span></div>
+        <div class="owner-stat-card"><p>Horário de pico</p><strong>12h – 14h</strong><span>Almoço responde por 61%</span></div>
+      </div>
+      <p style="font-size:.78rem;color:#aaa;margin-top:16px">Dados simulados — integração com pedidos reais disponível em breve.</p>`;
+  }
+
+  if (ownerView === 'multi' && canUseBusinessFeatures) {
+    return `
+      <div class="owner-top">
+        <h3 class="owner-title">Multi-unidades</h3>
+        <div class="owner-actions">
+          <button class="owner-btn" id="add-unit-btn">+ Nova unidade</button>
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <div class="owner-row" style="justify-content:space-between">
+          <div><span class="owner-row-name">Matriz</span><br><span style="font-size:.78rem;color:#888">webcardapio.com/${escapeHtml(runtimeConfig.store||'loja')}</span></div>
+          <span style="font-size:.75rem;background:#E8F5E9;color:#1B5E20;padding:3px 10px;border-radius:12px;font-weight:600">Ativa</span>
+        </div>
+        <div class="owner-row" style="justify-content:space-between;opacity:.6">
+          <div><span class="owner-row-name">Unidade 2</span><br><span style="font-size:.78rem;color:#888">A configurar</span></div>
+          <span style="font-size:.75rem;background:#f5f5f5;color:#aaa;padding:3px 10px;border-radius:12px">Inativa</span>
+        </div>
       </div>`;
   }
 
@@ -680,14 +754,27 @@ function ownerMainContent(items, filteredItems, isOpen, deliveryLabel) {
   }
 
   if (ownerView === 'plano') {
+    const plans = [
+      { id:'basico',   label:'Básico',    price:'R$29', period:'/mês', feats:['Link público','Botão WhatsApp','1 template','Até 20 itens'] },
+      { id:'pro',      label:'Pro',       price:'R$59', period:'/mês', feats:['Tudo do Básico','Templates ilimitados','Itens ilimitados','Painel do dono','Busca e filtros','Aparência (logo/capa)','Pedidos recentes'] },
+      { id:'business', label:'Business',  price:'R$99', period:'/mês', feats:['Tudo do Pro','Relatórios avançados','Multi-unidades','Domínio próprio','Ocultar "Feito com"','Suporte prioritário'] },
+    ];
     return `
       <div class="owner-top">
-        <h3 class="owner-title">Plano</h3>
+        <h3 class="owner-title">Plano atual: <strong>${currentPlan.charAt(0).toUpperCase()+currentPlan.slice(1)}</strong></h3>
       </div>
-      <div class="owner-plan-card">
-        <h4>Plano ${currentPlan.toUpperCase()}</h4>
-        <p>Recursos ativos: painel do dono, editor completo, filtros e ${canUseBusinessFeatures ? 'multi-unidades' : 'painel inteligente'}.</p>
-      </div>`;
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px">
+        ${plans.map(p=>`
+          <div style="border-radius:12px;padding:16px;border:${p.id===currentPlan?'2px solid #34A853':'1px solid rgba(255,255,255,.1)'};background:${p.id===currentPlan?'rgba(52,168,83,.07)':'transparent'}">
+            ${p.id===currentPlan?'<span style="font-size:10px;background:#34A853;color:#fff;padding:2px 8px;border-radius:8px;font-weight:700">ATUAL</span><br>':''}
+            <p style="font-size:.85rem;font-weight:700;color:#f5f7ff;margin:8px 0 2px">${p.label}</p>
+            <p style="font-size:1.3rem;font-weight:800;color:#f5f7ff">${p.price}<span style="font-size:.75rem;font-weight:400;color:rgba(255,255,255,.45)">${p.period}</span></p>
+            <div style="margin-top:10px;display:flex;flex-direction:column;gap:5px">
+              ${p.feats.map(f=>`<span style="font-size:.75rem;color:rgba(255,255,255,.65)">✓ ${f}</span>`).join('')}
+            </div>
+          </div>`).join('')}
+      </div>
+      <p style="font-size:.75rem;color:rgba(255,255,255,.35);margin-top:14px;text-align:center">Para mudar de plano, entre em contato com o suporte.</p>`;
   }
 
   return `
@@ -750,9 +837,12 @@ function renderOwnerDashboard() {
           <div class="owner-brand">Web Cardapio</div>
           <span class="owner-plan">Plano ${currentPlan} ativo</span>
           <div class="owner-nav">
-            <button class="owner-nav-item ${ownerView === 'cardapio' ? 'active' : ''}" data-owner-view="cardapio">Meu cardapio</button>
+            <button class="owner-nav-item ${ownerView === 'cardapio' ? 'active' : ''}" data-owner-view="cardapio">Meu cardápio</button>
             <button class="owner-nav-item ${ownerView === 'templates' ? 'active' : ''}" data-owner-view="templates">Templates</button>
+            ${canUseProFeatures ? `<button class="owner-nav-item ${ownerView === 'aparencia' ? 'active' : ''}" data-owner-view="aparencia">Aparência</button>` : ''}
             <button class="owner-nav-item ${ownerView === 'pedidos' ? 'active' : ''}" data-owner-view="pedidos">Pedidos recentes</button>
+            ${canUseBusinessFeatures ? `<button class="owner-nav-item ${ownerView === 'relatorios' ? 'active' : ''}" data-owner-view="relatorios">Relatórios</button>` : ''}
+            ${canUseBusinessFeatures ? `<button class="owner-nav-item ${ownerView === 'multi' ? 'active' : ''}" data-owner-view="multi">Multi-unidades</button>` : ''}
             <button class="owner-nav-item ${ownerView === 'plano' ? 'active' : ''}" data-owner-view="plano">Plano</button>
           </div>
           <div class="owner-public-link">
@@ -771,6 +861,27 @@ function renderOwnerDashboard() {
       ownerView = button.getAttribute('data-owner-view') || 'cardapio';
       renderOwnerDashboard();
     });
+  });
+
+  // template click
+  shell.querySelectorAll('[data-tpl-id]').forEach((card) => {
+    card.addEventListener('click', () => {
+      const tplId = card.getAttribute('data-tpl-id');
+      runtimeConfig.tpl = tplId;
+      applyTemplateTheme(tplId);
+      saveCustomMenuState();
+      renderOwnerDashboard();
+    });
+  });
+
+  // aparencia save
+  document.getElementById('owner-save-brand')?.addEventListener('click', () => {
+    runtimeConfig.logoUrl = (document.getElementById('brand-logo')?.value||'').trim();
+    runtimeConfig.coverUrl = (document.getElementById('brand-cover')?.value||'').trim();
+    applyMediaBranding();
+    saveCustomMenuState();
+    const b = document.getElementById('owner-save-brand');
+    if(b){b.textContent='Salvo!'; setTimeout(()=>{b.textContent='Salvar';},1200);}
   });
 
   shell.querySelectorAll('[data-owner-filter]').forEach((button) => {
