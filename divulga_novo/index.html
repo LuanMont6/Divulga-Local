@@ -326,10 +326,14 @@
       <div class="ob-step" data-step="2">2</div>
       <div style="flex:1;height:2px;background:#eee;margin:auto;border-radius:2px"></div>
       <div class="ob-step" data-step="3">3</div>
+      <div style="flex:1;height:2px;background:#eee;margin:auto;border-radius:2px"></div>
+      <div class="ob-step" data-step="4">4</div>
+      <div style="flex:1;height:2px;background:#eee;margin:auto;border-radius:2px"></div>
+      <div class="ob-step" data-step="5">5</div>
     </div>
 
     <div id="ob-panel-1">
-      <p style="font-size:.75rem;font-weight:700;letter-spacing:.1em;color:#34A853;margin-bottom:8px">PASSO 1 DE 3</p>
+      <p style="font-size:.75rem;font-weight:700;letter-spacing:.1em;color:#34A853;margin-bottom:8px">PASSO 1 DE 4</p>
       <h2 style="font-size:1.6rem;font-weight:800;color:#111;margin-bottom:6px">Sobre o seu negócio</h2>
       <p style="color:#888;font-size:.9rem;margin-bottom:28px">Vamos configurar seu cardápio em minutos.</p>
       <div style="display:flex;flex-direction:column;gap:16px">
@@ -357,7 +361,7 @@
     </div>
 
     <div id="ob-panel-2" style="display:none">
-      <p style="font-size:.75rem;font-weight:700;letter-spacing:.1em;color:#34A853;margin-bottom:8px">PASSO 2 DE 3</p>
+      <p style="font-size:.75rem;font-weight:700;letter-spacing:.1em;color:#34A853;margin-bottom:8px">PASSO 2 DE 4</p>
       <h2 style="font-size:1.6rem;font-weight:800;color:#f5f7ff;margin-bottom:6px">Escolha o seu template</h2>
       <p style="color:rgba(255,255,255,.68);font-size:.9rem;margin-bottom:24px">Pode trocar depois, sem perder os dados.</p>
       <div style="display:flex;flex-direction:column;gap:12px" id="ob-templates">
@@ -409,7 +413,7 @@
     </div>
 
     <div id="ob-panel-3" style="display:none">
-      <p style="font-size:.75rem;font-weight:700;letter-spacing:.1em;color:#34A853;margin-bottom:8px">PASSO 3 DE 3</p>
+      <p style="font-size:.75rem;font-weight:700;letter-spacing:.1em;color:#34A853;margin-bottom:8px">PASSO 3 DE 5</p>
       <h2 style="font-size:1.6rem;font-weight:800;color:#f5f7ff;margin-bottom:6px">Escolha seu plano</h2>
       <p style="color:rgba(255,255,255,.7);font-size:.9rem;margin-bottom:24px">7 dias grátis em todos. Sem cartão de crédito.</p>
       <div style="display:flex;flex-direction:column;gap:10px">
@@ -434,6 +438,63 @@
       </div>
       <div style="display:flex;gap:12px;margin-top:20px">
         <button onclick="obNext(2)" style="padding:14px 20px;border-radius:10px;border:1.5px solid rgba(255,255,255,.72);background:transparent;color:#f5f7ff;font-family:inherit;font-size:.95rem;cursor:pointer">← Voltar</button>
+        <button onclick="obNext(4)" style="flex:1;padding:14px;border-radius:10px;background:#34A853;color:#fff;border:none;font-family:inherit;font-size:1rem;font-weight:700;cursor:pointer">Continuar →</button>
+      </div>
+    </div>
+
+    <!-- STEP 4: PREVIEW DO CARDÁPIO -->
+    <div id="ob-panel-4" style="display:none">
+      <p style="font-size:.75rem;font-weight:700;letter-spacing:.1em;color:#34A853;margin-bottom:8px">PASSO 4 DE 5</p>
+      <h2 style="font-size:1.4rem;font-weight:800;color:#f5f7ff;margin-bottom:6px">Veja como ficou seu cardápio 👀</h2>
+      <p style="color:rgba(255,255,255,.68);font-size:.85rem;margin-bottom:16px">É exatamente assim que seus clientes vão ver. Gostou? Crie sua conta e publique.</p>
+      <div id="ob-preview-wrap" style="position:relative;border-radius:16px;overflow:hidden;box-shadow:0 4px 32px rgba(0,0,0,.45);background:#111;margin-bottom:20px">
+        <div style="background:#111;padding:8px 16px 4px;display:flex;align-items:center;justify-content:space-between">
+          <span style="color:#fff;font-size:.7rem;font-weight:700">9:41</span>
+          <div style="display:flex;gap:5px;align-items:center">
+            <svg width="12" height="10" viewBox="0 0 12 10" fill="white"><rect x="0" y="4" width="2" height="6" rx="1"/><rect x="3" y="2" width="2" height="8" rx="1"/><rect x="6" y="0" width="2" height="10" rx="1"/><rect x="9" y="1" width="2" height="9" rx="1" opacity=".4"/></svg>
+            <svg width="14" height="10" viewBox="0 0 14 10" fill="white"><rect x="1" y="2" width="10" height="7" rx="1" stroke="white" stroke-width="1.2" fill="none"/><rect x="11" y="4" width="2" height="3" rx="1"/><rect x="2" y="3" width="7" height="5" rx=".5"/></svg>
+          </div>
+        </div>
+        <div style="background:#1c1c1e;padding:5px 12px;display:flex;align-items:center;gap:8px">
+          <div style="flex:1;background:#2c2c2e;border-radius:6px;padding:5px 10px;font-size:.7rem;color:rgba(255,255,255,.5);white-space:nowrap;overflow:hidden;text-overflow:ellipsis" id="ob-preview-url">webcardapio.com/seu-negocio</div>
+        </div>
+        <iframe id="ob-preview-iframe" style="width:100%;height:480px;border:none;display:block;background:#fff" src="about:blank" title="Preview do cardápio" sandbox="allow-scripts allow-same-origin"></iframe>
+        <div id="ob-preview-loading" style="position:absolute;inset:0;top:56px;background:rgba(17,17,17,.85);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px">
+          <div style="width:36px;height:36px;border:3px solid rgba(255,255,255,.15);border-top-color:#34A853;border-radius:50%;animation:ob-spin 0.8s linear infinite"></div>
+          <span style="color:rgba(255,255,255,.6);font-size:.85rem">Carregando seu cardápio…</span>
+        </div>
+      </div>
+      <div style="display:flex;gap:12px">
+        <button onclick="obNext(3)" style="padding:14px 20px;border-radius:10px;border:1.5px solid rgba(255,255,255,.72);background:transparent;color:#f5f7ff;font-family:inherit;font-size:.95rem;cursor:pointer">← Ajustar</button>
+        <button onclick="obNext(5)" style="flex:1;padding:14px;border-radius:10px;background:#34A853;color:#fff;border:none;font-family:inherit;font-size:1rem;font-weight:700;cursor:pointer">Ficou ótimo! Criar conta →</button>
+      </div>
+    </div>
+
+    <div id="ob-panel-5" style="display:none">
+      <h2 style="font-size:1.6rem;font-weight:800;color:#f5f7ff;margin-bottom:6px">Crie sua conta</h2>
+      <p style="color:rgba(255,255,255,.68);font-size:.9rem;margin-bottom:28px">Informe email e senha do dono para acessar e editar o cardápio depois.</p>
+      <div style="display:flex;flex-direction:column;gap:16px">
+        <div>
+          <label style="display:block;font-size:.83rem;font-weight:600;color:rgba(255,255,255,.8);margin-bottom:6px">E-mail</label>
+          <input id="ob-email" type="email" placeholder="seu@email.com" style="width:100%;padding:12px 14px;border:1.5px solid #ddd;border-radius:10px;font-size:.95rem;font-family:inherit;outline:none;box-sizing:border-box" onfocus="this.style.borderColor='#34A853'" onblur="this.style.borderColor='#ddd'">
+        </div>
+        <div>
+          <label style="display:block;font-size:.83rem;font-weight:600;color:rgba(255,255,255,.8);margin-bottom:6px">Senha</label>
+          <div style="position:relative">
+            <input id="ob-senha" type="password" placeholder="Minimo 1 caracteres" style="width:100%;padding:12px 44px 12px 14px;border:1.5px solid #ddd;border-radius:10px;font-size:.95rem;font-family:inherit;outline:none;box-sizing:border-box" onfocus="this.style.borderColor='#34A853'" onblur="this.style.borderColor='#ddd'">
+            <button type="button" onclick="toggleSenha('ob-senha',this)" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:rgba(255,255,255,.5);font-size:.8rem;font-family:inherit">mostrar</button>
+          </div>
+        </div>
+        <div>
+          <label style="display:block;font-size:.83rem;font-weight:600;color:rgba(255,255,255,.8);margin-bottom:6px">Confirmar senha</label>
+          <div style="position:relative">
+            <input id="ob-senha2" type="password" placeholder="Repita a senha" style="width:100%;padding:12px 44px 12px 14px;border:1.5px solid #ddd;border-radius:10px;font-size:.95rem;font-family:inherit;outline:none;box-sizing:border-box" onfocus="this.style.borderColor='#34A853'" onblur="this.style.borderColor='#ddd'">
+            <button type="button" onclick="toggleSenha('ob-senha2',this)" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:rgba(255,255,255,.5);font-size:.8rem;font-family:inherit">mostrar</button>
+          </div>
+        </div>
+      </div>
+      <div style="display:flex;gap:12px;margin-top:28px">
+        <button onclick="obNext(4)" style="padding:14px 20px;border-radius:10px;border:1.5px solid rgba(255,255,255,.72);background:transparent;color:#f5f7ff;font-family:inherit;font-size:.95rem;cursor:pointer">← Voltar</button>
         <button onclick="obFinish()" style="flex:1;padding:14px;border-radius:10px;background:#34A853;color:#fff;border:none;font-family:inherit;font-size:1rem;font-weight:700;cursor:pointer">Criar meu cardápio grátis →</button>
       </div>
     </div>
@@ -455,6 +516,7 @@
 .ob-step{width:28px;height:28px;border-radius:50%;border:2px solid #ddd;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#aaa;flex-shrink:0;transition:all .2s}
 .ob-step.active{border-color:#34A853;color:#34A853}
 .ob-step.done{background:#34A853;border-color:#34A853;color:#fff}
+@keyframes ob-spin{to{transform:rotate(360deg)}}
 .ob-tipo{padding:10px 12px;border-radius:8px;border:1.5px solid #d9d9d9;background:#fff;font-family:inherit;font-size:.85rem;cursor:pointer;text-align:left;transition:border-color .15s,background-color .15s,color .15s,box-shadow .15s}
 .ob-tipo.active{border-color:#2ea44f;background:#2ea44f;color:#fff;box-shadow:0 4px 12px rgba(46,164,79,.28)}
 .ob-tpl{transition:border-color .15s,background-color .15s}
@@ -473,13 +535,13 @@
 
 <script>
 function obNext(step) {
-  ['1','2','3','sucesso'].forEach(function(s) {
+  ['1','2','3','4','5','sucesso'].forEach(function(s) {
     var p = document.getElementById('ob-panel-' + s);
     if(p) p.style.display = 'none';
   });
   document.getElementById('ob-panel-' + step).style.display = 'block';
   var bar = document.getElementById('ob-bar');
-  if(bar && typeof step === 'number') bar.style.width = [0,0,50,100][step] + '%';
+  if(bar && typeof step === 'number') bar.style.width = [0,0,25,50,75,100][step] + '%';
   document.querySelectorAll('.ob-step').forEach(function(el) {
     var s = parseInt(el.dataset.step);
     el.classList.remove('active','done');
@@ -489,6 +551,33 @@ function obNext(step) {
     }
   });
   window.scrollTo({top:0,behavior:'smooth'});
+  // load preview iframe when entering step 4
+  if(step === 4) { obLoadPreview(); }
+}
+
+function obLoadPreview() {
+  var nome = (document.getElementById('ob-nome') ? document.getElementById('ob-nome').value.trim() : '') || 'meu-negocio';
+  var waInput = document.getElementById('ob-wa') ? document.getElementById('ob-wa').value.trim() : '';
+  var wa = normalizeWhatsApp(waInput) || '5511999999999';
+  var templateAtivo = document.querySelector('.ob-tpl.active');
+  var planoAtivo = document.querySelector('.ob-plan.active');
+  var tipoAtivo = document.querySelector('.ob-tipo.active');
+  var template = templateAtivo ? templateAtivo.dataset.tpl : 'clean';
+  var plano = planoAtivo ? planoAtivo.dataset.plan : 'pro';
+  var tipo = tipoAtivo ? tipoAtivo.dataset.val : 'restaurante';
+  var slug = nome.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/\s+/g,'-').replace(/[^a-z0-9-]/g,'').replace(/-+/g,'-').replace(/^-|-$/g,'') || 'meu-negocio';
+  var url = buildCardapioUrl(slug, nome, wa, template, plano, tipo);
+  var iframe = document.getElementById('ob-preview-iframe');
+  var loading = document.getElementById('ob-preview-loading');
+  var urlLabel = document.getElementById('ob-preview-url');
+  if(urlLabel) urlLabel.textContent = 'webcardapio.com/' + slug;
+  if(loading) loading.style.display = 'flex';
+  if(iframe) {
+    iframe.onload = function() {
+      if(loading) loading.style.display = 'none';
+    };
+    iframe.src = url;
+  }
 }
 
 function normalizeWhatsApp(raw) {
@@ -520,28 +609,6 @@ function markOwnerSlug(slug) {
     localStorage.setItem('webcardapio:owner-slugs', JSON.stringify(map));
   } catch (e) {
     console.warn('Nao foi possivel salvar dono local', e);
-  }
-}
-
-function getOwnerKeyForSlug(slug) {
-  try {
-    var raw = localStorage.getItem('webcardapio:owner-keys');
-    var map = raw ? JSON.parse(raw) : {};
-
-    if (map[slug]) {
-      return map[slug];
-    }
-
-    var generated = (window.crypto && window.crypto.randomUUID)
-      ? window.crypto.randomUUID()
-      : (Date.now().toString(36) + Math.random().toString(36).slice(2, 12));
-
-    map[slug] = generated;
-    localStorage.setItem('webcardapio:owner-keys', JSON.stringify(map));
-    return generated;
-  } catch (e) {
-    console.warn('Nao foi possivel gerar ownerKey local', e);
-    return '';
   }
 }
 
@@ -577,6 +644,19 @@ function resetOnboarding() {
 
   document.getElementById('ob-link-display').textContent = 'https://webcardapio.com/seu-negocio';
 
+  var emailEl = document.getElementById('ob-email');
+  var senhaEl = document.getElementById('ob-senha');
+  var senha2El = document.getElementById('ob-senha2');
+  if (emailEl) emailEl.value = '';
+  if (senhaEl) {
+    senhaEl.value = '';
+    senhaEl.type = 'password';
+  }
+  if (senha2El) {
+    senha2El.value = '';
+    senha2El.type = 'password';
+  }
+
   document.querySelectorAll('.ob-tipo').forEach(function(btn){ btn.classList.remove('active'); });
   var tipoPadrao = document.querySelector('.ob-tipo[data-val="restaurante"]');
   if (tipoPadrao) tipoPadrao.classList.add('active');
@@ -600,6 +680,18 @@ function obExitToSite() {
   showPage('site');
 }
 
+function toggleSenha(fieldId, btn) {
+  var field = document.getElementById(fieldId);
+  if (!field) return;
+  if (field.type === 'password') {
+    field.type = 'text';
+    btn.textContent = 'ocultar';
+  } else {
+    field.type = 'password';
+    btn.textContent = 'mostrar';
+  }
+}
+
 function obFinish() {
   var nome = document.getElementById('ob-nome').value.trim() || 'seu-negocio';
   var waInput = document.getElementById('ob-wa').value.trim();
@@ -607,6 +699,23 @@ function obFinish() {
 
   if (!wa || wa.length < 12 || wa.length > 13) {
     alert('Informe um WhatsApp valido com DDD para gerar o link corretamente.');
+    return;
+  }
+
+  var email = (document.getElementById('ob-email').value || '').trim();
+  var senha = document.getElementById('ob-senha').value;
+  var senha2 = document.getElementById('ob-senha2').value;
+
+  if (!email || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) {
+    alert('Informe um e-mail valido.');
+    return;
+  }
+  if (!senha || senha.length < 1) {
+    alert('A senha deve ter no minimo 8 caracteres.');
+    return;
+  }
+  if (senha !== senha2) {
+    alert('As senhas nao coincidem.');
     return;
   }
 
@@ -633,26 +742,25 @@ function obFinish() {
     markOwnerSlug(slug);
   }
 
-  var cardapioUrl = buildCardapioUrl(slug, nome, wa, template, plano, tipo);
-  var editorBlock = '';
-  if (plano === 'pro' || plano === 'business') {
-    var ownerKey = getOwnerKeyForSlug(slug);
-    var editorUrl = new URL(cardapioUrl);
-    editorUrl.searchParams.set('owner', '1');
-    if (ownerKey) editorUrl.searchParams.set('ownerKey', ownerKey);
-    editorBlock = ''
-      + '<div>'
-      + '<div style="font-size:11px;color:#7a7a7a;text-transform:uppercase;letter-spacing:.08em;margin-bottom:2px">Link de edicao (dono)</div>'
-      + '<a href="' + editorUrl.toString() + '" target="_blank" rel="noopener noreferrer" style="color:#205da6;text-decoration:none;word-break:break-all">' + editorUrl.toString() + '</a>'
-      + '</div>';
+  try {
+    var accounts = JSON.parse(localStorage.getItem('webcardapio:accounts') || '{}');
+    accounts[slug] = {
+      email: email,
+      slug: slug,
+      plan: plano
+    };
+    localStorage.setItem('webcardapio:accounts', JSON.stringify(accounts));
+  } catch (e) {
+    console.warn('Nao foi possivel salvar conta', e);
   }
+
+  var cardapioUrl = buildCardapioUrl(slug, nome, wa, template, plano, tipo);
   var linkEl = document.getElementById('ob-link-display');
   linkEl.innerHTML = ''
     + '<div style="margin-bottom:10px">'
-    + '<div style="font-size:11px;color:#7a7a7a;text-transform:uppercase;letter-spacing:.08em;margin-bottom:2px">Link publico (cliente)</div>'
+    + '<div style="font-size:11px;color:#7a7a7a;text-transform:uppercase;letter-spacing:.08em;margin-bottom:2px">Link do seu cardapio</div>'
     + '<a href="' + cardapioUrl + '" target="_blank" rel="noopener noreferrer" style="color:#34A853;text-decoration:none;word-break:break-all">' + cardapioUrl + '</a>'
-    + '</div>'
-    + editorBlock;
+    + '</div>';
 
   obNext('sucesso');
   var bar = document.getElementById('ob-bar');
