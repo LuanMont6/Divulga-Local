@@ -1,5 +1,9 @@
-const WA_NUMBER = window.WA_NUMBER || '5582999004440';
-const ITEMS = window.ITEMS || {};
+// WA_NUMBER and ITEMS are set by menu-data.js via window.*
+// Reading here avoids redeclaration errors when both scripts load on the same page.
+if (typeof window.WA_NUMBER === 'undefined') window.WA_NUMBER = '5582999004440';
+if (typeof window.ITEMS === 'undefined') window.ITEMS = {};
+const WA_NUMBER = window.WA_NUMBER;
+const ITEMS = window.ITEMS;
 
 const CART_STORAGE_KEY = 'webcardapio:cart';
 const PROFILE_STORAGE_KEY = 'webcardapio:profiles';
@@ -254,7 +258,13 @@ const editorEnabled = (urlParams.get('editor') || '').trim() === '1';
 const ownerKeyEnabled = (urlParams.get('ownerKey') || '').trim().length > 0;
 // owner mode: URL param OR stored JWT token OR stored slug
 const _storedToken = localStorage.getItem('webcardapio:owner-token');
-const ownerModeEnabled = (urlParams.get('owner') || '').trim() === '1' || ownerKeyEnabled || isStoredOwnerSlug(runtimeConfig.store) || Boolean(_storedToken && runtimeConfig.store);
+// ownerModeEnabled is a FUNCTION so it stays true after login without page reload
+function ownerModeEnabled() {
+  return (urlParams.get('owner') || '').trim() === '1'
+    || ownerKeyEnabled
+    || isStoredOwnerSlug(runtimeConfig.store)
+    || Boolean(localStorage.getItem('webcardapio:owner-token') && runtimeConfig.store);
+}
 // plan: URL param > JWT payload > default
 function _parsePlanFromToken(token) {
   try {
@@ -263,10 +273,10 @@ function _parsePlanFromToken(token) {
   } catch { return null; }
 }
 const _planFromToken = _storedToken ? _parsePlanFromToken(_storedToken) : null;
-const currentPlan = normalizePlan(runtimeConfig.plan || _planFromToken || (ownerModeEnabled ? 'pro' : 'basico'));
+const currentPlan = normalizePlan(runtimeConfig.plan || _planFromToken || (ownerModeEnabled() ? 'pro' : 'basico'));
 const canUseProFeatures = currentPlan === 'pro' || currentPlan === 'business';
 const canUseBusinessFeatures = currentPlan === 'business';
-const canEdit = ownerModeEnabled;
+function canEdit() { return ownerModeEnabled(); }
 let removeMode = false;
 let editMode = false;
 let customMenuState = { added: [], removed: [], updated: {} };
@@ -354,7 +364,7 @@ async function fetchRemoteMenuData() {
 }
 
 async function syncRemoteMenuData() {
-  if (!ownerModeEnabled || !runtimeConfig.store) return;
+  if (!ownerModeEnabled() || !runtimeConfig.store) return;
 
   const token    = localStorage.getItem('webcardapio:owner-token');
   const ownerKey = getOwnerKey();
@@ -545,7 +555,7 @@ function applyPlanFeatures() {
     return;
   }
 
-  if (!canUseProFeatures || canEdit) {
+  if (!canUseProFeatures || canEdit()) {
     shell.innerHTML = '';
     return;
   }
@@ -556,7 +566,7 @@ function applyPlanFeatures() {
       <div class="plan-panel">
         <div class="plan-row">
           <input id="pro-search" class="plan-search" type="search" placeholder="Buscar item no cardapio...">
-          <span class="plan-chip">${canEdit ? 'Painel do dono' : 'Painel inteligente'}</span>
+          <span class="plan-chip">${canEdit() ? 'Painel do dono' : 'Painel inteligente'}</span>
         </div>
         <div class="plan-row">
           <span class="plan-chip" id="pro-stat-total">0 itens</span>
@@ -633,12 +643,17 @@ function collectOwnerItems() {
   const unique = new Set(Object.keys(ITEMS).map((id) => canonicalItemId(id)));
   return Array.from(unique)
     .filter((id) => ITEMS[id])
-    .map((id) => ({
-      id,
-      name: ITEMS[id].name,
-      price: ITEMS[id].price,
-      section: resolveItemSection(id)
-    }))
+    .map((id) => {
+      const updated = customMenuState.updated?.[id] || {};
+      const added   = customMenuState.added?.find((a) => a.id === id) || {};
+      return {
+        id,
+        name:    updated.name    || added.name    || ITEMS[id].name,
+        price:   updated.price   !== undefined ? updated.price : (added.price || ITEMS[id].price),
+        desc:    updated.desc    || added.desc    || '',
+        section: updated.section || added.section || resolveItemSection(id)
+      };
+    })
     .sort((a, b) => a.name.localeCompare(b.name, 'pt-BR'));
 }
 
@@ -814,7 +829,7 @@ function ownerMainContent(items, filteredItems, isOpen, deliveryLabel) {
 }
 
 function renderOwnerDashboard() {
-  if (!canEdit) {
+  if (!canEdit()) {
     return;
   }
 
@@ -1133,7 +1148,7 @@ function normalizeSection(input) {
 }
 
 function openAddItemModal(preset = 'item') {
-  if (!canEdit) {
+  if (!canEdit()) {
     return;
   }
 
@@ -1173,42 +1188,43 @@ function openAddItemModal(preset = 'item') {
 }
 
 function openEditItemModal(itemId) {
-  if (!canEdit) {
-    return;
-  }
-
-  const ctrl = document.getElementById('ctrl-' + itemId);
-  const card = ctrl ? ctrl.closest('.card') : null;
-  if (!card) {
+  if (!canEdit()) {
     return;
   }
 
   editingItemId = itemId;
 
-  const sectionEl = card.closest('.sec');
-  const section = sectionEl ? sectionEl.id.replace('sec-', '') : 'pratos';
-  const name = (card.querySelector('.card-name')?.textContent || '').trim();
-  const desc = (card.querySelector('.card-desc')?.textContent || '').trim();
-  const priceText = (card.querySelector('.price')?.textContent || '').replace('R$', '').trim().replace('.', '').replace(',', '.');
+  // Resolve data from state (works even when menu sections are hidden in owner mode)
+  const key     = canonicalItemId(itemId);
+  const updated = customMenuState.updated?.[key] || {};
+  const added   = customMenuState.added?.find((a) => a.id === key) || {};
+  const base    = ITEMS[key] || ITEMS[itemId] || {};
+
+  const name    = updated.name    || added.name    || base.name    || '';
+  const price   = updated.price   !== undefined ? updated.price
+                  : (added.price  !== undefined ? added.price : (base.price || 0));
+  const desc    = updated.desc    || added.desc    || '';
+  const section = updated.section || added.section || resolveItemSection(itemId) || 'pratos';
 
   const sectionInput = document.getElementById('editor-section');
-  const nameInput = document.getElementById('editor-name');
-  const priceInput = document.getElementById('editor-price');
-  const descInput = document.getElementById('editor-desc');
-  const titleEl = document.getElementById('editor-modal-title');
-  const submitBtn = document.querySelector('.editor-btn-primary');
+  const nameInput    = document.getElementById('editor-name');
+  const priceInput   = document.getElementById('editor-price');
+  const descInput    = document.getElementById('editor-desc');
+  const titleEl      = document.getElementById('editor-modal-title');
+  const submitBtn    = document.querySelector('.editor-btn-primary');
 
   if (sectionInput) sectionInput.value = normalizeSection(section) || 'pratos';
-  if (nameInput) nameInput.value = name;
-  if (priceInput) priceInput.value = Number.isFinite(Number(priceText)) ? Number(priceText).toFixed(2) : '';
-  if (descInput) descInput.value = desc;
-  if (titleEl) titleEl.textContent = 'Editar item';
-  if (submitBtn) submitBtn.textContent = 'Salvar alteracoes';
+  if (nameInput)    nameInput.value    = name;
+  if (priceInput)   priceInput.value  = Number.isFinite(Number(price)) ? Number(price).toFixed(2) : '';
+  if (descInput)    descInput.value   = desc;
+  if (titleEl)      titleEl.textContent = 'Editar item';
+  if (submitBtn)    submitBtn.textContent = 'Salvar alterações';
 
   const modal = document.getElementById('editor-modal');
   if (modal) {
     modal.classList.add('open');
     modal.setAttribute('aria-hidden', 'false');
+    setTimeout(() => nameInput?.focus(), 50);
   }
 }
 
@@ -1387,7 +1403,7 @@ function removeMenuItem(id) {
 }
 
 function toggleRemoveMode() {
-  if (!canEdit) {
+  if (!canEdit()) {
     return;
   }
 
@@ -1401,7 +1417,7 @@ function toggleRemoveMode() {
 }
 
 function toggleEditMode() {
-  if (!canEdit) {
+  if (!canEdit()) {
     return;
   }
 
@@ -1658,11 +1674,11 @@ async function init() {
   applyCustomCatalogFromConfig();
   applySavedMenuCustomizations();
 
-  if (canEdit) {
+  if (canEdit()) {
     document.body.classList.add('editor-enabled');
 
     // Owner links should open the management dashboard, while customer links stay on public menu.
-    if (ownerModeEnabled) {
+    if (ownerModeEnabled()) {
       document.body.classList.add('owner-dashboard-enabled');
       renderOwnerDashboard();
     }
@@ -1679,6 +1695,24 @@ async function init() {
   window.__MENU_APP_READY__ = true;
 }
 
+function ownerSetView(view) {
+  ownerView = String(view || 'cardapio');
+  renderOwnerDashboard();
+}
+
+function ownerLogout() {
+  localStorage.removeItem('webcardapio:owner-token');
+  const u = new URL(window.location.href);
+  u.searchParams.delete('owner');
+  u.searchParams.delete('ownerKey');
+  window.location.replace(u.toString());
+}
+
+function ownerFilterSearch(term) {
+  ownerFilter = String(term || 'todos');
+  renderOwnerDashboard();
+}
+
 window.add = add;
 window.remove = remove;
 window.sendToWhatsApp = sendToWhatsApp;
@@ -1693,6 +1727,10 @@ window.openEditItemModal = openEditItemModal;
 window.closeAddItemModal = closeAddItemModal;
 window.submitAddItemModal = submitAddItemModal;
 window.removeMenuItem = removeMenuItem;
+window.renderOwnerDashboard = renderOwnerDashboard;
+window.ownerSetView = ownerSetView;
+window.ownerLogout = ownerLogout;
+window.ownerFilterSearch = ownerFilterSearch;
 
 window.__MENU_APP_READY__ = 'booting';
 init();

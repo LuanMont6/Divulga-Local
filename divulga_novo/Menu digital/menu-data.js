@@ -1,6 +1,6 @@
-const WA_NUMBER = '5582999004440';
+window.WA_NUMBER = '5582999004440';
 
-const ITEMS = {
+window.ITEMS = {
   'prato-dia':     { name: 'Prato do dia',          price: 28.90 },
   'prato-dia-2':   { name: 'Prato do dia',          price: 28.90 },
   'combo-familia': { name: 'Combo família',         price: 79.90 },
@@ -20,6 +20,3 @@ const ITEMS = {
   'isca':          { name: 'Isca de frango',        price: 28.00 },
   'tabua':         { name: 'Tábua de frios',        price: 58.00 }
 };
-
-window.WA_NUMBER = WA_NUMBER;
-window.ITEMS = ITEMS;

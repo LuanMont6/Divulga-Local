@@ -35,7 +35,7 @@
     <button class="nav-btn" data-sec="lanches">Lanches</button>
     <button class="nav-btn" data-sec="bebidas">Bebidas</button>
     <button class="nav-btn" data-sec="sobremesas">Sobremesas</button>
-    <button class="nav-btn" data-sec="porcoes">Porções</button>
+    <button class="nav-btn" data-sec="combos">Combos</button>
   </nav>
   <div id="plan-feature-shell"></div>
 </div>
@@ -327,11 +327,11 @@
     </div>
   </div>
 
-  <!-- PORÇÕES -->
-  <div id="sec-porcoes" class="sec">
+  <!-- Combos -->
+  <div id="sec-combos" class="sec">
     <div class="section">
       <div class="section-header">
-        <h2>Porções</h2>
+        <h2>Combos</h2>
         <p>Para compartilhar com a galera</p>
       </div>
 
@@ -404,7 +404,7 @@
         <option value="lanches">Lanches</option>
         <option value="bebidas">Bebidas</option>
         <option value="sobremesas">Sobremesas</option>
-        <option value="porcoes">Porcoes</option>
+        <option value="combos">Combos</option>
       </select>
     </div>
     <div class="editor-form-row">
@@ -550,6 +550,7 @@
 #owner-fab{position:fixed;bottom:90px;left:16px;width:42px;height:42px;border-radius:50%;background:#1a1f24;border:1.5px solid rgba(255,255,255,.15);color:rgba(255,255,255,.55);cursor:pointer;z-index:800;display:flex;align-items:center;justify-content:center;transition:border-color .2s,color .2s}
 #owner-fab:hover{border-color:#34A853;color:#34A853}
 #owner-fab.active{border-color:#34A853;color:#34A853;background:rgba(52,168,83,.12)}
+body.owner-dashboard-enabled #owner-fab{display:none!important}
 </style>
 
 <div id="owner-overlay">
@@ -702,8 +703,18 @@
       showToast('Painel do dono ativo');
       updateFabState();
       // if menu-app already loaded, force render dashboard
-      if(window.__MENU_APP_READY__===true && typeof window.__forceOwnerDashboard==='function'){
+      if(window.__MENU_APP_READY__===true){
         window.__forceOwnerDashboard();
+      } else {
+        // wait for app to finish booting
+        var tries = 0;
+        var check = setInterval(function(){
+          tries++;
+          if(window.__MENU_APP_READY__===true || tries > 50){
+            clearInterval(check);
+            if(window.__MENU_APP_READY__===true) window.__forceOwnerDashboard();
+          }
+        }, 100);
       }
       return;
     }
@@ -732,11 +743,11 @@
 
   // expose for menu-app callback
   window.__forceOwnerDashboard = function(){
-    if(typeof renderOwnerDashboard==='function') renderOwnerDashboard();
-  };
-
-  // ── CUSTOMER LIVE POLLING (not owner mode) ────────────────
-  if(new URLSearchParams(location.search).get('owner')!=='1' && SLUG){
+    document.body.classList.add('editor-enabled');
+    document.body.classList.add('owner-dashboard-enabled');
+    if(typeof window.renderOwnerDashboard==='function'){
+      window.renderOwnerDashboard();
+    }
     var _lastUpdated = null;
     setInterval(async function(){
       try{
