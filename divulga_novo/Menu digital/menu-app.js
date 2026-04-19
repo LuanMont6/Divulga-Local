@@ -303,6 +303,12 @@ function getPublicMenuUrl() {
   clean.searchParams.delete('owner');
   clean.searchParams.delete('editor');
   clean.searchParams.delete('ownerKey');
+  clean.searchParams.delete('api');
+  // Build a minimal public URL: only keep store, storeName, wa, tpl, plan, segmento
+  const keep = new Set(['store','storeName','wa','tpl','plan','segmento','cfg']);
+  Array.from(clean.searchParams.keys()).forEach(k => {
+    if (!keep.has(k)) clean.searchParams.delete(k);
+  });
   return clean.toString();
 }
 
