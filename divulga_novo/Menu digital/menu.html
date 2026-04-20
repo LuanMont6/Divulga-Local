@@ -569,12 +569,10 @@ body.owner-dashboard-enabled #owner-fab{display:none!important}
       </div>
       <div>
         <label class="ol-label">Senha</label>
-        <input id="ol-password" class="ol-input" type="password" placeholder="••••••••" autocomplete="current-password">
+        <input id="ol-password" class="ol-input" type="password" placeholder="Mínimo 6 caracteres" autocomplete="current-password">
       </div>
       <p id="ol-error" class="ol-err"></p>
       <button id="ol-login-btn" class="ol-btn">Entrar no painel</button>
-      <div class="ol-divider">conta não criada ainda?</div>
-      <button id="ol-register-btn" class="ol-btn" style="background:transparent;border:1px solid rgba(255,255,255,.15);color:#f5f7ff">Criar conta de dono</button>
       <button id="ol-logout-btn" class="ol-logout">Sair do painel</button>
     </div>
   </div>
@@ -598,7 +596,7 @@ body.owner-dashboard-enabled #owner-fab{display:none!important}
   var overlay   = document.getElementById('owner-overlay');
   var fab       = document.getElementById('owner-fab');
   var loginBtn  = document.getElementById('ol-login-btn');
-  var regBtn    = document.getElementById('ol-register-btn');
+  var regBtn    = null; // register disabled on menu page
   var logoutBtn = document.getElementById('ol-logout-btn');
   var errEl     = document.getElementById('ol-error');
 
@@ -640,9 +638,10 @@ body.owner-dashboard-enabled #owner-fab{display:none!important}
   });
 
   loginBtn.addEventListener('click', doLogin);
-  regBtn.addEventListener('click', doRegister);
+  if(regBtn) regBtn.addEventListener('click', doRegister);
   logoutBtn.addEventListener('click', function(){
     localStorage.removeItem('webcardapio:owner-token');
+    localStorage.removeItem('webcardapio:owner-slug');
     var u = new URL(location.href);
     u.searchParams.delete('owner');
     location.replace(u.toString());
@@ -652,6 +651,7 @@ body.owner-dashboard-enabled #owner-fab{display:none!important}
     var email    = document.getElementById('ol-email').value.trim();
     var password = document.getElementById('ol-password').value;
     if(!email||!password){ showErr('Preencha e-mail e senha.'); return; }
+    if(password.length < 6){ showErr('A senha deve ter no mínimo 6 caracteres.'); return; }
     setLoading(true);
     try{
       var r = await fetch(API+'/api/auth/login',{
@@ -661,6 +661,7 @@ body.owner-dashboard-enabled #owner-fab{display:none!important}
       var b = await r.json();
       if(!r.ok) throw new Error(b.error||'Erro ao entrar.');
       localStorage.setItem('webcardapio:owner-token', b.token);
+      localStorage.setItem('webcardapio:owner-slug', runtimeConfig.store || '');
       // store plan in runtimeConfig if available
       if(b.user && b.user.plan) localStorage.setItem('webcardapio:plan', b.user.plan);
       closeOverlay();
@@ -672,7 +673,8 @@ body.owner-dashboard-enabled #owner-fab{display:none!important}
   async function doRegister(){
     var email    = document.getElementById('ol-email').value.trim();
     var password = document.getElementById('ol-password').value;
-    if(!email||!password){ showErr('Preencha e-mail e senha (min 6 chars).'); return; }
+    if(!email||!password){ showErr('Preencha e-mail e senha (mínimo 6 caracteres).'); return; }
+    if(password.length < 6){ showErr('A senha deve ter no mínimo 6 caracteres.'); return; }
     setLoading(true,'Criando conta...');
     try{
       var r = await fetch(API+'/api/auth/register',{
@@ -727,7 +729,7 @@ body.owner-dashboard-enabled #owner-fab{display:none!important}
 
   function showErr(msg){ errEl.textContent=msg; errEl.style.display='block'; }
   function setLoading(on, label){
-    loginBtn.disabled=on; regBtn.disabled=on;
+    loginBtn.disabled=on; if(regBtn) regBtn.disabled=on;
     if(on) loginBtn.textContent=label||'Entrando...';
     else   loginBtn.textContent='Entrar no painel';
     errEl.style.display='none';

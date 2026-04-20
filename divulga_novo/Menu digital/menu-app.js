@@ -256,14 +256,12 @@ function isStoredOwnerSlug(slug) {
 
 const editorEnabled = (urlParams.get('editor') || '').trim() === '1';
 const ownerKeyEnabled = (urlParams.get('ownerKey') || '').trim().length > 0;
-// owner mode: URL param OR stored JWT token OR stored slug
+// owner mode: URL param ?owner=1 OR ownerKey — token in localStorage is only used for API calls
 const _storedToken = localStorage.getItem('webcardapio:owner-token');
-// ownerModeEnabled is a FUNCTION so it stays true after login without page reload
+const _storedOwnerSlug = localStorage.getItem('webcardapio:owner-slug') || '';
 function ownerModeEnabled() {
   return (urlParams.get('owner') || '').trim() === '1'
-    || ownerKeyEnabled
-    || isStoredOwnerSlug(runtimeConfig.store)
-    || Boolean(localStorage.getItem('webcardapio:owner-token') && runtimeConfig.store);
+    || ownerKeyEnabled;
 }
 // plan: URL param > JWT payload > default
 function _parsePlanFromToken(token) {
@@ -561,7 +559,7 @@ function applyPlanFeatures() {
     return;
   }
 
-  if (!canUseProFeatures || canEdit()) {
+  if (!canUseProFeatures || !canEdit()) {
     shell.innerHTML = '';
     return;
   }
