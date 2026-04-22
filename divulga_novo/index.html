@@ -711,7 +711,7 @@ function obFinish() {
     return;
   }
   if (!senha || senha.length < 1) {
-    alert('A senha deve ter no minimo 8 caracteres.');
+    alert('Preencha a senha.');
     return;
   }
   if (senha !== senha2) {
@@ -742,30 +742,58 @@ function obFinish() {
     markOwnerSlug(slug);
   }
 
-  try {
-    var accounts = JSON.parse(localStorage.getItem('webcardapio:accounts') || '{}');
-    accounts[slug] = {
-      email: email,
-      slug: slug,
-      plan: plano
-    };
-    localStorage.setItem('webcardapio:accounts', JSON.stringify(accounts));
-  } catch (e) {
-    console.warn('Nao foi possivel salvar conta', e);
-  }
-
   var cardapioUrl = buildCardapioUrl(slug, nome, wa, template, plano, tipo);
-  var linkEl = document.getElementById('ob-link-display');
-  linkEl.innerHTML = ''
-    + '<div style="margin-bottom:10px">'
-    + '<div style="font-size:11px;color:#7a7a7a;text-transform:uppercase;letter-spacing:.08em;margin-bottom:2px">Link do seu cardapio</div>'
-    + '<a href="' + cardapioUrl + '" target="_blank" rel="noopener noreferrer" style="color:#34A853;text-decoration:none;word-break:break-all">' + cardapioUrl + '</a>'
-    + '</div>';
 
-  obNext('sucesso');
-  var bar = document.getElementById('ob-bar');
-  if(bar) bar.style.width = '100%';
-  document.querySelectorAll('.ob-step').forEach(function(el){ el.classList.add('done'); });
+  // Register account on backend
+  var apiBase = (typeof window.API_BASE_URL === 'string' && window.API_BASE_URL)
+    ? window.API_BASE_URL
+    : (location.hostname === 'localhost' || location.hostname === '127.0.0.1')
+      ? 'http://localhost:3001'
+      : location.protocol + '//' + location.hostname + ':3001';
+
+  var btnFinish = document.querySelector('[onclick="obFinish()"]');
+  if (btnFinish) { btnFinish.disabled = true; btnFinish.textContent = 'Criando conta...'; }
+
+  fetch(apiBase + '/api/auth/register', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email: email, password: senha, plan: plano })
+  })
+  .then(function(r) { return r.json().then(function(b) { return { ok: r.ok, body: b }; }); })
+  .then(function(res) {
+    if (btnFinish) { btnFinish.disabled = false; btnFinish.textContent = 'Criar meu cardápio grátis →'; }
+    if (!res.ok && res.body.error !== 'Email já cadastrado.') {
+      alert('Erro ao criar conta: ' + (res.body.error || 'tente novamente.'));
+      return;
+    }
+    // Save token if returned
+    if (res.body.token) {
+      localStorage.setItem('webcardapio:owner-token', res.body.token);
+      localStorage.setItem('webcardapio:owner-slug', slug);
+    }
+    // Save local account info
+    try {
+      var accounts = JSON.parse(localStorage.getItem('webcardapio:accounts') || '{}');
+      accounts[slug] = { email: email, slug: slug, plan: plano };
+      localStorage.setItem('webcardapio:accounts', JSON.stringify(accounts));
+    } catch (e) {}
+
+    var linkEl = document.getElementById('ob-link-display');
+    linkEl.innerHTML = ''
+      + '<div style="margin-bottom:10px">'
+      + '<div style="font-size:11px;color:#7a7a7a;text-transform:uppercase;letter-spacing:.08em;margin-bottom:2px">Link do seu cardapio</div>'
+      + '<a href="' + cardapioUrl + '" target="_blank" rel="noopener noreferrer" style="color:#34A853;text-decoration:none;word-break:break-all">' + cardapioUrl + '</a>'
+      + '</div>';
+
+    obNext('sucesso');
+    var bar = document.getElementById('ob-bar');
+    if(bar) bar.style.width = '100%';
+    document.querySelectorAll('.ob-step').forEach(function(el){ el.classList.add('done'); });
+  })
+  .catch(function() {
+    if (btnFinish) { btnFinish.disabled = false; btnFinish.textContent = 'Criar meu cardápio grátis →'; }
+    alert('Não foi possível conectar ao servidor. Verifique sua conexão e tente novamente.');
+  });
 }
 </script>
 

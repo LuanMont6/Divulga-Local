@@ -10,6 +10,10 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="styles.css">
+<!-- API config: set window.API_BASE_URL to point to your production backend -->
+<script>
+  window.API_BASE_URL = 'https://divulga-local-production.up.railway.app';
+</script>
 </head>
 <body>
 
@@ -651,7 +655,6 @@ body.owner-dashboard-enabled #owner-fab{display:none!important}
     var email    = document.getElementById('ol-email').value.trim();
     var password = document.getElementById('ol-password').value;
     if(!email||!password){ showErr('Preencha e-mail e senha.'); return; }
-    if(password.length < 6){ showErr('A senha deve ter no mínimo 6 caracteres.'); return; }
     setLoading(true);
     try{
       var r = await fetch(API+'/api/auth/login',{
@@ -673,8 +676,7 @@ body.owner-dashboard-enabled #owner-fab{display:none!important}
   async function doRegister(){
     var email    = document.getElementById('ol-email').value.trim();
     var password = document.getElementById('ol-password').value;
-    if(!email||!password){ showErr('Preencha e-mail e senha (mínimo 6 caracteres).'); return; }
-    if(password.length < 6){ showErr('A senha deve ter no mínimo 6 caracteres.'); return; }
+    if(!email||!password){ showErr('Preencha e-mail e senha.'); return; }
     setLoading(true,'Criando conta...');
     try{
       var r = await fetch(API+'/api/auth/register',{

@@ -90,19 +90,19 @@ const validPwd  = v => typeof v === 'string' && v.length >= 6;
 
 const db = await initDb(DB_PATH);
 
-// â”€â”€ health â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── health ──────────────────────────────────────────────────
 app.get('/api/health', (_req, res) => res.json({ ok: true }));
 
-// â”€â”€ register â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── register ────────────────────────────────────────────────
 app.post('/api/auth/register', async (req, res) => {
   const email    = safeEmail(req.body?.email);
   const password = req.body?.password;
   const plan     = ['basico','pro','business'].includes(req.body?.plan) ? req.body.plan : 'basico';
 
   if (!email || !validPwd(password))
-    return res.status(400).json({ error: 'Email vÃ¡lido e senha com mÃ­nimo 6 caracteres.' });
+    return res.status(400).json({ error: 'Email válido e senha com mínimo 6 caracteres.' });
   if (await db.get('SELECT id FROM users WHERE email=?', email))
-    return res.status(409).json({ error: 'Email jÃ¡ cadastrado.' });
+    return res.status(409).json({ error: 'Email já cadastrado.' });
 
   const hash   = await bcrypt.hash(password, 10);
   const result = await db.run('INSERT INTO users (email,password_hash,plan) VALUES (?,?,?)', email, hash, plan);
@@ -110,21 +110,21 @@ app.post('/api/auth/register', async (req, res) => {
   return res.status(201).json({ token, user: { id: result.lastID, email, plan } });
 });
 
-// â”€â”€ login â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── login ────────────────────────────────────────────────────
 app.post('/api/auth/login', async (req, res) => {
   const email    = safeEmail(req.body?.email);
   const password = req.body?.password;
   const user     = await db.get('SELECT id,email,password_hash,plan FROM users WHERE email=?', email);
 
-  if (!user) return res.status(401).json({ error: 'Credenciais invÃ¡lidas.' });
+  if (!user) return res.status(401).json({ error: 'Credenciais inválidas.' });
   const ok = await bcrypt.compare(String(password || ''), user.password_hash);
-  if (!ok)  return res.status(401).json({ error: 'Credenciais invÃ¡lidas.' });
+  if (!ok)  return res.status(401).json({ error: 'Credenciais inválidas.' });
 
   const token = createToken(user.id, JWT_SECRET);
   return res.json({ token, user: { id: user.id, email: user.email, plan: user.plan } });
 });
 
-// â”€â”€ list my menus â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── list my menus ────────────────────────────────────────────
 app.get('/api/me/menus', authRequired(JWT_SECRET), async (req, res) => {
   const menus = await db.all(
     'SELECT slug,title,updated_at FROM menus WHERE owner_id=? ORDER BY updated_at DESC',
@@ -133,18 +133,18 @@ app.get('/api/me/menus', authRequired(JWT_SECRET), async (req, res) => {
   return res.json({ menus });
 });
 
-// â”€â”€ PUBLIC read menu (cliente vÃª o cardÃ¡pio) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── PUBLIC read menu (cliente vê o cardápio) ─────────────────
 app.get('/api/menu/:slug', async (req, res) => {
   const s    = toSlug(req.params.slug);
   const menu = await db.get('SELECT slug,title,data_json,updated_at FROM menus WHERE slug=?', s);
-  if (!menu) return res.status(404).json({ error: 'CardÃ¡pio nÃ£o encontrado.' });
+  if (!menu) return res.status(404).json({ error: 'Cardápio não encontrado.' });
   let data = {};
   try { data = JSON.parse(menu.data_json); } catch {}
   delete data._ownerKey;
   return res.json({ slug: menu.slug, title: menu.title, data, updatedAt: menu.updated_at });
 });
 
-// â”€â”€ AUTHENTICATED save/update (dono com JWT) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── AUTHENTICATED save/update (dono com JWT) ─────────────────
 app.put('/api/menu/:slug', authRequired(JWT_SECRET), async (req, res) => {
   const s     = toSlug(req.params.slug);
   const title = String(req.body?.title || '').trim();
@@ -163,7 +163,7 @@ app.put('/api/menu/:slug', authRequired(JWT_SECRET), async (req, res) => {
     return res.status(201).json({ slug: s, title, created: true });
   }
   if (existing.owner_id !== req.userId)
-    return res.status(403).json({ error: 'Sem permissÃ£o.' });
+    return res.status(403).json({ error: 'Sem permissão.' });
 
   await db.run(
     "UPDATE menus SET title=?,data_json=?,updated_at=datetime('now') WHERE slug=?",
@@ -172,7 +172,7 @@ app.put('/api/menu/:slug', authRequired(JWT_SECRET), async (req, res) => {
   return res.json({ slug: s, title, created: false });
 });
 
-// â”€â”€ PUBLIC ownerKey fallback â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── PUBLIC ownerKey fallback ─────────────────────────────────
 app.put('/api/public/menu/:slug', async (req, res) => {
   const s        = toSlug(req.params.slug);
   const title    = String(req.body?.title || '').trim();
@@ -195,7 +195,7 @@ app.put('/api/public/menu/:slug', async (req, res) => {
   let stored = {};
   try { stored = JSON.parse(existing.data_json); } catch {}
   if (stored._ownerKey && stored._ownerKey !== ownerKey)
-    return res.status(403).json({ error: 'ownerKey invÃ¡lido.' });
+    return res.status(403).json({ error: 'ownerKey inválido.' });
 
   await db.run(
     "UPDATE menus SET title=?,data_json=?,updated_at=datetime('now') WHERE slug=?",
@@ -295,6 +295,23 @@ const TEMPLATE_THEMES = {
     '--amber-bg': '#fff7dc',
     '--blue': '#1d5f9e',
     '--blue-bg': '#e8f3ff'
+  },
+  yellow: {
+    '--bg': '#fffde7',
+    '--surface': '#ffffff',
+    '--text': '#3e2800',
+    '--text-muted': '#7a5c00',
+    '--text-hint': '#b08f3a',
+    '--border': 'rgba(245,127,23,0.15)',
+    '--border-md': 'rgba(245,127,23,0.28)',
+    '--accent': '#f57f17',
+    '--accent-fg': '#ffffff',
+    '--green': '#2e7d32',
+    '--green-bg': '#e9f8ec',
+    '--amber': '#a86500',
+    '--amber-bg': '#fff2db',
+    '--blue': '#0e5fa3',
+    '--blue-bg': '#e7f2ff'
   }
 };
 
@@ -469,14 +486,12 @@ function isStoredOwnerSlug(slug) {
 
 const editorEnabled = (urlParams.get('editor') || '').trim() === '1';
 const ownerKeyEnabled = (urlParams.get('ownerKey') || '').trim().length > 0;
-// owner mode: URL param OR stored JWT token OR stored slug
+// owner mode: URL param ?owner=1 OR ownerKey — token in localStorage is only used for API calls
 const _storedToken = localStorage.getItem('webcardapio:owner-token');
-// ownerModeEnabled is a FUNCTION so it stays true after login without page reload
+const _storedOwnerSlug = localStorage.getItem('webcardapio:owner-slug') || '';
 function ownerModeEnabled() {
   return (urlParams.get('owner') || '').trim() === '1'
-    || ownerKeyEnabled
-    || isStoredOwnerSlug(runtimeConfig.store)
-    || Boolean(localStorage.getItem('webcardapio:owner-token') && runtimeConfig.store);
+    || ownerKeyEnabled;
 }
 // plan: URL param > JWT payload > default
 function _parsePlanFromToken(token) {
@@ -516,6 +531,12 @@ function getPublicMenuUrl() {
   clean.searchParams.delete('owner');
   clean.searchParams.delete('editor');
   clean.searchParams.delete('ownerKey');
+  clean.searchParams.delete('api');
+  // Build a minimal public URL: only keep store, storeName, wa, tpl, plan, segmento
+  const keep = new Set(['store','storeName','wa','tpl','plan','segmento','cfg']);
+  Array.from(clean.searchParams.keys()).forEach(k => {
+    if (!keep.has(k)) clean.searchParams.delete(k);
+  });
   return clean.toString();
 }
 
@@ -598,7 +619,7 @@ async function syncRemoteMenuData() {
 
   try {
     if (token) {
-      // JWT route â€” authenticated save
+      // JWT route — authenticated save
       await fetch(`${apiBase}/api/menu/${encodeURIComponent(slug)}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
@@ -613,7 +634,7 @@ async function syncRemoteMenuData() {
       });
     }
   } catch {
-    // offline â€” keep local state
+    // offline — keep local state
   }
 }
 
@@ -768,7 +789,7 @@ function applyPlanFeatures() {
     return;
   }
 
-  if (!canUseProFeatures || canEdit()) {
+  if (!canUseProFeatures || !canEdit()) {
     shell.innerHTML = '';
     return;
   }
@@ -803,7 +824,7 @@ function applyPlanFeatures() {
       unitSelect.addEventListener('change', () => {
         const unit = unitSelect.value;
         if (deliveryMode) {
-          deliveryMode.textContent = `${unit} Â· Entrega e retirada`;
+          deliveryMode.textContent = `${unit} · Entrega e retirada`;
         }
       });
     }
@@ -847,7 +868,8 @@ function sectionLabel(section) {
     lanches: 'Lanche',
     bebidas: 'Bebida',
     sobremesas: 'Sobremesa',
-    porcoes: 'Porcao'
+    porcoes: 'Porcao',
+    combos: 'Combo'
   };
   return labels[section] || 'Item';
 }
@@ -879,10 +901,10 @@ function formatWhatsForOwner() {
 function ownerMainContent(items, filteredItems, isOpen, deliveryLabel) {
   if (ownerView === 'templates') {
     const tpls = [
-      { id:'clean',  label:'Clean & moderno', desc:'Restaurante, cafÃ©',    bg:'#F7F5F0', accent:'#1a1a18' },
+      { id:'clean',  label:'Clean & moderno', desc:'Restaurante, café',    bg:'#F7F5F0', accent:'#1a1a18' },
       { id:'dark',   label:'Dark premium',    desc:'Bar, hamburgueria',    bg:'#1a1a18', accent:'#fff' },
       { id:'red',    label:'Vermelho & bold', desc:'Pizzaria, delivery',   bg:'#FFF0F0', accent:'#C0392B' },
-      { id:'green',  label:'Verde natural',   desc:'AÃ§aÃ­, saudÃ¡vel',      bg:'#F0FFF4', accent:'#1B5E20' },
+      { id:'green',  label:'Verde natural',   desc:'Açaí, saudável',      bg:'#F0FFF4', accent:'#1B5E20' },
       { id:'yellow', label:'Amarelo vibrante',desc:'Lanchonete',           bg:'#FFFDE7', accent:'#F57F17' },
     ];
     const cur = getConfiguredTemplate();
@@ -908,7 +930,7 @@ function ownerMainContent(items, filteredItems, isOpen, deliveryLabel) {
   if (ownerView === 'aparencia' && canUseProFeatures) {
     return `
       <div class="owner-top">
-        <h3 class="owner-title">AparÃªncia</h3>
+        <h3 class="owner-title">Aparência</h3>
         <div class="owner-actions">
           <button class="owner-btn" id="owner-save-brand">Salvar</button>
         </div>
@@ -923,15 +945,15 @@ function ownerMainContent(items, filteredItems, isOpen, deliveryLabel) {
   if (ownerView === 'relatorios' && canUseBusinessFeatures) {
     return `
       <div class="owner-top">
-        <h3 class="owner-title">RelatÃ³rios</h3>
+        <h3 class="owner-title">Relatórios</h3>
       </div>
       <div class="owner-stats-grid" style="grid-template-columns:repeat(2,1fr)">
         <div class="owner-stat-card"><p>Pedidos esta semana</p><strong>94</strong><span>+18% vs semana anterior</span></div>
-        <div class="owner-stat-card"><p>Ticket mÃ©dio</p><strong>R$ 47,30</strong><span>baseado nos Ãºltimos 30 dias</span></div>
+        <div class="owner-stat-card"><p>Ticket médio</p><strong>R$ 47,30</strong><span>baseado nos últimos 30 dias</span></div>
         <div class="owner-stat-card"><p>Item mais pedido</p><strong>X-tudo especial</strong><span>38% dos pedidos</span></div>
-        <div class="owner-stat-card"><p>HorÃ¡rio de pico</p><strong>12h â€“ 14h</strong><span>AlmoÃ§o responde por 61%</span></div>
+        <div class="owner-stat-card"><p>Horário de pico</p><strong>12h – 14h</strong><span>Almoço responde por 61%</span></div>
       </div>
-      <p style="font-size:.78rem;color:#aaa;margin-top:16px">Dados simulados â€” integraÃ§Ã£o com pedidos reais disponÃ­vel em breve.</p>`;
+      <p style="font-size:.78rem;color:#aaa;margin-top:16px">Dados simulados — integração com pedidos reais disponível em breve.</p>`;
   }
 
   if (ownerView === 'multi' && canUseBusinessFeatures) {
@@ -961,7 +983,7 @@ function ownerMainContent(items, filteredItems, isOpen, deliveryLabel) {
         <div class="owner-actions">
           <button class="owner-btn" id="owner-view-menu">Ver cardapio</button>
           <button class="owner-btn" id="owner-refresh">Atualizar</button>
-          <button class="owner-more" aria-label="Mais opcoes">â€¢â€¢â€¢</button>
+          <button class="owner-more" aria-label="Mais opcoes">•••</button>
         </div>
       </div>
       <div class="owner-stats-grid">
@@ -971,21 +993,21 @@ function ownerMainContent(items, filteredItems, isOpen, deliveryLabel) {
       </div>
       <p class="owner-section-title">Atividade recente</p>
       <div class="owner-activity-list">
-        <div class="owner-activity-item"><span class="dot-green"></span><span>Pedido via WhatsApp â€” 2x X-tudo + 1x Limonada</span><small>ha 4 min</small></div>
-        <div class="owner-activity-item"><span class="dot-green"></span><span>Pedido via WhatsApp â€” 1x Wrap + 2x Suco natural</span><small>ha 18 min</small></div>
-        <div class="owner-activity-item"><span class="dot-blue"></span><span>Acesso ao cardapio â€” usuario novo</span><small>ha 22 min</small></div>
-        <div class="owner-activity-item"><span class="dot-green"></span><span>Pedido via WhatsApp â€” 3x X-tudo especial</span><small>ha 31 min</small></div>
-        <div class="owner-activity-item"><span class="dot-blue"></span><span>Acesso ao cardapio â€” usuario recorrente</span><small>ha 45 min</small></div>
+        <div class="owner-activity-item"><span class="dot-green"></span><span>Pedido via WhatsApp — 2x X-tudo + 1x Limonada</span><small>ha 4 min</small></div>
+        <div class="owner-activity-item"><span class="dot-green"></span><span>Pedido via WhatsApp — 1x Wrap + 2x Suco natural</span><small>ha 18 min</small></div>
+        <div class="owner-activity-item"><span class="dot-blue"></span><span>Acesso ao cardapio — usuario novo</span><small>ha 22 min</small></div>
+        <div class="owner-activity-item"><span class="dot-green"></span><span>Pedido via WhatsApp — 3x X-tudo especial</span><small>ha 31 min</small></div>
+        <div class="owner-activity-item"><span class="dot-blue"></span><span>Acesso ao cardapio — usuario recorrente</span><small>ha 45 min</small></div>
       </div>
       <p class="owner-section-title">Exemplo de mensagem gerada automaticamente:</p>
-      <pre class="owner-message-box">Ola! Gostaria de fazer um pedido:\n\nâ€¢ 2x X-tudo especial â€” R$ 64,00\nâ€¢ 1x Limonada suica â€” R$ 16,00\n\n*Total: R$ 80,00*\n\nPode confirmar meu pedido? ðŸ˜Š</pre>`;
+      <pre class="owner-message-box">Ola! Gostaria de fazer um pedido:\n\n• 2x X-tudo especial — R$ 64,00\n• 1x Limonada suica — R$ 16,00\n\n*Total: R$ 80,00*\n\nPode confirmar meu pedido? 😊</pre>`;
   }
 
   if (ownerView === 'plano') {
     const plans = [
-      { id:'basico',   label:'BÃ¡sico',    price:'R$29', period:'/mÃªs', feats:['Link pÃºblico','BotÃ£o WhatsApp','1 template','AtÃ© 20 itens'] },
-      { id:'pro',      label:'Pro',       price:'R$59', period:'/mÃªs', feats:['Tudo do BÃ¡sico','Templates ilimitados','Itens ilimitados','Painel do dono','Busca e filtros','AparÃªncia (logo/capa)','Pedidos recentes'] },
-      { id:'business', label:'Business',  price:'R$99', period:'/mÃªs', feats:['Tudo do Pro','RelatÃ³rios avanÃ§ados','Multi-unidades','DomÃ­nio prÃ³prio','Ocultar "Feito com"','Suporte prioritÃ¡rio'] },
+      { id:'basico',   label:'Básico',    price:'R$29', period:'/mês', feats:['Link público','Botão WhatsApp','1 template','Até 20 itens'] },
+      { id:'pro',      label:'Pro',       price:'R$59', period:'/mês', feats:['Tudo do Básico','Templates ilimitados','Itens ilimitados','Painel do dono','Busca e filtros','Aparência (logo/capa)','Pedidos recentes'] },
+      { id:'business', label:'Business',  price:'R$99', period:'/mês', feats:['Tudo do Pro','Relatórios avançados','Multi-unidades','Domínio próprio','Ocultar "Feito com"','Suporte prioritário'] },
     ];
     return `
       <div class="owner-top">
@@ -993,16 +1015,16 @@ function ownerMainContent(items, filteredItems, isOpen, deliveryLabel) {
       </div>
       <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px">
         ${plans.map(p=>`
-          <div style="border-radius:12px;padding:16px;border:${p.id===currentPlan?'2px solid #34A853':'1px solid rgba(255,255,255,.1)'};background:${p.id===currentPlan?'rgba(52,168,83,.07)':'transparent'}">
+          <div style="border-radius:12px;padding:16px;border:${p.id===currentPlan?'2px solid #34A853':'1px solid var(--border-md)'};background:${p.id===currentPlan?'rgba(52,168,83,.07)':'var(--surface)'}">
             ${p.id===currentPlan?'<span style="font-size:10px;background:#34A853;color:#fff;padding:2px 8px;border-radius:8px;font-weight:700">ATUAL</span><br>':''}
-            <p style="font-size:.85rem;font-weight:700;color:#f5f7ff;margin:8px 0 2px">${p.label}</p>
-            <p style="font-size:1.3rem;font-weight:800;color:#f5f7ff">${p.price}<span style="font-size:.75rem;font-weight:400;color:rgba(255,255,255,.45)">${p.period}</span></p>
+            <p style="font-size:.85rem;font-weight:700;color:var(--text);margin:8px 0 2px">${p.label}</p>
+            <p style="font-size:1.3rem;font-weight:800;color:var(--text)">${p.price}<span style="font-size:.75rem;font-weight:400;color:var(--text-muted)">${p.period}</span></p>
             <div style="margin-top:10px;display:flex;flex-direction:column;gap:5px">
-              ${p.feats.map(f=>`<span style="font-size:.75rem;color:rgba(255,255,255,.65)">âœ“ ${f}</span>`).join('')}
+              ${p.feats.map(f=>`<span style="font-size:.75rem;color:var(--text-muted)">✓ ${f}</span>`).join('')}
             </div>
           </div>`).join('')}
       </div>
-      <p style="font-size:.75rem;color:rgba(255,255,255,.35);margin-top:14px;text-align:center">Para mudar de plano, entre em contato com o suporte.</p>`;
+      <p style="font-size:.75rem;color:var(--text-hint);margin-top:14px;text-align:center">Para mudar de plano, entre em contato com o suporte.</p>`;
   }
 
   return `
@@ -1024,6 +1046,7 @@ function ownerMainContent(items, filteredItems, isOpen, deliveryLabel) {
       <button class="owner-chip ${ownerFilter === 'lanches' ? 'active' : ''}" data-owner-filter="lanches">Lanches</button>
       <button class="owner-chip ${ownerFilter === 'bebidas' ? 'active' : ''}" data-owner-filter="bebidas">Bebidas</button>
       <button class="owner-chip ${ownerFilter === 'sobremesas' ? 'active' : ''}" data-owner-filter="sobremesas">Sobremesas</button>
+      <button class="owner-chip ${ownerFilter === 'combos' ? 'active' : ''}" data-owner-filter="combos">Combos</button>
     </div>
     <div class="owner-list">
       ${filteredItems.map((item) => `
@@ -1032,8 +1055,8 @@ function ownerMainContent(items, filteredItems, isOpen, deliveryLabel) {
           <span class="owner-row-tag">${sectionLabel(item.section)}</span>
           <span class="owner-row-price">${formatBRL(item.price)}</span>
           <div>
-            <button class="owner-icon-btn" data-owner-edit="${item.id}">âœŽ</button>
-            <button class="owner-icon-btn" data-owner-remove="${item.id}">Ã—</button>
+            <button class="owner-icon-btn" data-owner-edit="${item.id}">✎</button>
+            <button class="owner-icon-btn" data-owner-remove="${item.id}">×</button>
           </div>
         </div>
       `).join('')}
@@ -1065,11 +1088,11 @@ function renderOwnerDashboard() {
           <div class="owner-brand">Web Cardapio</div>
           <span class="owner-plan">Plano ${currentPlan} ativo</span>
           <div class="owner-nav">
-            <button class="owner-nav-item ${ownerView === 'cardapio' ? 'active' : ''}" data-owner-view="cardapio">Meu cardÃ¡pio</button>
+            <button class="owner-nav-item ${ownerView === 'cardapio' ? 'active' : ''}" data-owner-view="cardapio">Meu cardápio</button>
             <button class="owner-nav-item ${ownerView === 'templates' ? 'active' : ''}" data-owner-view="templates">Templates</button>
-            ${canUseProFeatures ? `<button class="owner-nav-item ${ownerView === 'aparencia' ? 'active' : ''}" data-owner-view="aparencia">AparÃªncia</button>` : ''}
+            ${canUseProFeatures ? `<button class="owner-nav-item ${ownerView === 'aparencia' ? 'active' : ''}" data-owner-view="aparencia">Aparência</button>` : ''}
             <button class="owner-nav-item ${ownerView === 'pedidos' ? 'active' : ''}" data-owner-view="pedidos">Pedidos recentes</button>
-            ${canUseBusinessFeatures ? `<button class="owner-nav-item ${ownerView === 'relatorios' ? 'active' : ''}" data-owner-view="relatorios">RelatÃ³rios</button>` : ''}
+            ${canUseBusinessFeatures ? `<button class="owner-nav-item ${ownerView === 'relatorios' ? 'active' : ''}" data-owner-view="relatorios">Relatórios</button>` : ''}
             ${canUseBusinessFeatures ? `<button class="owner-nav-item ${ownerView === 'multi' ? 'active' : ''}" data-owner-view="multi">Multi-unidades</button>` : ''}
             <button class="owner-nav-item ${ownerView === 'plano' ? 'active' : ''}" data-owner-view="plano">Plano</button>
           </div>
@@ -1097,6 +1120,10 @@ function renderOwnerDashboard() {
       const tplId = card.getAttribute('data-tpl-id');
       runtimeConfig.tpl = tplId;
       applyTemplateTheme(tplId);
+      // update URL so public link reflects the new template
+      const u = new URL(location.href);
+      u.searchParams.set('tpl', tplId);
+      history.replaceState(null, '', u.toString());
       saveCustomMenuState();
       renderOwnerDashboard();
     });
@@ -1176,10 +1203,21 @@ function renderOwnerDashboard() {
 
 function applySectionLabels(segment) {
   const labels = SECTION_LABELS_BY_SEGMENT[segment] || SECTION_LABELS_BY_SEGMENT.restaurante;
+  // collect all renamed labels to detect duplicates with existing nav buttons
+  const renamedLabels = new Set(Object.values(labels).map(l => l.toLowerCase()));
   Object.entries(labels).forEach(([sec, label]) => {
     const navBtn = document.querySelector(`.nav-btn[data-sec="${sec}"]`);
     if (navBtn) {
       navBtn.textContent = label;
+    }
+  });
+  // hide nav buttons whose label would duplicate a renamed section
+  document.querySelectorAll('.nav-btn').forEach(btn => {
+    const sec = btn.getAttribute('data-sec');
+    if (!labels[sec] && renamedLabels.has(btn.textContent.trim().toLowerCase())) {
+      btn.style.display = 'none';
+    } else {
+      btn.style.display = '';
     }
   });
 }
@@ -1353,7 +1391,7 @@ function decorateDefaultCardsForRemove() {
 
 function normalizeSection(input) {
   const value = (input || '').toLowerCase().trim();
-  const accepted = ['destaques', 'pratos', 'lanches', 'bebidas', 'sobremesas', 'porcoes'];
+  const accepted = ['destaques', 'pratos', 'lanches', 'bebidas', 'sobremesas', 'porcoes', 'combos'];
   if (accepted.includes(value)) {
     return value;
   }
@@ -1431,7 +1469,7 @@ function openEditItemModal(itemId) {
   if (priceInput)   priceInput.value  = Number.isFinite(Number(price)) ? Number(price).toFixed(2) : '';
   if (descInput)    descInput.value   = desc;
   if (titleEl)      titleEl.textContent = 'Editar item';
-  if (submitBtn)    submitBtn.textContent = 'Salvar alteraÃ§Ãµes';
+  if (submitBtn)    submitBtn.textContent = 'Salvar alterações';
 
   const modal = document.getElementById('editor-modal');
   if (modal) {
@@ -1720,7 +1758,7 @@ function renderCtrl(id) {
 
   el.innerHTML = `
     <div class="qty-ctrl">
-      <button onclick="remove('${id}')">âˆ’</button>
+      <button onclick="remove('${id}')">−</button>
       <span>${qty}</span>
       <button onclick="add('${id}')">+</button>
     </div>`;
@@ -1804,7 +1842,7 @@ function loadCart() {
 
 function sendToWhatsApp() {
   const entries = Object.entries(cart).filter(([id, qty]) => qty > 0 && ITEMS[id]);
-  let msg = 'OlÃ¡! Gostaria de fazer um pedido:\n\n';
+  let msg = 'Olá! Gostaria de fazer um pedido:\n\n';
 
   if (entries.length > 0) {
     let total = 0;
@@ -1813,13 +1851,13 @@ function sendToWhatsApp() {
       const item = ITEMS[id];
       const subtotal = item.price * qty;
       total += subtotal;
-      msg += `â€¢ ${qty}x ${item.name} â€” R$ ${subtotal.toFixed(2).replace('.', ',')}\n`;
+      msg += `• ${qty}x ${item.name} — R$ ${subtotal.toFixed(2).replace('.', ',')}\n`;
     });
 
     msg += `\n*Total: R$ ${total.toFixed(2).replace('.', ',')}*`;
-    msg += '\n\nPode confirmar meu pedido? ðŸ˜Š';
+    msg += '\n\nPode confirmar meu pedido? 😊';
   } else {
-    msg += 'Quero ver o cardÃ¡pio completo e fazer um pedido.';
+    msg += 'Quero ver o cardápio completo e fazer um pedido.';
   }
 
   window.open('https://wa.me/' + configuredWaNumber + '?text=' + encodeURIComponent(msg), '_blank');
@@ -1908,6 +1946,24 @@ async function init() {
   window.__MENU_APP_READY__ = true;
 }
 
+function ownerSetView(view) {
+  ownerView = String(view || 'cardapio');
+  renderOwnerDashboard();
+}
+
+function ownerLogout() {
+  localStorage.removeItem('webcardapio:owner-token');
+  const u = new URL(window.location.href);
+  u.searchParams.delete('owner');
+  u.searchParams.delete('ownerKey');
+  window.location.replace(u.toString());
+}
+
+function ownerFilterSearch(term) {
+  ownerFilter = String(term || 'todos');
+  renderOwnerDashboard();
+}
+
 window.add = add;
 window.remove = remove;
 window.sendToWhatsApp = sendToWhatsApp;
@@ -1933,31 +1989,28 @@ init();
 
 
 === C:\Users\USER\OneDrive\Divulga_local\divulga_novo\Menu digital\menu-data.js ===
-const WA_NUMBER = '5582999004440';
+window.WA_NUMBER = '5582999004440';
 
-const ITEMS = {
+window.ITEMS = {
   'prato-dia':     { name: 'Prato do dia',          price: 28.90 },
   'prato-dia-2':   { name: 'Prato do dia',          price: 28.90 },
-  'combo-familia': { name: 'Combo famÃ­lia',         price: 79.90 },
+  'combo-familia': { name: 'Combo família',         price: 79.90 },
   'x-tudo-dest':   { name: 'X-tudo especial',       price: 32.00 },
-  'file-madeira':  { name: 'FilÃ© ao molho madeira', price: 52.00 },
-  'moqueca':       { name: 'Moqueca de camarÃ£o',    price: 68.00 },
+  'file-madeira':  { name: 'Filé ao molho madeira', price: 52.00 },
+  'moqueca':       { name: 'Moqueca de camarão',    price: 68.00 },
   'risoto':        { name: 'Risoto de funghi',      price: 44.00 },
   'x-tudo':        { name: 'X-tudo especial',       price: 32.00 },
   'wrap':          { name: 'Wrap frango crispy',    price: 26.00 },
   'combo-duplo':   { name: 'Combo duplo',           price: 46.00 },
   'suco':          { name: 'Suco natural 500ml',    price: 12.00 },
   'cerveja':       { name: 'Cerveja artesanal',     price: 18.00 },
-  'limonada':      { name: 'Limonada suÃ­Ã§a',        price: 16.00 },
-  'petit':         { name: 'Petit gÃ¢teau',          price: 22.00 },
+  'limonada':      { name: 'Limonada suíça',        price: 16.00 },
+  'petit':         { name: 'Petit gâteau',          price: 22.00 },
   'brownie':       { name: 'Brownie com sorvete',   price: 19.00 },
   'batata':        { name: 'Batata frita crocante', price: 34.00 },
   'isca':          { name: 'Isca de frango',        price: 28.00 },
-  'tabua':         { name: 'TÃ¡bua de frios',        price: 58.00 }
+  'tabua':         { name: 'Tábua de frios',        price: 58.00 }
 };
-
-window.WA_NUMBER = WA_NUMBER;
-window.ITEMS = ITEMS;
 
 
 
@@ -1967,7 +2020,7 @@ window.ITEMS = ITEMS;
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Web CardÃ¡pio</title>
+<title>Web Cardápio</title>
 <meta name="theme-color" content="#0f111a">
 <link rel="icon" type="image/svg+xml" href="../favicon.svg">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -1985,8 +2038,8 @@ window.ITEMS = ITEMS;
       </svg>
     </div>
     <div class="hero-info">
-      <h1>Web CardÃ¡pio</h1>
-      <p>PeÃ§a com facilidade direto pelo WhatsApp</p>
+      <h1>Web Cardápio</h1>
+      <p>Peça com facilidade direto pelo WhatsApp</p>
     </div>
   </div>
   <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
@@ -1999,7 +2052,7 @@ window.ITEMS = ITEMS;
     <button class="nav-btn" data-sec="lanches">Lanches</button>
     <button class="nav-btn" data-sec="bebidas">Bebidas</button>
     <button class="nav-btn" data-sec="sobremesas">Sobremesas</button>
-    <button class="nav-btn" data-sec="porcoes">PorÃ§Ãµes</button>
+    <button class="nav-btn" data-sec="combos">Combos</button>
   </nav>
   <div id="plan-feature-shell"></div>
 </div>
@@ -2034,7 +2087,7 @@ window.ITEMS = ITEMS;
         <div class="card-body">
           <p class="card-name">Prato do dia</p>
           <div class="card-tags"><span class="tag tag-dest">Chef indica</span></div>
-          <p class="card-desc">Frango grelhado, arroz, feijÃ£o, salada e farofa. Acompanha suco da fruta do dia.</p>
+          <p class="card-desc">Frango grelhado, arroz, feijão, salada e farofa. Acompanha suco da fruta do dia.</p>
           <div class="card-bottom">
             <div><span class="price-old">R$ 34,00</span><span class="price">R$ 28,90</span></div>
             <div id="ctrl-prato-dia"></div>
@@ -2047,7 +2100,7 @@ window.ITEMS = ITEMS;
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2"><rect x="3" y="11" width="18" height="8" rx="2"/><path d="M7 11V8a5 5 0 0 1 10 0v3"/></svg>
         </div>
         <div class="card-body">
-          <p class="card-name">Combo famÃ­lia</p>
+          <p class="card-name">Combo família</p>
           <div class="card-tags"><span class="tag tag-novo">Novo</span></div>
           <p class="card-desc">2 pratos + 2 bebidas + sobremesa. Ideal para dividir, serve 4 pessoas.</p>
           <div class="card-bottom">
@@ -2064,7 +2117,7 @@ window.ITEMS = ITEMS;
         <div class="card-body">
           <p class="card-name">X-tudo especial</p>
           <div class="card-tags"><span class="tag tag-dest">Mais pedido</span></div>
-          <p class="card-desc">HambÃºrguer 180g, queijo, bacon, alface, tomate e molho da casa.</p>
+          <p class="card-desc">Hambúrguer 180g, queijo, bacon, alface, tomate e molho da casa.</p>
           <div class="card-bottom">
             <span class="price">R$ 32,00</span>
             <div id="ctrl-x-tudo-dest"></div>
@@ -2087,9 +2140,9 @@ window.ITEMS = ITEMS;
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2"><path d="M4 19h16M4 15h16M8 15V5m4 10V8m4 7V3"/></svg>
         </div>
         <div class="card-body">
-          <p class="card-name">FilÃ© ao molho madeira</p>
+          <p class="card-name">Filé ao molho madeira</p>
           <div class="card-tags"><span class="tag tag-dest">Chef indica</span></div>
-          <p class="card-desc">FilÃ© mignon, molho madeira artesanal, arroz branco e batata sautÃ©.</p>
+          <p class="card-desc">Filé mignon, molho madeira artesanal, arroz branco e batata sauté.</p>
           <div class="card-bottom">
             <span class="price">R$ 52,00</span>
             <div id="ctrl-file-madeira"></div>
@@ -2102,9 +2155,9 @@ window.ITEMS = ITEMS;
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2"><circle cx="12" cy="12" r="9"/><path d="M9 12c0-1.657 1.343-3 3-3s3 1.343 3 3-1.343 3-3 3"/></svg>
         </div>
         <div class="card-body">
-          <p class="card-name">Moqueca de camarÃ£o</p>
+          <p class="card-name">Moqueca de camarão</p>
           <div class="card-tags"><span class="tag tag-veg">Frutos do mar</span></div>
-          <p class="card-desc">CamarÃ£o fresco, leite de coco, pimentÃµes coloridos e coentro. Serve 2 pessoas.</p>
+          <p class="card-desc">Camarão fresco, leite de coco, pimentões coloridos e coentro. Serve 2 pessoas.</p>
           <div class="card-bottom">
             <span class="price">R$ 68,00</span>
             <div id="ctrl-moqueca"></div>
@@ -2119,7 +2172,7 @@ window.ITEMS = ITEMS;
         <div class="card-body">
           <p class="card-name">Risoto de funghi</p>
           <div class="card-tags"><span class="tag tag-veg">Vegetariano</span></div>
-          <p class="card-desc">Arroz arbÃ³reo, cogumelos frescos variados, parmesÃ£o e manjericÃ£o.</p>
+          <p class="card-desc">Arroz arbóreo, cogumelos frescos variados, parmesão e manjericão.</p>
           <div class="card-bottom">
             <span class="price">R$ 44,00</span>
             <div id="ctrl-risoto"></div>
@@ -2134,7 +2187,7 @@ window.ITEMS = ITEMS;
         <div class="card-body">
           <p class="card-name">Prato do dia</p>
           <div class="card-tags"><span class="tag tag-dest">Chef indica</span></div>
-          <p class="card-desc">Frango grelhado, arroz, feijÃ£o, salada e farofa. Acompanha suco da fruta do dia.</p>
+          <p class="card-desc">Frango grelhado, arroz, feijão, salada e farofa. Acompanha suco da fruta do dia.</p>
           <div class="card-bottom">
             <div><span class="price-old">R$ 34,00</span><span class="price">R$ 28,90</span></div>
             <div id="ctrl-prato-dia-2"></div>
@@ -2149,7 +2202,7 @@ window.ITEMS = ITEMS;
     <div class="section">
       <div class="section-header">
         <h2>Lanches</h2>
-        <p>Artesanais, pÃ£o fresquinho todos os dias</p>
+        <p>Artesanais, pão fresquinho todos os dias</p>
       </div>
 
       <div class="card">
@@ -2159,7 +2212,7 @@ window.ITEMS = ITEMS;
         <div class="card-body">
           <p class="card-name">X-tudo especial</p>
           <div class="card-tags"><span class="tag tag-dest">Mais pedido</span></div>
-          <p class="card-desc">HambÃºrguer 180g, queijo cheddar, bacon crocante, alface, tomate e molho da casa.</p>
+          <p class="card-desc">Hambúrguer 180g, queijo cheddar, bacon crocante, alface, tomate e molho da casa.</p>
           <div class="card-bottom">
             <span class="price">R$ 32,00</span>
             <div id="ctrl-x-tudo"></div>
@@ -2174,7 +2227,7 @@ window.ITEMS = ITEMS;
         <div class="card-body">
           <p class="card-name">Wrap frango crispy</p>
           <div class="card-tags"><span class="tag tag-novo">Novo</span></div>
-          <p class="card-desc">Frango empanado artesanal, cream cheese, rÃºcula fresca e tomate seco.</p>
+          <p class="card-desc">Frango empanado artesanal, cream cheese, rúcula fresca e tomate seco.</p>
           <div class="card-bottom">
             <span class="price">R$ 26,00</span>
             <div id="ctrl-wrap"></div>
@@ -2188,7 +2241,7 @@ window.ITEMS = ITEMS;
         </div>
         <div class="card-body">
           <p class="card-name">Combo duplo</p>
-          <p class="card-desc">2 hambÃºrgueres 120g + batata pequena + 2 refrigerantes. Para dividir.</p>
+          <p class="card-desc">2 hambúrgueres 120g + batata pequena + 2 refrigerantes. Para dividir.</p>
           <div class="card-bottom">
             <div><span class="price-old">R$ 56,00</span><span class="price">R$ 46,00</span></div>
             <div id="ctrl-combo-duplo"></div>
@@ -2213,7 +2266,7 @@ window.ITEMS = ITEMS;
         <div class="card-body">
           <p class="card-name">Suco natural 500ml</p>
           <div class="card-tags"><span class="tag tag-veg">Natural</span></div>
-          <p class="card-desc">Laranja, maracujÃ¡, acerola ou limÃ£o. Feito na hora, sem adiÃ§Ã£o de aÃ§Ãºcar.</p>
+          <p class="card-desc">Laranja, maracujá, acerola ou limão. Feito na hora, sem adição de açúcar.</p>
           <div class="card-bottom">
             <span class="price">R$ 12,00</span>
             <div id="ctrl-suco"></div>
@@ -2240,9 +2293,9 @@ window.ITEMS = ITEMS;
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2"><path d="M12 3v2m0 14v2M5.636 5.636l1.414 1.414m10.314 10.314 1.414 1.414M3 12h2m14 0h2"/><circle cx="12" cy="12" r="4"/></svg>
         </div>
         <div class="card-body">
-          <p class="card-name">Limonada suÃ­Ã§a</p>
+          <p class="card-name">Limonada suíça</p>
           <div class="card-tags"><span class="tag tag-dest">Favorita</span></div>
-          <p class="card-desc">LimÃ£o, leite condensado, creme de leite e gelo. 500ml.</p>
+          <p class="card-desc">Limão, leite condensado, creme de leite e gelo. 500ml.</p>
           <div class="card-bottom">
             <span class="price">R$ 16,00</span>
             <div id="ctrl-limonada"></div>
@@ -2257,7 +2310,7 @@ window.ITEMS = ITEMS;
     <div class="section">
       <div class="section-header">
         <h2>Sobremesas</h2>
-        <p>O fim perfeito pra qualquer refeiÃ§Ã£o</p>
+        <p>O fim perfeito pra qualquer refeição</p>
       </div>
 
       <div class="card">
@@ -2265,7 +2318,7 @@ window.ITEMS = ITEMS;
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2"><path d="M12 2l2 7h7l-5.5 4 2 7L12 16l-5.5 4 2-7L3 9h7z"/></svg>
         </div>
         <div class="card-body">
-          <p class="card-name">Petit gÃ¢teau</p>
+          <p class="card-name">Petit gâteau</p>
           <div class="card-tags"><span class="tag tag-dest">Destaque</span></div>
           <p class="card-desc">Bolinho de chocolate com recheio quente, sorvete de creme e calda de morango.</p>
           <div class="card-bottom">
@@ -2281,7 +2334,7 @@ window.ITEMS = ITEMS;
         </div>
         <div class="card-body">
           <p class="card-name">Brownie com sorvete</p>
-          <p class="card-desc">Brownie quentinho de chocolate belga com 2 bolas de sorvete Ã  escolha.</p>
+          <p class="card-desc">Brownie quentinho de chocolate belga com 2 bolas de sorvete à escolha.</p>
           <div class="card-bottom">
             <span class="price">R$ 19,00</span>
             <div id="ctrl-brownie"></div>
@@ -2291,11 +2344,11 @@ window.ITEMS = ITEMS;
     </div>
   </div>
 
-  <!-- PORÃ‡Ã•ES -->
-  <div id="sec-porcoes" class="sec">
+  <!-- Combos -->
+  <div id="sec-combos" class="sec">
     <div class="section">
       <div class="section-header">
-        <h2>PorÃ§Ãµes</h2>
+        <h2>Combos</h2>
         <p>Para compartilhar com a galera</p>
       </div>
 
@@ -2306,7 +2359,7 @@ window.ITEMS = ITEMS;
         <div class="card-body">
           <p class="card-name">Batata frita crocante</p>
           <div class="card-tags"><span class="tag tag-dest">Popular</span></div>
-          <p class="card-desc">400g de batata palito frita com cheddar e bacon. Serve atÃ© 3 pessoas.</p>
+          <p class="card-desc">400g de batata palito frita com cheddar e bacon. Serve até 3 pessoas.</p>
           <div class="card-bottom">
             <span class="price">R$ 34,00</span>
             <div id="ctrl-batata"></div>
@@ -2333,7 +2386,7 @@ window.ITEMS = ITEMS;
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2"><path d="M12 3C8 3 5 7 5 12h14c0-5-3-9-7-9z"/><rect x="3" y="12" width="18" height="3" rx="1"/></svg>
         </div>
         <div class="card-body">
-          <p class="card-name">TÃ¡bua de frios</p>
+          <p class="card-name">Tábua de frios</p>
           <div class="card-tags"><span class="tag tag-novo">Novo</span></div>
           <p class="card-desc">Queijos, presunto, salame, torradas e azeitonas. Para 4 pessoas.</p>
           <div class="card-bottom">
@@ -2353,7 +2406,7 @@ window.ITEMS = ITEMS;
     Fazer pedido pelo WhatsApp
   </button>
 
-  <p class="powered" id="powered-by">Feito com <a href="#">Web CardÃ¡pio</a> â€” seu cardÃ¡pio digital</p>
+  <p class="powered" id="powered-by">Feito com <a href="#">Web Cardápio</a> — seu cardápio digital</p>
 
 </div>
 
@@ -2368,7 +2421,7 @@ window.ITEMS = ITEMS;
         <option value="lanches">Lanches</option>
         <option value="bebidas">Bebidas</option>
         <option value="sobremesas">Sobremesas</option>
-        <option value="porcoes">Porcoes</option>
+        <option value="combos">Combos</option>
       </select>
     </div>
     <div class="editor-form-row">
@@ -2428,7 +2481,7 @@ window.ITEMS = ITEMS;
           host.innerHTML = '<button class="btn-add" onclick="add(\'' + id + '\')">+</button>';
           return;
         }
-        host.innerHTML = '<div class="qty-ctrl"><button onclick="remove(\'' + id + '\')">âˆ’</button><span>' + qty + '</span><button onclick="add(\'' + id + '\')">+</button></div>';
+        host.innerHTML = '<div class="qty-ctrl"><button onclick="remove(\'' + id + '\')">−</button><span>' + qty + '</span><button onclick="add(\'' + id + '\')">+</button></div>';
       }
 
       function rerenderAll() {
@@ -2461,7 +2514,7 @@ window.ITEMS = ITEMS;
             const qty = entry[1];
             const subtotal = (items[id].price || 0) * qty;
             total += subtotal;
-            msg += 'â€¢ ' + qty + 'x ' + items[id].name + ' - R$ ' + subtotal.toFixed(2).replace('.', ',') + '\n';
+            msg += '• ' + qty + 'x ' + items[id].name + ' - R$ ' + subtotal.toFixed(2).replace('.', ',') + '\n';
           });
           msg += '\n*Total: R$ ' + total.toFixed(2).replace('.', ',') + '*';
         }
@@ -2492,9 +2545,9 @@ window.ITEMS = ITEMS;
   })();
 </script>
 
-<!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-     PAINEL DO DONO â€” login overlay + FAB + lÃ³gica JWT
-â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
+<!-- ══════════════════════════════════════════════════════════
+     PAINEL DO DONO — login overlay + FAB + lógica JWT
+══════════════════════════════════════════════════════════ -->
 <style>
 #owner-overlay{position:fixed;inset:0;background:rgba(0,0,0,.78);z-index:9100;display:none;align-items:center;justify-content:center;padding:20px}
 #owner-overlay.open{display:flex}
@@ -2524,7 +2577,7 @@ body.owner-dashboard-enabled #owner-fab{display:none!important}
         <p class="ol-title">Painel do dono</p>
         <p class="ol-sub">Acesso exclusivo</p>
       </div>
-      <button class="ol-close" id="ol-close-btn">Ã—</button>
+      <button class="ol-close" id="ol-close-btn">×</button>
     </div>
     <div style="display:flex;flex-direction:column;gap:12px">
       <div>
@@ -2533,12 +2586,10 @@ body.owner-dashboard-enabled #owner-fab{display:none!important}
       </div>
       <div>
         <label class="ol-label">Senha</label>
-        <input id="ol-password" class="ol-input" type="password" placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢" autocomplete="current-password">
+        <input id="ol-password" class="ol-input" type="password" placeholder="Mínimo 6 caracteres" autocomplete="current-password">
       </div>
       <p id="ol-error" class="ol-err"></p>
       <button id="ol-login-btn" class="ol-btn">Entrar no painel</button>
-      <div class="ol-divider">conta nÃ£o criada ainda?</div>
-      <button id="ol-register-btn" class="ol-btn" style="background:transparent;border:1px solid rgba(255,255,255,.15);color:#f5f7ff">Criar conta de dono</button>
       <button id="ol-logout-btn" class="ol-logout">Sair do painel</button>
     </div>
   </div>
@@ -2562,7 +2613,7 @@ body.owner-dashboard-enabled #owner-fab{display:none!important}
   var overlay   = document.getElementById('owner-overlay');
   var fab       = document.getElementById('owner-fab');
   var loginBtn  = document.getElementById('ol-login-btn');
-  var regBtn    = document.getElementById('ol-register-btn');
+  var regBtn    = null; // register disabled on menu page
   var logoutBtn = document.getElementById('ol-logout-btn');
   var errEl     = document.getElementById('ol-error');
 
@@ -2585,11 +2636,11 @@ body.owner-dashboard-enabled #owner-fab{display:none!important}
   fab.addEventListener('click', function(){
     var token = getToken();
     if(token && new URLSearchParams(location.search).get('owner')==='1'){
-      // already in owner mode â€” show overlay to logout
+      // already in owner mode — show overlay to logout
       openOverlay(); return;
     }
     if(token){
-      // has token but not in owner mode â€” activate
+      // has token but not in owner mode — activate
       activateOwner(); return;
     }
     openOverlay();
@@ -2604,9 +2655,10 @@ body.owner-dashboard-enabled #owner-fab{display:none!important}
   });
 
   loginBtn.addEventListener('click', doLogin);
-  regBtn.addEventListener('click', doRegister);
+  if(regBtn) regBtn.addEventListener('click', doRegister);
   logoutBtn.addEventListener('click', function(){
     localStorage.removeItem('webcardapio:owner-token');
+    localStorage.removeItem('webcardapio:owner-slug');
     var u = new URL(location.href);
     u.searchParams.delete('owner');
     location.replace(u.toString());
@@ -2625,6 +2677,7 @@ body.owner-dashboard-enabled #owner-fab{display:none!important}
       var b = await r.json();
       if(!r.ok) throw new Error(b.error||'Erro ao entrar.');
       localStorage.setItem('webcardapio:owner-token', b.token);
+      localStorage.setItem('webcardapio:owner-slug', runtimeConfig.store || '');
       // store plan in runtimeConfig if available
       if(b.user && b.user.plan) localStorage.setItem('webcardapio:plan', b.user.plan);
       closeOverlay();
@@ -2636,7 +2689,7 @@ body.owner-dashboard-enabled #owner-fab{display:none!important}
   async function doRegister(){
     var email    = document.getElementById('ol-email').value.trim();
     var password = document.getElementById('ol-password').value;
-    if(!email||!password){ showErr('Preencha e-mail e senha (min 6 chars).'); return; }
+    if(!email||!password){ showErr('Preencha e-mail e senha.'); return; }
     setLoading(true,'Criando conta...');
     try{
       var r = await fetch(API+'/api/auth/register',{
@@ -2644,13 +2697,13 @@ body.owner-dashboard-enabled #owner-fab{display:none!important}
         body: JSON.stringify({email, password, plan:'pro'})
       });
       var b = await r.json();
-      if(r.status===409){ // already exists â€” try login
+      if(r.status===409){ // already exists — try login
         var r2 = await fetch(API+'/api/auth/login',{
           method:'POST', headers:{'Content-Type':'application/json'},
           body: JSON.stringify({email,password})
         });
         var b2 = await r2.json();
-        if(!r2.ok) throw new Error('Email jÃ¡ cadastrado com outra senha.');
+        if(!r2.ok) throw new Error('Email já cadastrado com outra senha.');
         b = b2;
       } else if(!r.ok) throw new Error(b.error||'Erro ao criar conta.');
       localStorage.setItem('webcardapio:owner-token', b.token);
@@ -2691,7 +2744,7 @@ body.owner-dashboard-enabled #owner-fab{display:none!important}
 
   function showErr(msg){ errEl.textContent=msg; errEl.style.display='block'; }
   function setLoading(on, label){
-    loginBtn.disabled=on; regBtn.disabled=on;
+    loginBtn.disabled=on; if(regBtn) regBtn.disabled=on;
     if(on) loginBtn.textContent=label||'Entrando...';
     else   loginBtn.textContent='Entrar no painel';
     errEl.style.display='none';
@@ -2709,11 +2762,9 @@ body.owner-dashboard-enabled #owner-fab{display:none!important}
   window.__forceOwnerDashboard = function(){
     document.body.classList.add('editor-enabled');
     document.body.classList.add('owner-dashboard-enabled');
-    if(typeof renderOwnerDashboard==='function') renderOwnerDashboard();
-  };
-
-  // â”€â”€ CUSTOMER LIVE POLLING (not owner mode) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-  if(new URLSearchParams(location.search).get('owner')!=='1' && SLUG){
+    if(typeof window.renderOwnerDashboard==='function'){
+      window.renderOwnerDashboard();
+    }
     var _lastUpdated = null;
     setInterval(async function(){
       try{
@@ -3866,7 +3917,7 @@ body.edit-mode .edit-item-btn {
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Divulga Local | Marketing para NegÃ³cios Locais</title>
+<title>Divulga Local | Marketing para Negócios Locais</title>
 <meta name="theme-color" content="#0f111a">
 <link rel="icon" type="image/svg+xml" href="favicon.svg">
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -3885,17 +3936,17 @@ body.edit-mode .edit-item-btn {
     <span class="logo-text">Divulga<span style="color:#4285F4">Local</span></span>
   </div>
   <div class="nav-tabs">
-    <button class="nav-tab active" onclick="showPage('site')">Site pÃºblico</button>
-    <button class="nav-tab" onclick="showPage('cardapio-landing')">CardÃ¡pio Digital</button>
+    <button class="nav-tab active" onclick="showPage('site')">Site público</button>
+    <button class="nav-tab" onclick="showPage('cardapio-landing')">Cardápio Digital</button>
     <button class="nav-tab" onclick="showPage('dash')">Painel interno</button>
   </div>
   <div class="nav-right">
     <button class="nav-btn btn-ghost" onclick="showPage('dash')">Entrar</button>
-    <button class="nav-btn btn-cta" onclick="showPage('cardapio-landing')" style="background:#34A853;border-color:#34A853">CardÃ¡pio grÃ¡tis 7 dias</button>
+    <button class="nav-btn btn-cta" onclick="showPage('cardapio-landing')" style="background:#34A853;border-color:#34A853">Cardápio grátis 7 dias</button>
   </div>
 </nav>
 
-<!-- SITE PÃšBLICO -->
+<!-- SITE PÚBLICO -->
 <div id="page-site" class="page active">
 
   <div class="hero">
@@ -3909,32 +3960,32 @@ body.edit-mode .edit-item-btn {
       Parceiros Google &amp; Instagram Ads
     </div>
     <h1 class="hero-title">
-      Seu negÃ³cio local<br>
+      Seu negócio local<br>
       <span class="word-blue">aparecendo</span>,
       <span class="word-green">crescendo</span><br>
       e <span class="word-red">vendendo</span> mais
     </h1>
-    <p class="hero-sub">EstratÃ©gias de trÃ¡fego pago no Google e Instagram feitas especialmente para negÃ³cios locais e deliverys que querem escalar o faturamento.</p>
+    <p class="hero-sub">Estratégias de tráfego pago no Google e Instagram feitas especialmente para negócios locais e deliverys que querem escalar o faturamento.</p>
     <div class="hero-actions">
-      <a href="#contato" class="btn-hero btn-primary-hero" onclick="document.getElementById('contato').scrollIntoView({behavior:'smooth'});return false">Quero mais clientes â†’</a>
+      <a href="#contato" class="btn-hero btn-primary-hero" onclick="document.getElementById('contato').scrollIntoView({behavior:'smooth'});return false">Quero mais clientes →</a>
       <a href="#cases" class="btn-hero btn-outline-hero" onclick="document.getElementById('cases').scrollIntoView({behavior:'smooth'});return false">Ver resultados reais</a>
     </div>
     <div class="stats-row">
-      <div class="stat-item"><strong style="color:#4285F4">3x</strong><p>crescimento mÃ©dio</p></div>
-      <div class="stat-item"><strong style="color:#34A853">+50</strong><p>negÃ³cios atendidos</p></div>
+      <div class="stat-item"><strong style="color:#4285F4">3x</strong><p>crescimento médio</p></div>
+      <div class="stat-item"><strong style="color:#34A853">+50</strong><p>negócios atendidos</p></div>
       <div class="stat-item"><strong style="color:#FBBC05">Google</strong><p>+ Instagram Ads</p></div>
       <div class="stat-item"><strong style="color:#EA4335">90</strong><p>dias p/ resultados</p></div>
     </div>
   </div>
 
   <div class="section section-dark">
-    <p class="s-label" style="color:#4285F4">ServiÃ§os</p>
-    <h2 class="s-title">Tudo que seu negÃ³cio precisa<br>para <span style="color:#4285F4">dominar a regiÃ£o</span></h2>
+    <p class="s-label" style="color:#4285F4">Serviços</p>
+    <h2 class="s-title">Tudo que seu negócio precisa<br>para <span style="color:#4285F4">dominar a região</span></h2>
     <div class="services-grid">
-      <div class="svc-card"><div class="svc-accent" style="background:#4285F4"></div><h3>Google Ads Local</h3><p>ApareÃ§a no topo quando seu cliente buscar exatamente o que vocÃª oferece na sua cidade.</p></div>
+      <div class="svc-card"><div class="svc-accent" style="background:#4285F4"></div><h3>Google Ads Local</h3><p>Apareça no topo quando seu cliente buscar exatamente o que você oferece na sua cidade.</p></div>
       <div class="svc-card"><div class="svc-accent" style="background:#EA4335"></div><h3>Instagram Ads</h3><p>Criativos que param o scroll e geram pedidos, reservas e visitas direto pelo Instagram.</p></div>
-      <div class="svc-card"><div class="svc-accent" style="background:#FBBC05"></div><h3>CaptaÃ§Ã£o de Leads</h3><p>FormulÃ¡rios e landing pages otimizados para transformar cliques em contatos qualificados.</p></div>
-      <div class="svc-card"><div class="svc-accent" style="background:#34A853"></div><h3>GestÃ£o e RelatÃ³rios</h3><p>Acompanhamento semanal com mÃ©tricas claras: custo por lead, ROAS e crescimento real.</p></div>
+      <div class="svc-card"><div class="svc-accent" style="background:#FBBC05"></div><h3>Captação de Leads</h3><p>Formulários e landing pages otimizados para transformar cliques em contatos qualificados.</p></div>
+      <div class="svc-card"><div class="svc-accent" style="background:#34A853"></div><h3>Gestão e Relatórios</h3><p>Acompanhamento semanal com métricas claras: custo por lead, ROAS e crescimento real.</p></div>
     </div>
   </div>
 
@@ -3944,18 +3995,18 @@ body.edit-mode .edit-item-btn {
     <div class="cases-grid">
       <div class="case-card">
         <div class="case-logo" style="background:#4285F4">PH</div>
-        <h3>PH MaceiÃ³</h3>
+        <h3>PH Maceió</h3>
         <p class="case-type">Restaurante / Delivery</p>
         <div class="case-metrics">
           <div class="metric"><strong style="color:#4285F4">3.2x</strong><span>faturamento</span></div>
           <div class="metric"><strong style="color:#34A853">-42%</strong><span>custo/pedido</span></div>
           <div class="metric"><strong style="color:#EA4335">60</strong><span>dias</span></div>
         </div>
-        <p class="case-quote" style="border-color:#4285F4">"A Divulga Local transformou o fluxo de clientes. Em 60 dias jÃ¡ sentimos no caixa." â€” Hugo, Diretor</p>
+        <p class="case-quote" style="border-color:#4285F4">"A Divulga Local transformou o fluxo de clientes. Em 60 dias já sentimos no caixa." — Hugo, Diretor</p>
       </div>
       <div class="case-card">
         <div class="case-logo" style="background:#34A853">KD</div>
-        <h3>KiDelÃ­cia Pizzaria</h3>
+        <h3>KiDelícia Pizzaria</h3>
         <p class="case-type">Pizzaria / Delivery</p>
         <div class="case-metrics">
           <div class="metric"><strong style="color:#34A853">2.8x</strong><span>pedidos</span></div>
@@ -3966,31 +4017,31 @@ body.edit-mode .edit-item-btn {
       </div>
       <div class="case-card">
         <div class="case-logo" style="background:#FBBC05;color:#333">+N</div>
-        <h3>Seu negÃ³cio aqui</h3>
-        <p class="case-type">PrÃ³ximo case de sucesso</p>
+        <h3>Seu negócio aqui</h3>
+        <p class="case-type">Próximo case de sucesso</p>
         <div class="case-metrics">
           <div class="metric"><strong style="color:#FBBC05">?x</strong><span>crescimento</span></div>
-          <div class="metric"><strong style="color:#4285F4">0 â†’</strong><span>escala</span></div>
+          <div class="metric"><strong style="color:#4285F4">0 →</strong><span>escala</span></div>
         </div>
-        <p class="case-quote" style="border-color:#FBBC05;color:#aaa">"Fale com a gente e descubra o potencial do seu negÃ³cio na sua regiÃ£o."</p>
+        <p class="case-quote" style="border-color:#FBBC05;color:#aaa">"Fale com a gente e descubra o potencial do seu negócio na sua região."</p>
       </div>
     </div>
   </div>
 
   <div class="section section-dark">
     <p class="s-label" style="color:#FBBC05">Como funciona</p>
-    <h2 class="s-title">Do diagnÃ³stico ao <span style="color:#FBBC05">resultado</span></h2>
+    <h2 class="s-title">Do diagnóstico ao <span style="color:#FBBC05">resultado</span></h2>
     <div class="steps-row">
-      <div class="step-item"><div class="step-bar" style="background:#4285F4"></div><div class="step-num" style="color:#4285F4">01</div><h3>DiagnÃ³stico grÃ¡tis</h3><p>Analisamos seu negÃ³cio, pÃºblico e concorrentes na sua regiÃ£o sem custo.</p></div>
-      <div class="step-item"><div class="step-bar" style="background:#EA4335"></div><div class="step-num" style="color:#EA4335">02</div><h3>EstratÃ©gia sob medida</h3><p>Montamos um plano de mÃ­dia personalizado para o seu tipo de negÃ³cio.</p></div>
-      <div class="step-item"><div class="step-bar" style="background:#FBBC05"></div><div class="step-num" style="color:#FBBC05">03</div><h3>Campanhas no ar</h3><p>Ativamos Google e Instagram Ads com criativos testados e segmentaÃ§Ã£o precisa.</p></div>
-      <div class="step-item"><div class="step-bar" style="background:#34A853"></div><div class="step-num" style="color:#34A853">04</div><h3>Escala contÃ­nua</h3><p>Otimizamos semanalmente para reduzir custo e aumentar retorno.</p></div>
+      <div class="step-item"><div class="step-bar" style="background:#4285F4"></div><div class="step-num" style="color:#4285F4">01</div><h3>Diagnóstico grátis</h3><p>Analisamos seu negócio, público e concorrentes na sua região sem custo.</p></div>
+      <div class="step-item"><div class="step-bar" style="background:#EA4335"></div><div class="step-num" style="color:#EA4335">02</div><h3>Estratégia sob medida</h3><p>Montamos um plano de mídia personalizado para o seu tipo de negócio.</p></div>
+      <div class="step-item"><div class="step-bar" style="background:#FBBC05"></div><div class="step-num" style="color:#FBBC05">03</div><h3>Campanhas no ar</h3><p>Ativamos Google e Instagram Ads com criativos testados e segmentação precisa.</p></div>
+      <div class="step-item"><div class="step-bar" style="background:#34A853"></div><div class="step-num" style="color:#34A853">04</div><h3>Escala contínua</h3><p>Otimizamos semanalmente para reduzir custo e aumentar retorno.</p></div>
     </div>
   </div>
 
   <div class="section section-alt" id="agendamento">
-    <p class="s-label" style="color:#4285F4">Agendar reuniÃ£o</p>
-    <h2 class="s-title" style="color:#fff">Escolha o melhor <span style="color:#4285F4">horÃ¡rio para vocÃª</span></h2>
+    <p class="s-label" style="color:#4285F4">Agendar reunião</p>
+    <h2 class="s-title" style="color:#fff">Escolha o melhor <span style="color:#4285F4">horário para você</span></h2>
     <div class="schedule-wrap">
       <div class="calendar-header">
         <button class="cal-nav" onclick="changeMonth(-1)">&#8249;</button>
@@ -3999,10 +4050,10 @@ body.edit-mode .edit-item-btn {
       </div>
       <div class="cal-grid" id="cal-grid"></div>
       <div id="time-section" style="display:none">
-        <p style="font-size:.88rem;color:rgba(255,255,255,0.5);margin-bottom:.8rem">HorÃ¡rios disponÃ­veis â€” <span id="sel-date" style="color:#fff;font-weight:600"></span></p>
+        <p style="font-size:.88rem;color:rgba(255,255,255,0.5);margin-bottom:.8rem">Horários disponíveis — <span id="sel-date" style="color:#fff;font-weight:600"></span></p>
         <div class="time-slots" id="time-slots"></div>
         <div id="confirm-btn-wrap" style="display:none;margin-top:1.2rem">
-          <button class="submit-btn" style="max-width:280px" onclick="confirmBooking()">Confirmar reuniÃ£o â†’</button>
+          <button class="submit-btn" style="max-width:280px" onclick="confirmBooking()">Confirmar reunião →</button>
         </div>
       </div>
     </div>
@@ -4010,17 +4061,17 @@ body.edit-mode .edit-item-btn {
 
   <div class="section" style="background:#0d0d1e" id="contato">
     <p class="s-label" style="color:#EA4335">Fale conosco</p>
-    <h2 class="s-title" style="color:#fff">Pronto para <span style="color:#EA4335">comeÃ§ar</span>?</h2>
+    <h2 class="s-title" style="color:#fff">Pronto para <span style="color:#EA4335">começar</span>?</h2>
     <div class="form-wrap">
       <div class="form-grid">
         <div class="form-group"><label>Nome</label><input type="text" placeholder="Seu nome"></div>
         <div class="form-group"><label>WhatsApp</label><input type="tel" placeholder="(00) 00000-0000"></div>
-        <div class="form-group"><label>Nome do negÃ³cio</label><input type="text" placeholder="Ex: Pizzaria do JoÃ£o"></div>
-        <div class="form-group"><label>Tipo de negÃ³cio</label><select><option>Restaurante / Delivery</option><option>Loja fÃ­sica</option><option>ServiÃ§os locais</option><option>E-commerce</option><option>Outro</option></select></div>
-        <div class="form-group full"><label>Faturamento mensal aproximado</label><select><option>AtÃ© R$10 mil</option><option>R$10kâ€“R$30k</option><option>R$30kâ€“R$100k</option><option>Acima de R$100k</option></select></div>
-        <div class="form-group full"><label>Como podemos ajudar?</label><textarea rows="3" placeholder="Conte um pouco sobre seu negÃ³cio e objetivos..."></textarea></div>
+        <div class="form-group"><label>Nome do negócio</label><input type="text" placeholder="Ex: Pizzaria do João"></div>
+        <div class="form-group"><label>Tipo de negócio</label><select><option>Restaurante / Delivery</option><option>Loja física</option><option>Serviços locais</option><option>E-commerce</option><option>Outro</option></select></div>
+        <div class="form-group full"><label>Faturamento mensal aproximado</label><select><option>Até R$10 mil</option><option>R$10k–R$30k</option><option>R$30k–R$100k</option><option>Acima de R$100k</option></select></div>
+        <div class="form-group full"><label>Como podemos ajudar?</label><textarea rows="3" placeholder="Conte um pouco sobre seu negócio e objetivos..."></textarea></div>
       </div>
-      <button class="submit-btn" onclick="alert('Lead enviado! Entraremos em contato em breve.')">Quero meu diagnÃ³stico gratuito â†’</button>
+      <button class="submit-btn" onclick="alert('Lead enviado! Entraremos em contato em breve.')">Quero meu diagnóstico gratuito →</button>
     </div>
   </div>
 
@@ -4034,11 +4085,11 @@ body.edit-mode .edit-item-btn {
       </div>
       <span class="logo-text">Divulga<span style="color:#4285F4">Local</span>.mkt</span>
     </div>
-    <p>Â© 2026 Divulga Local. Marketing para NegÃ³cios Locais.</p>
+    <p>© 2026 Divulga Local. Marketing para Negócios Locais.</p>
   </footer>
 </div>
 
-<!-- CARDÃPIO DIGITAL LANDING -->
+<!-- CARDÁPIO DIGITAL LANDING -->
 <div id="page-cardapio-landing" class="page" style="display:none">
 
   <div class="hero" style="background:#0a0a0a;padding:72px 20px 60px;text-align:center">
@@ -4047,16 +4098,16 @@ body.edit-mode .edit-item-btn {
       <span style="font-size:12px;color:#34A853;font-weight:600;letter-spacing:.04em">NOVO PRODUTO</span>
     </div>
     <h1 style="font-size:clamp(2rem,5vw,3.2rem);font-weight:800;color:#fff;line-height:1.1;max-width:700px;margin:0 auto 20px">
-      CardÃ¡pio digital bonito,<br><span style="color:#34A853">em 5 minutos</span>, com pedidos<br>direto no seu WhatsApp
+      Cardápio digital bonito,<br><span style="color:#34A853">em 5 minutos</span>, com pedidos<br>direto no seu WhatsApp
     </h1>
     <p style="font-size:1.05rem;color:rgba(255,255,255,.55);max-width:480px;margin:0 auto 36px;line-height:1.6">
-      Seu cliente abre o link, monta o pedido e manda pro seu WhatsApp. VocÃª escolhe o template, edita os itens e pronto â€” sem precisar de ninguÃ©m.
+      Seu cliente abre o link, monta o pedido e manda pro seu WhatsApp. Você escolhe o template, edita os itens e pronto — sem precisar de ninguém.
     </p>
     <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap">
-      <button onclick="showPage('cardapio-onboarding')" style="background:#34A853;color:#fff;border:none;border-radius:10px;padding:14px 32px;font-family:inherit;font-size:1rem;font-weight:700;cursor:pointer">Criar meu cardÃ¡pio grÃ¡tis â†’</button>
+      <button onclick="showPage('cardapio-onboarding')" style="background:#34A853;color:#fff;border:none;border-radius:10px;padding:14px 32px;font-family:inherit;font-size:1rem;font-weight:700;cursor:pointer">Criar meu cardápio grátis →</button>
       <button onclick="document.getElementById('cd-demo').scrollIntoView({behavior:'smooth'})" style="background:transparent;color:rgba(255,255,255,.7);border:1px solid rgba(255,255,255,.2);border-radius:10px;padding:14px 28px;font-family:inherit;font-size:1rem;cursor:pointer">Ver como funciona</button>
     </div>
-    <p style="font-size:12px;color:rgba(255,255,255,.3);margin-top:16px">7 dias grÃ¡tis Â· sem cartÃ£o de crÃ©dito Â· cancele quando quiser</p>
+    <p style="font-size:12px;color:rgba(255,255,255,.3);margin-top:16px">7 dias grátis · sem cartão de crédito · cancele quando quiser</p>
   </div>
 
   <div style="background:#f9f9f9;padding:60px 20px" id="cd-demo">
@@ -4069,7 +4120,7 @@ body.edit-mode .edit-item-btn {
         </div>
         <div style="font-size:.75rem;font-weight:700;color:#34A853;margin-bottom:6px">PASSO 1</div>
         <h3 style="font-size:1rem;font-weight:700;color:#111;margin-bottom:8px">Escolha o template</h3>
-        <p style="font-size:.88rem;color:#666;line-height:1.6">Clean, dark, colorido ou rÃºstico â€” vocÃª escolhe o visual que combina com o seu negÃ³cio.</p>
+        <p style="font-size:.88rem;color:#666;line-height:1.6">Clean, dark, colorido ou rústico — você escolhe o visual que combina com o seu negócio.</p>
       </div>
       <div style="background:#fff;border-radius:16px;padding:28px 24px;border:1px solid #eee">
         <div style="width:40px;height:40px;border-radius:10px;background:#E8F5E9;display:flex;align-items:center;justify-content:center;margin-bottom:16px">
@@ -4077,7 +4128,7 @@ body.edit-mode .edit-item-btn {
         </div>
         <div style="font-size:.75rem;font-weight:700;color:#34A853;margin-bottom:6px">PASSO 2</div>
         <h3 style="font-size:1rem;font-weight:700;color:#111;margin-bottom:8px">Adicione seus itens</h3>
-        <p style="font-size:.88rem;color:#666;line-height:1.6">Nome, preÃ§o, categoria e foto. Adicione, edite ou remova quando quiser, na palma da mÃ£o.</p>
+        <p style="font-size:.88rem;color:#666;line-height:1.6">Nome, preço, categoria e foto. Adicione, edite ou remova quando quiser, na palma da mão.</p>
       </div>
       <div style="background:#fff;border-radius:16px;padding:28px 24px;border:1px solid #eee">
         <div style="width:40px;height:40px;border-radius:10px;background:#E8F5E9;display:flex;align-items:center;justify-content:center;margin-bottom:16px">
@@ -4085,14 +4136,14 @@ body.edit-mode .edit-item-btn {
         </div>
         <div style="font-size:.75rem;font-weight:700;color:#34A853;margin-bottom:6px">PASSO 3</div>
         <h3 style="font-size:1rem;font-weight:700;color:#111;margin-bottom:8px">Compartilhe o link</h3>
-        <p style="font-size:.88rem;color:#666;line-height:1.6">Seu link <strong>webcardapio.com/seunome</strong> estÃ¡ no ar. Cliente pede, cai direto no seu WhatsApp.</p>
+        <p style="font-size:.88rem;color:#666;line-height:1.6">Seu link <strong>webcardapio.com/seunome</strong> está no ar. Cliente pede, cai direto no seu WhatsApp.</p>
       </div>
     </div>
   </div>
 
   <div style="background:#fff;padding:60px 20px">
     <p style="text-align:center;font-size:.8rem;font-weight:700;letter-spacing:.1em;color:#4285F4;margin-bottom:12px">TEMPLATES</p>
-    <h2 style="text-align:center;font-size:clamp(1.4rem,3vw,1.9rem);font-weight:800;color:#111;margin-bottom:36px">Para cada tipo de negÃ³cio, um visual Ãºnico</h2>
+    <h2 style="text-align:center;font-size:clamp(1.4rem,3vw,1.9rem);font-weight:800;color:#111;margin-bottom:36px">Para cada tipo de negócio, um visual único</h2>
     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:16px;max-width:860px;margin:0 auto 40px">
       <div style="border-radius:14px;overflow:hidden;border:1px solid #eee;cursor:pointer" onclick="showPage('cardapio-onboarding')">
         <div style="height:100px;background:#F7F5F0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px">
@@ -4100,7 +4151,7 @@ body.edit-mode .edit-item-btn {
           <div style="width:52px;height:3px;background:#ccc;border-radius:3px"></div>
           <div style="width:44px;height:3px;background:#ccc;border-radius:3px"></div>
         </div>
-        <div style="padding:10px 12px"><p style="font-size:13px;font-weight:700;color:#111">Clean & moderno</p><p style="font-size:11px;color:#888">Restaurante, cafÃ©</p></div>
+        <div style="padding:10px 12px"><p style="font-size:13px;font-weight:700;color:#111">Clean & moderno</p><p style="font-size:11px;color:#888">Restaurante, café</p></div>
       </div>
       <div style="border-radius:14px;overflow:hidden;border:1px solid #eee;cursor:pointer" onclick="showPage('cardapio-onboarding')">
         <div style="height:100px;background:#1a1a18;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px">
@@ -4124,7 +4175,7 @@ body.edit-mode .edit-item-btn {
           <div style="width:52px;height:3px;background:#ccc;border-radius:3px"></div>
           <div style="width:44px;height:3px;background:#ddd;border-radius:3px"></div>
         </div>
-        <div style="padding:10px 12px"><p style="font-size:13px;font-weight:700;color:#111">Verde natural</p><p style="font-size:11px;color:#888">AÃ§aÃ­, saudÃ¡vel</p></div>
+        <div style="padding:10px 12px"><p style="font-size:13px;font-weight:700;color:#111">Verde natural</p><p style="font-size:11px;color:#888">Açaí, saudável</p></div>
       </div>
       <div style="border-radius:14px;overflow:hidden;border:1px solid #eee;cursor:pointer" onclick="showPage('cardapio-onboarding')">
         <div style="height:100px;background:#FFFDE7;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px">
@@ -4142,46 +4193,46 @@ body.edit-mode .edit-item-btn {
     <h2 style="text-align:center;font-size:clamp(1.4rem,3vw,1.9rem);font-weight:800;color:#111;margin-bottom:36px">Simples, sem surpresas</h2>
     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:20px;max-width:780px;margin:0 auto">
       <div style="background:#fff;border-radius:16px;padding:28px 24px;border:1px solid #eee">
-        <p style="font-size:1.8rem;font-weight:800;color:#111">R$29<span style="font-size:1rem;font-weight:400;color:#888">/mÃªs</span></p>
-        <p style="font-weight:700;color:#111;margin:8px 0 16px">BÃ¡sico</p>
+        <p style="font-size:1.8rem;font-weight:800;color:#111">R$29<span style="font-size:1rem;font-weight:400;color:#888">/mês</span></p>
+        <p style="font-weight:700;color:#111;margin:8px 0 16px">Básico</p>
         <div style="display:flex;flex-direction:column;gap:8px;font-size:.88rem;color:#555">
-          <div>âœ“ 1 template</div><div>âœ“ AtÃ© 20 itens</div><div>âœ“ Link pÃºblico</div><div>âœ“ BotÃ£o WhatsApp</div>
+          <div>✓ 1 template</div><div>✓ Até 20 itens</div><div>✓ Link público</div><div>✓ Botão WhatsApp</div>
         </div>
-        <button onclick="showPage('cardapio-onboarding')" style="width:100%;margin-top:20px;padding:11px;border-radius:8px;border:1.5px solid #111;background:transparent;font-family:inherit;font-size:.9rem;font-weight:700;cursor:pointer">ComeÃ§ar grÃ¡tis</button>
+        <button onclick="showPage('cardapio-onboarding')" style="width:100%;margin-top:20px;padding:11px;border-radius:8px;border:1.5px solid #111;background:transparent;font-family:inherit;font-size:.9rem;font-weight:700;cursor:pointer">Começar grátis</button>
       </div>
       <div style="background:#111;border-radius:16px;padding:28px 24px;border:2px solid #34A853;position:relative">
         <div style="position:absolute;top:-12px;left:50%;transform:translateX(-50%);background:#34A853;color:#fff;font-size:11px;font-weight:700;padding:4px 14px;border-radius:20px;white-space:nowrap">MAIS POPULAR</div>
-        <p style="font-size:1.8rem;font-weight:800;color:#fff">R$59<span style="font-size:1rem;font-weight:400;color:rgba(255,255,255,.5)">/mÃªs</span></p>
+        <p style="font-size:1.8rem;font-weight:800;color:#fff">R$59<span style="font-size:1rem;font-weight:400;color:rgba(255,255,255,.5)">/mês</span></p>
         <p style="font-weight:700;color:#fff;margin:8px 0 16px">Pro</p>
         <div style="display:flex;flex-direction:column;gap:8px;font-size:.88rem;color:rgba(255,255,255,.7)">
-          <div>âœ“ Todos os templates</div><div>âœ“ Itens ilimitados</div><div>âœ“ Link personalizado</div><div>âœ“ Painel de pedidos</div><div>âœ“ EstatÃ­sticas</div>
+          <div>✓ Todos os templates</div><div>✓ Itens ilimitados</div><div>✓ Link personalizado</div><div>✓ Painel de pedidos</div><div>✓ Estatísticas</div>
         </div>
-        <button onclick="showPage('cardapio-onboarding')" style="width:100%;margin-top:20px;padding:11px;border-radius:8px;border:none;background:#34A853;color:#fff;font-family:inherit;font-size:.9rem;font-weight:700;cursor:pointer">ComeÃ§ar grÃ¡tis</button>
+        <button onclick="showPage('cardapio-onboarding')" style="width:100%;margin-top:20px;padding:11px;border-radius:8px;border:none;background:#34A853;color:#fff;font-family:inherit;font-size:.9rem;font-weight:700;cursor:pointer">Começar grátis</button>
       </div>
       <div style="background:#fff;border-radius:16px;padding:28px 24px;border:1px solid #eee">
-        <p style="font-size:1.8rem;font-weight:800;color:#111">R$99<span style="font-size:1rem;font-weight:400;color:#888">/mÃªs</span></p>
+        <p style="font-size:1.8rem;font-weight:800;color:#111">R$99<span style="font-size:1rem;font-weight:400;color:#888">/mês</span></p>
         <p style="font-weight:700;color:#111;margin:8px 0 16px">Business</p>
         <div style="display:flex;flex-direction:column;gap:8px;font-size:.88rem;color:#555">
-          <div>âœ“ Tudo do Pro</div><div>âœ“ DomÃ­nio prÃ³prio</div><div>âœ“ Multi-unidades</div><div>âœ“ RelatÃ³rios avanÃ§ados</div><div>âœ“ Suporte prioritÃ¡rio</div>
+          <div>✓ Tudo do Pro</div><div>✓ Domínio próprio</div><div>✓ Multi-unidades</div><div>✓ Relatórios avançados</div><div>✓ Suporte prioritário</div>
         </div>
-        <button onclick="showPage('cardapio-onboarding')" style="width:100%;margin-top:20px;padding:11px;border-radius:8px;border:1.5px solid #111;background:transparent;font-family:inherit;font-size:.9rem;font-weight:700;cursor:pointer">ComeÃ§ar grÃ¡tis</button>
+        <button onclick="showPage('cardapio-onboarding')" style="width:100%;margin-top:20px;padding:11px;border-radius:8px;border:1.5px solid #111;background:transparent;font-family:inherit;font-size:.9rem;font-weight:700;cursor:pointer">Começar grátis</button>
       </div>
     </div>
-    <p style="text-align:center;font-size:12px;color:#aaa;margin-top:20px">7 dias grÃ¡tis em todos os planos Â· Pagamento via Pix ou cartÃ£o Â· Cancele quando quiser</p>
+    <p style="text-align:center;font-size:12px;color:#aaa;margin-top:20px">7 dias grátis em todos os planos · Pagamento via Pix ou cartão · Cancele quando quiser</p>
   </div>
 
   <div style="background:#0a0a0a;padding:60px 20px;text-align:center">
-    <h2 style="font-size:clamp(1.6rem,3vw,2.2rem);font-weight:800;color:#fff;margin-bottom:12px">Pronto para ter seu cardÃ¡pio no ar?</h2>
-    <p style="color:rgba(255,255,255,.5);margin-bottom:28px">Leva 5 minutos. Sem precisar de ninguÃ©m.</p>
-    <button onclick="showPage('cardapio-onboarding')" style="background:#34A853;color:#fff;border:none;border-radius:10px;padding:16px 40px;font-family:inherit;font-size:1rem;font-weight:700;cursor:pointer">Criar meu cardÃ¡pio grÃ¡tis â†’</button>
+    <h2 style="font-size:clamp(1.6rem,3vw,2.2rem);font-weight:800;color:#fff;margin-bottom:12px">Pronto para ter seu cardápio no ar?</h2>
+    <p style="color:rgba(255,255,255,.5);margin-bottom:28px">Leva 5 minutos. Sem precisar de ninguém.</p>
+    <button onclick="showPage('cardapio-onboarding')" style="background:#34A853;color:#fff;border:none;border-radius:10px;padding:16px 40px;font-family:inherit;font-size:1rem;font-weight:700;cursor:pointer">Criar meu cardápio grátis →</button>
   </div>
 
 </div>
 
-<!-- CARDÃPIO ONBOARDING -->
+<!-- CARDÁPIO ONBOARDING -->
 <div id="page-cardapio-onboarding" class="page" style="display:none">
   <div style="max-width:560px;margin:0 auto;padding:48px 20px 80px">
-    <button onclick="obBackToLanding()" style="background:none;border:none;color:rgba(255,255,255,.78);font-size:.88rem;cursor:pointer;margin-bottom:28px;font-family:inherit">â† Voltar</button>
+    <button onclick="obBackToLanding()" style="background:none;border:none;color:rgba(255,255,255,.78);font-size:.88rem;cursor:pointer;margin-bottom:28px;font-family:inherit">← Voltar</button>
 
     <div style="display:flex;gap:8px;margin-bottom:32px" id="ob-steps">
       <div class="ob-step active" data-step="1">1</div>
@@ -4197,30 +4248,30 @@ body.edit-mode .edit-item-btn {
 
     <div id="ob-panel-1">
       <p style="font-size:.75rem;font-weight:700;letter-spacing:.1em;color:#34A853;margin-bottom:8px">PASSO 1 DE 4</p>
-      <h2 style="font-size:1.6rem;font-weight:800;color:#111;margin-bottom:6px">Sobre o seu negÃ³cio</h2>
-      <p style="color:#888;font-size:.9rem;margin-bottom:28px">Vamos configurar seu cardÃ¡pio em minutos.</p>
+      <h2 style="font-size:1.6rem;font-weight:800;color:#111;margin-bottom:6px">Sobre o seu negócio</h2>
+      <p style="color:#888;font-size:.9rem;margin-bottom:28px">Vamos configurar seu cardápio em minutos.</p>
       <div style="display:flex;flex-direction:column;gap:16px">
         <div>
           <label style="display:block;font-size:.83rem;font-weight:600;color:#444;margin-bottom:6px">Nome do estabelecimento</label>
-          <input id="ob-nome" type="text" placeholder="Ex: Burguer do ZÃ©" style="width:100%;padding:12px 14px;border:1.5px solid #ddd;border-radius:10px;font-size:.95rem;font-family:inherit;outline:none" onfocus="this.style.borderColor='#34A853'" onblur="this.style.borderColor='#ddd'">
+          <input id="ob-nome" type="text" placeholder="Ex: Burguer do Zé" style="width:100%;padding:12px 14px;border:1.5px solid #ddd;border-radius:10px;font-size:.95rem;font-family:inherit;outline:none" onfocus="this.style.borderColor='#34A853'" onblur="this.style.borderColor='#ddd'">
         </div>
         <div>
           <label style="display:block;font-size:.83rem;font-weight:600;color:#444;margin-bottom:6px">WhatsApp (com DDD)</label>
           <input id="ob-wa" type="tel" placeholder="(82) 99999-9999" style="width:100%;padding:12px 14px;border:1.5px solid #ddd;border-radius:10px;font-size:.95rem;font-family:inherit;outline:none" onfocus="this.style.borderColor='#34A853'" onblur="this.style.borderColor='#ddd'">
         </div>
         <div>
-          <label style="display:block;font-size:.83rem;font-weight:600;color:#444;margin-bottom:8px">Tipo de negÃ³cio</label>
+          <label style="display:block;font-size:.83rem;font-weight:600;color:#444;margin-bottom:8px">Tipo de negócio</label>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px" id="ob-tipos">
             <button class="ob-tipo active" data-val="restaurante">Restaurante</button>
             <button class="ob-tipo" data-val="hamburgueria">Hamburgueria</button>
             <button class="ob-tipo" data-val="pizzaria">Pizzaria</button>
-            <button class="ob-tipo" data-val="cafe">CafÃ© / Confeitaria</button>
+            <button class="ob-tipo" data-val="cafe">Café / Confeitaria</button>
             <button class="ob-tipo" data-val="bar">Bar / Boteco</button>
             <button class="ob-tipo" data-val="outro">Outro</button>
           </div>
         </div>
       </div>
-      <button onclick="obNext(2)" style="width:100%;margin-top:28px;padding:14px;border-radius:10px;background:#34A853;color:#fff;border:none;font-family:inherit;font-size:1rem;font-weight:700;cursor:pointer">Continuar â†’</button>
+      <button onclick="obNext(2)" style="width:100%;margin-top:28px;padding:14px;border-radius:10px;background:#34A853;color:#fff;border:none;font-family:inherit;font-size:1rem;font-weight:700;cursor:pointer">Continuar →</button>
     </div>
 
     <div id="ob-panel-2" style="display:none">
@@ -4233,7 +4284,7 @@ body.edit-mode .edit-item-btn {
             <div style="width:28px;height:4px;background:#1a1a18;border-radius:2px"></div>
             <div style="width:36px;height:2px;background:#ccc;border-radius:2px"></div>
           </div>
-          <div><p style="font-weight:700;color:#f5f7ff;font-size:.9rem">Clean & moderno</p><p style="font-size:.8rem;color:rgba(255,255,255,.68)">Restaurante, cafÃ©</p></div>
+          <div><p style="font-weight:700;color:#f5f7ff;font-size:.9rem">Clean & moderno</p><p style="font-size:.8rem;color:rgba(255,255,255,.68)">Restaurante, café</p></div>
           <div class="ob-tpl-check" style="margin-left:auto;width:20px;height:20px;border-radius:50%;background:#34A853;display:flex;align-items:center;justify-content:center;flex-shrink:0">
             <svg width="10" height="10" viewBox="0 0 10 10"><path d="M2 5l2.5 2.5L8 3" stroke="#fff" stroke-width="1.5" fill="none"/></svg>
           </div>
@@ -4263,53 +4314,22 @@ body.edit-mode .edit-item-btn {
             <div style="width:28px;height:4px;background:#1B5E20;border-radius:2px"></div>
             <div style="width:36px;height:2px;background:#ccc;border-radius:2px"></div>
           </div>
-          <div><p style="font-weight:700;color:#f5f7ff;font-size:.9rem">Verde natural</p><p style="font-size:.8rem;color:rgba(255,255,255,.68)">AÃ§aÃ­, saudÃ¡vel</p></div>
+          <div><p style="font-weight:700;color:#f5f7ff;font-size:.9rem">Verde natural</p><p style="font-size:.8rem;color:rgba(255,255,255,.68)">Açaí, saudável</p></div>
           <div class="ob-tpl-check" style="margin-left:auto;width:20px;height:20px;border-radius:50%;background:#34A853;display:flex;align-items:center;justify-content:center;flex-shrink:0">
             <svg width="10" height="10" viewBox="0 0 10 10"><path d="M2 5l2.5 2.5L8 3" stroke="#fff" stroke-width="1.5" fill="none"/></svg>
           </div>
         </div>
       </div>
       <div style="display:flex;gap:12px;margin-top:28px">
-        <button onclick="obNext(1)" style="padding:14px 20px;border-radius:10px;border:1.5px solid rgba(255,255,255,.72);background:transparent;color:#f5f7ff;font-family:inherit;font-size:.95rem;cursor:pointer">â† Voltar</button>
-        <button onclick="obNext(3)" style="flex:1;padding:14px;border-radius:10px;background:#34A853;color:#fff;border:none;font-family:inherit;font-size:1rem;font-weight:700;cursor:pointer">Continuar â†’</button>
+        <button onclick="obNext(1)" style="padding:14px 20px;border-radius:10px;border:1.5px solid rgba(255,255,255,.72);background:transparent;color:#f5f7ff;font-family:inherit;font-size:.95rem;cursor:pointer">← Voltar</button>
+        <button onclick="obNext(3)" style="flex:1;padding:14px;border-radius:10px;background:#34A853;color:#fff;border:none;font-family:inherit;font-size:1rem;font-weight:700;cursor:pointer">Continuar →</button>
       </div>
     </div>
 
     <div id="ob-panel-3" style="display:none">
       <p style="font-size:.75rem;font-weight:700;letter-spacing:.1em;color:#34A853;margin-bottom:8px">PASSO 3 DE 5</p>
-      <h2 style="font-size:1.6rem;font-weight:800;color:#f5f7ff;margin-bottom:6px">Escolha seu plano</h2>
-      <p style="color:rgba(255,255,255,.7);font-size:.9rem;margin-bottom:24px">7 dias grÃ¡tis em todos. Sem cartÃ£o de crÃ©dito.</p>
-      <div style="display:flex;flex-direction:column;gap:10px">
-        <div class="ob-plan" data-plan="basico" onclick="selectPlan(this)" style="border:1.5px solid #eee;border-radius:12px;padding:16px;cursor:pointer;display:flex;justify-content:space-between;align-items:center">
-          <div><p class="ob-plan-title">BÃ¡sico</p><p class="ob-plan-sub">1 template Â· 20 itens Â· botÃ£o WhatsApp</p></div>
-          <p class="ob-plan-price">R$29<span>/mÃªs</span></p>
-        </div>
-        <div class="ob-plan active" data-plan="pro" onclick="selectPlan(this)" style="border:1.5px solid #eee;border-radius:12px;padding:16px;cursor:pointer;display:flex;justify-content:space-between;align-items:center">
-          <div>
-            <div style="display:flex;align-items:center;gap:8px;margin-bottom:2px"><p class="ob-plan-title">Pro</p><span style="font-size:10px;background:#34A853;color:#fff;padding:2px 8px;border-radius:10px;font-weight:700">RECOMENDADO</span></div>
-            <p class="ob-plan-sub">Templates ilimitados Â· itens ilimitados Â· painel</p>
-          </div>
-          <p class="ob-plan-price">R$59<span>/mÃªs</span></p>
-        </div>
-        <div class="ob-plan" data-plan="business" onclick="selectPlan(this)" style="border:1.5px solid #eee;border-radius:12px;padding:16px;cursor:pointer;display:flex;justify-content:space-between;align-items:center">
-          <div><p class="ob-plan-title">Business</p><p class="ob-plan-sub">Tudo do Pro + domÃ­nio prÃ³prio + multi-unidades</p></div>
-          <p class="ob-plan-price">R$99<span>/mÃªs</span></p>
-        </div>
-      </div>
-      <div style="background:#f9f9f9;border-radius:10px;padding:14px 16px;margin-top:20px;font-size:.83rem;color:#555;line-height:1.6">
-        âœ“ 7 dias grÃ¡tis, sem cartÃ£o &nbsp;Â·&nbsp; âœ“ Pague via Pix ou cartÃ£o &nbsp;Â·&nbsp; âœ“ Cancele quando quiser
-      </div>
-      <div style="display:flex;gap:12px;margin-top:20px">
-        <button onclick="obNext(2)" style="padding:14px 20px;border-radius:10px;border:1.5px solid rgba(255,255,255,.72);background:transparent;color:#f5f7ff;font-family:inherit;font-size:.95rem;cursor:pointer">â† Voltar</button>
-        <button onclick="obNext(4)" style="flex:1;padding:14px;border-radius:10px;background:#34A853;color:#fff;border:none;font-family:inherit;font-size:1rem;font-weight:700;cursor:pointer">Continuar â†’</button>
-      </div>
-    </div>
-
-    <!-- STEP 4: PREVIEW DO CARDÃPIO -->
-    <div id="ob-panel-4" style="display:none">
-      <p style="font-size:.75rem;font-weight:700;letter-spacing:.1em;color:#34A853;margin-bottom:8px">PASSO 4 DE 5</p>
-      <h2 style="font-size:1.4rem;font-weight:800;color:#f5f7ff;margin-bottom:6px">Veja como ficou seu cardÃ¡pio ðŸ‘€</h2>
-      <p style="color:rgba(255,255,255,.68);font-size:.85rem;margin-bottom:16px">Ã‰ exatamente assim que seus clientes vÃ£o ver. Gostou? Crie sua conta e publique.</p>
+      <h2 style="font-size:1.4rem;font-weight:800;color:#f5f7ff;margin-bottom:6px">Veja como ficou seu cardápio 👀</h2>
+      <p style="color:rgba(255,255,255,.68);font-size:.85rem;margin-bottom:16px">É exatamente assim que seus clientes vão ver. Gostou? Escolha seu plano e publique.</p>
       <div id="ob-preview-wrap" style="position:relative;border-radius:16px;overflow:hidden;box-shadow:0 4px 32px rgba(0,0,0,.45);background:#111;margin-bottom:20px">
         <div style="background:#111;padding:8px 16px 4px;display:flex;align-items:center;justify-content:space-between">
           <span style="color:#fff;font-size:.7rem;font-weight:700">9:41</span>
@@ -4321,21 +4341,52 @@ body.edit-mode .edit-item-btn {
         <div style="background:#1c1c1e;padding:5px 12px;display:flex;align-items:center;gap:8px">
           <div style="flex:1;background:#2c2c2e;border-radius:6px;padding:5px 10px;font-size:.7rem;color:rgba(255,255,255,.5);white-space:nowrap;overflow:hidden;text-overflow:ellipsis" id="ob-preview-url">webcardapio.com/seu-negocio</div>
         </div>
-        <iframe id="ob-preview-iframe" style="width:100%;height:480px;border:none;display:block;background:#fff" src="about:blank" title="Preview do cardÃ¡pio" sandbox="allow-scripts allow-same-origin"></iframe>
+        <iframe id="ob-preview-iframe" style="width:100%;height:480px;border:none;display:block;background:#fff" src="about:blank" title="Preview do cardápio" sandbox="allow-scripts allow-same-origin"></iframe>
         <div id="ob-preview-loading" style="position:absolute;inset:0;top:56px;background:rgba(17,17,17,.85);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px">
           <div style="width:36px;height:36px;border:3px solid rgba(255,255,255,.15);border-top-color:#34A853;border-radius:50%;animation:ob-spin 0.8s linear infinite"></div>
-          <span style="color:rgba(255,255,255,.6);font-size:.85rem">Carregando seu cardÃ¡pioâ€¦</span>
+          <span style="color:rgba(255,255,255,.6);font-size:.85rem">Carregando seu cardápio…</span>
         </div>
       </div>
       <div style="display:flex;gap:12px">
-        <button onclick="obNext(3)" style="padding:14px 20px;border-radius:10px;border:1.5px solid rgba(255,255,255,.72);background:transparent;color:#f5f7ff;font-family:inherit;font-size:.95rem;cursor:pointer">â† Ajustar</button>
-        <button onclick="obNext(5)" style="flex:1;padding:14px;border-radius:10px;background:#34A853;color:#fff;border:none;font-family:inherit;font-size:1rem;font-weight:700;cursor:pointer">Ficou Ã³timo! Criar conta â†’</button>
+        <button onclick="obNext(2)" style="padding:14px 20px;border-radius:10px;border:1.5px solid rgba(255,255,255,.72);background:transparent;color:#f5f7ff;font-family:inherit;font-size:.95rem;cursor:pointer">← Ajustar</button>
+        <button onclick="obNext(4)" style="flex:1;padding:14px;border-radius:10px;background:#34A853;color:#fff;border:none;font-family:inherit;font-size:1rem;font-weight:700;cursor:pointer">Ficou ótimo! Ver planos →</button>
+      </div>
+    </div>
+
+    <!-- STEP 4: PLANO -->
+    <div id="ob-panel-4" style="display:none">
+      <p style="font-size:.75rem;font-weight:700;letter-spacing:.1em;color:#34A853;margin-bottom:8px">PASSO 4 DE 5</p>
+      <h2 style="font-size:1.6rem;font-weight:800;color:#f5f7ff;margin-bottom:6px">Escolha seu plano</h2>
+      <p style="color:rgba(255,255,255,.7);font-size:.9rem;margin-bottom:24px">7 dias grátis em todos. Sem cartão de crédito.</p>
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <div class="ob-plan" data-plan="basico" onclick="selectPlan(this)" style="border:1.5px solid #eee;border-radius:12px;padding:16px;cursor:pointer;display:flex;justify-content:space-between;align-items:center">
+          <div><p class="ob-plan-title">Básico</p><p class="ob-plan-sub">1 template · 20 itens · botão WhatsApp</p></div>
+          <p class="ob-plan-price">R$29<span>/mês</span></p>
+        </div>
+        <div class="ob-plan active" data-plan="pro" onclick="selectPlan(this)" style="border:1.5px solid #eee;border-radius:12px;padding:16px;cursor:pointer;display:flex;justify-content:space-between;align-items:center">
+          <div>
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:2px"><p class="ob-plan-title">Pro</p><span style="font-size:10px;background:#34A853;color:#fff;padding:2px 8px;border-radius:10px;font-weight:700">RECOMENDADO</span></div>
+            <p class="ob-plan-sub">Templates ilimitados · itens ilimitados · painel</p>
+          </div>
+          <p class="ob-plan-price">R$59<span>/mês</span></p>
+        </div>
+        <div class="ob-plan" data-plan="business" onclick="selectPlan(this)" style="border:1.5px solid #eee;border-radius:12px;padding:16px;cursor:pointer;display:flex;justify-content:space-between;align-items:center">
+          <div><p class="ob-plan-title">Business</p><p class="ob-plan-sub">Tudo do Pro + domínio próprio + multi-unidades</p></div>
+          <p class="ob-plan-price">R$99<span>/mês</span></p>
+        </div>
+      </div>
+      <div style="background:#f9f9f9;border-radius:10px;padding:14px 16px;margin-top:20px;font-size:.83rem;color:#555;line-height:1.6">
+        ✓ 7 dias grátis, sem cartão &nbsp;·&nbsp; ✓ Pague via Pix ou cartão &nbsp;·&nbsp; ✓ Cancele quando quiser
+      </div>
+      <div style="display:flex;gap:12px;margin-top:20px">
+        <button onclick="obNext(3)" style="padding:14px 20px;border-radius:10px;border:1.5px solid rgba(255,255,255,.72);background:transparent;color:#f5f7ff;font-family:inherit;font-size:.95rem;cursor:pointer">← Voltar</button>
+        <button onclick="obNext(5)" style="flex:1;padding:14px;border-radius:10px;background:#34A853;color:#fff;border:none;font-family:inherit;font-size:1rem;font-weight:700;cursor:pointer">Continuar →</button>
       </div>
     </div>
 
     <div id="ob-panel-5" style="display:none">
       <h2 style="font-size:1.6rem;font-weight:800;color:#f5f7ff;margin-bottom:6px">Crie sua conta</h2>
-      <p style="color:rgba(255,255,255,.68);font-size:.9rem;margin-bottom:28px">Informe email e senha do dono para acessar e editar o cardÃ¡pio depois.</p>
+      <p style="color:rgba(255,255,255,.68);font-size:.9rem;margin-bottom:28px">Informe email e senha do dono para acessar e editar o cardápio depois.</p>
       <div style="display:flex;flex-direction:column;gap:16px">
         <div>
           <label style="display:block;font-size:.83rem;font-weight:600;color:rgba(255,255,255,.8);margin-bottom:6px">E-mail</label>
@@ -4344,7 +4395,7 @@ body.edit-mode .edit-item-btn {
         <div>
           <label style="display:block;font-size:.83rem;font-weight:600;color:rgba(255,255,255,.8);margin-bottom:6px">Senha</label>
           <div style="position:relative">
-            <input id="ob-senha" type="password" placeholder="Minimo 8 caracteres" style="width:100%;padding:12px 44px 12px 14px;border:1.5px solid #ddd;border-radius:10px;font-size:.95rem;font-family:inherit;outline:none;box-sizing:border-box" onfocus="this.style.borderColor='#34A853'" onblur="this.style.borderColor='#ddd'">
+            <input id="ob-senha" type="password" placeholder="Mínimo 6 caracteres" style="width:100%;padding:12px 44px 12px 14px;border:1.5px solid #ddd;border-radius:10px;font-size:.95rem;font-family:inherit;outline:none;box-sizing:border-box" onfocus="this.style.borderColor='#34A853'" onblur="this.style.borderColor='#ddd'">
             <button type="button" onclick="toggleSenha('ob-senha',this)" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:rgba(255,255,255,.5);font-size:.8rem;font-family:inherit">mostrar</button>
           </div>
         </div>
@@ -4357,8 +4408,8 @@ body.edit-mode .edit-item-btn {
         </div>
       </div>
       <div style="display:flex;gap:12px;margin-top:28px">
-        <button onclick="obNext(4)" style="padding:14px 20px;border-radius:10px;border:1.5px solid rgba(255,255,255,.72);background:transparent;color:#f5f7ff;font-family:inherit;font-size:.95rem;cursor:pointer">â† Voltar</button>
-        <button onclick="obFinish()" style="flex:1;padding:14px;border-radius:10px;background:#34A853;color:#fff;border:none;font-family:inherit;font-size:1rem;font-weight:700;cursor:pointer">Criar meu cardÃ¡pio grÃ¡tis â†’</button>
+        <button onclick="obNext(4)" style="padding:14px 20px;border-radius:10px;border:1.5px solid rgba(255,255,255,.72);background:transparent;color:#f5f7ff;font-family:inherit;font-size:.95rem;cursor:pointer">← Voltar</button>
+        <button onclick="obFinish()" style="flex:1;padding:14px;border-radius:10px;background:#34A853;color:#fff;border:none;font-family:inherit;font-size:1rem;font-weight:700;cursor:pointer">Criar meu cardápio grátis →</button>
       </div>
     </div>
 
@@ -4366,10 +4417,10 @@ body.edit-mode .edit-item-btn {
       <div style="width:64px;height:64px;background:#E8F5E9;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 20px">
         <svg width="28" height="28" viewBox="0 0 28 28" fill="none"><path d="M6 14l5.5 5.5L22 8" stroke="#34A853" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
       </div>
-      <h2 style="font-size:1.6rem;font-weight:800;color:#f5f7ff;margin-bottom:8px">CardÃ¡pio criado!</h2>
-      <p style="color:rgba(255,255,255,.72);margin-bottom:8px">Seu link jÃ¡ estÃ¡ no ar:</p>
+      <h2 style="font-size:1.6rem;font-weight:800;color:#f5f7ff;margin-bottom:8px">Cardápio criado!</h2>
+      <p style="color:rgba(255,255,255,.72);margin-bottom:8px">Seu link já está no ar:</p>
       <div id="ob-link-display" style="background:#f4f4f4;border-radius:8px;padding:12px 16px;font-weight:700;color:#34A853;font-size:1rem;margin-bottom:24px">https://webcardapio.com/seu-negocio</div>
-      <p style="font-size:.85rem;color:rgba(255,255,255,.58);margin-bottom:20px">VocÃª receberÃ¡ as instruÃ§Ãµes de acesso pelo WhatsApp em instantes.</p>
+      <p style="font-size:.85rem;color:rgba(255,255,255,.58);margin-bottom:20px">Você receberá as instruções de acesso pelo WhatsApp em instantes.</p>
       <button onclick="obExitToSite()" style="padding:12px 28px;border-radius:10px;border:1.5px solid rgba(255,255,255,.72);background:transparent;color:#f5f7ff;font-family:inherit;font-size:.9rem;cursor:pointer">Voltar ao site</button>
     </div>
   </div>
@@ -4414,8 +4465,8 @@ function obNext(step) {
     }
   });
   window.scrollTo({top:0,behavior:'smooth'});
-  // load preview iframe when entering step 4
-  if(step === 4) { obLoadPreview(); }
+  // load preview iframe when entering step 3
+  if(step === 3) { obLoadPreview(); }
 }
 
 function obLoadPreview() {
@@ -4573,8 +4624,8 @@ function obFinish() {
     alert('Informe um e-mail valido.');
     return;
   }
-  if (!senha || senha.length < 8) {
-    alert('A senha deve ter no minimo 8 caracteres.');
+  if (!senha || senha.length < 1) {
+    alert('Preencha a senha.');
     return;
   }
   if (senha !== senha2) {
@@ -4605,30 +4656,56 @@ function obFinish() {
     markOwnerSlug(slug);
   }
 
-  try {
-    var accounts = JSON.parse(localStorage.getItem('webcardapio:accounts') || '{}');
-    accounts[slug] = {
-      email: email,
-      slug: slug,
-      plan: plano
-    };
-    localStorage.setItem('webcardapio:accounts', JSON.stringify(accounts));
-  } catch (e) {
-    console.warn('Nao foi possivel salvar conta', e);
-  }
-
   var cardapioUrl = buildCardapioUrl(slug, nome, wa, template, plano, tipo);
-  var linkEl = document.getElementById('ob-link-display');
-  linkEl.innerHTML = ''
-    + '<div style="margin-bottom:10px">'
-    + '<div style="font-size:11px;color:#7a7a7a;text-transform:uppercase;letter-spacing:.08em;margin-bottom:2px">Link do seu cardapio</div>'
-    + '<a href="' + cardapioUrl + '" target="_blank" rel="noopener noreferrer" style="color:#34A853;text-decoration:none;word-break:break-all">' + cardapioUrl + '</a>'
-    + '</div>';
 
-  obNext('sucesso');
-  var bar = document.getElementById('ob-bar');
-  if(bar) bar.style.width = '100%';
-  document.querySelectorAll('.ob-step').forEach(function(el){ el.classList.add('done'); });
+  // Register account on backend
+  var apiBase = (location.hostname === 'localhost' || location.hostname === '127.0.0.1')
+    ? 'http://localhost:3001'
+    : location.protocol + '//' + location.hostname + ':3001';
+
+  var btnFinish = document.querySelector('[onclick="obFinish()"]');
+  if (btnFinish) { btnFinish.disabled = true; btnFinish.textContent = 'Criando conta...'; }
+
+  fetch(apiBase + '/api/auth/register', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email: email, password: senha, plan: plano })
+  })
+  .then(function(r) { return r.json().then(function(b) { return { ok: r.ok, body: b }; }); })
+  .then(function(res) {
+    if (btnFinish) { btnFinish.disabled = false; btnFinish.textContent = 'Criar meu cardápio grátis →'; }
+    if (!res.ok && res.body.error !== 'Email já cadastrado.') {
+      alert('Erro ao criar conta: ' + (res.body.error || 'tente novamente.'));
+      return;
+    }
+    // Save token if returned
+    if (res.body.token) {
+      localStorage.setItem('webcardapio:owner-token', res.body.token);
+      localStorage.setItem('webcardapio:owner-slug', slug);
+    }
+    // Save local account info
+    try {
+      var accounts = JSON.parse(localStorage.getItem('webcardapio:accounts') || '{}');
+      accounts[slug] = { email: email, slug: slug, plan: plano };
+      localStorage.setItem('webcardapio:accounts', JSON.stringify(accounts));
+    } catch (e) {}
+
+    var linkEl = document.getElementById('ob-link-display');
+    linkEl.innerHTML = ''
+      + '<div style="margin-bottom:10px">'
+      + '<div style="font-size:11px;color:#7a7a7a;text-transform:uppercase;letter-spacing:.08em;margin-bottom:2px">Link do seu cardapio</div>'
+      + '<a href="' + cardapioUrl + '" target="_blank" rel="noopener noreferrer" style="color:#34A853;text-decoration:none;word-break:break-all">' + cardapioUrl + '</a>'
+      + '</div>';
+
+    obNext('sucesso');
+    var bar = document.getElementById('ob-bar');
+    if(bar) bar.style.width = '100%';
+    document.querySelectorAll('.ob-step').forEach(function(el){ el.classList.add('done'); });
+  })
+  .catch(function() {
+    if (btnFinish) { btnFinish.disabled = false; btnFinish.textContent = 'Criar meu cardápio grátis →'; }
+    alert('Não foi possível conectar ao servidor. Verifique sua conexão e tente novamente.');
+  });
 }
 </script>
 
@@ -4642,7 +4719,7 @@ function obFinish() {
         <div class="dot" style="background:#FBBC05"></div>
         <div class="dot" style="background:#34A853"></div>
       </div>
-      <span class="logo-text" style="color:#111">Divulga<span style="color:#4285F4">Local</span> â€” Painel</span>
+      <span class="logo-text" style="color:#111">Divulga<span style="color:#4285F4">Local</span> — Painel</span>
     </div>
     <div class="dash-user">
       <div class="dash-avatar">DL</div>
@@ -4652,38 +4729,38 @@ function obFinish() {
   <div class="dash-body">
     <div class="sidebar">
       <p class="sidebar-section">Principal</p>
-      <div class="sidebar-item active" onclick="showDash('overview',this)">&#128202; VisÃ£o geral</div>
+      <div class="sidebar-item active" onclick="showDash('overview',this)">&#128202; Visão geral</div>
       <div class="sidebar-item" onclick="showDash('clientes',this)">&#127970; Clientes <span class="badge-count">8</span></div>
       <div class="sidebar-item" onclick="showDash('leads',this)">&#127919; Leads <span class="badge-count">3</span></div>
       <div class="sidebar-item" onclick="showDash('agenda',this)">&#128197; Agenda</div>
-      <p class="sidebar-section">OperaÃ§Ãµes</p>
+      <p class="sidebar-section">Operações</p>
       <div class="sidebar-item" onclick="showDash('tarefas',this)">&#9989; Tarefas</div>
-      <div class="sidebar-item" onclick="showDash('relatorios',this)">&#128200; RelatÃ³rios</div>
+      <div class="sidebar-item" onclick="showDash('relatorios',this)">&#128200; Relatórios</div>
     </div>
     <div class="dash-main">
 
       <div class="dash-section active" id="dash-overview">
-        <p class="page-title">VisÃ£o geral</p>
+        <p class="page-title">Visão geral</p>
         <p class="page-sub">Hoje, quinta-feira 2 de abril de 2026</p>
         <div class="kpi-row">
-          <div class="kpi"><p class="kpi-label">Clientes ativos</p><p class="kpi-val" style="color:#4285F4">8</p><p class="kpi-delta delta-up">â–² +2 este mÃªs</p></div>
-          <div class="kpi"><p class="kpi-label">Leads este mÃªs</p><p class="kpi-val" style="color:#EA4335">14</p><p class="kpi-delta delta-up">â–² +6 vs Ãºltimo mÃªs</p></div>
-          <div class="kpi"><p class="kpi-label">ReuniÃµes agendadas</p><p class="kpi-val" style="color:#FBBC05">3</p><p class="kpi-delta" style="color:#888">Esta semana</p></div>
-          <div class="kpi"><p class="kpi-label">Taxa de conversÃ£o</p><p class="kpi-val" style="color:#34A853">57%</p><p class="kpi-delta delta-up">â–² +8pp</p></div>
+          <div class="kpi"><p class="kpi-label">Clientes ativos</p><p class="kpi-val" style="color:#4285F4">8</p><p class="kpi-delta delta-up">▲ +2 este mês</p></div>
+          <div class="kpi"><p class="kpi-label">Leads este mês</p><p class="kpi-val" style="color:#EA4335">14</p><p class="kpi-delta delta-up">▲ +6 vs último mês</p></div>
+          <div class="kpi"><p class="kpi-label">Reuniões agendadas</p><p class="kpi-val" style="color:#FBBC05">3</p><p class="kpi-delta" style="color:#888">Esta semana</p></div>
+          <div class="kpi"><p class="kpi-label">Taxa de conversão</p><p class="kpi-val" style="color:#34A853">57%</p><p class="kpi-delta delta-up">▲ +8pp</p></div>
         </div>
         <div class="section-row">
           <div class="mini-card">
-            <h4>PrÃ³ximas reuniÃµes hoje</h4>
-            <div class="appt-item"><span class="appt-time">09:00</span><div class="appt-info"><p>Hamburgeria Central</p><span>Onboarding â€” Google Ads</span></div><div class="appt-dot" style="background:#4285F4"></div></div>
-            <div class="appt-item"><span class="appt-time">11:30</span><div class="appt-info"><p>SalÃ£o da Cris</p><span>ReuniÃ£o de resultados</span></div><div class="appt-dot" style="background:#34A853"></div></div>
-            <div class="appt-item"><span class="appt-time">15:00</span><div class="appt-info"><p>Ã“tica VisÃ£o Clara</p><span>DiagnÃ³stico gratuito</span></div><div class="appt-dot" style="background:#FBBC05"></div></div>
+            <h4>Próximas reuniões hoje</h4>
+            <div class="appt-item"><span class="appt-time">09:00</span><div class="appt-info"><p>Hamburgeria Central</p><span>Onboarding — Google Ads</span></div><div class="appt-dot" style="background:#4285F4"></div></div>
+            <div class="appt-item"><span class="appt-time">11:30</span><div class="appt-info"><p>Salão da Cris</p><span>Reunião de resultados</span></div><div class="appt-dot" style="background:#34A853"></div></div>
+            <div class="appt-item"><span class="appt-time">15:00</span><div class="appt-info"><p>Ótica Visão Clara</p><span>Diagnóstico gratuito</span></div><div class="appt-dot" style="background:#FBBC05"></div></div>
           </div>
           <div class="mini-card">
             <h4>Atividade recente</h4>
-            <div class="activity-item"><div class="act-icon" style="background:#e8f5e9">&#127919;</div><div><p class="act-text"><strong>Novo lead:</strong> FarmÃ¡cia Vida+ SaÃºde</p><p class="act-time">hÃ¡ 12 min</p></div></div>
-            <div class="activity-item"><div class="act-icon" style="background:#e3f2fd">&#128197;</div><div><p class="act-text"><strong>ReuniÃ£o confirmada:</strong> SalÃ£o da Cris</p><p class="act-time">hÃ¡ 1 hora</p></div></div>
-            <div class="activity-item"><div class="act-icon" style="background:#fff8e1">&#128200;</div><div><p class="act-text"><strong>RelatÃ³rio enviado:</strong> PH MaceiÃ³ â€” marÃ§o</p><p class="act-time">ontem</p></div></div>
-            <div class="activity-item"><div class="act-icon" style="background:#fce4ec">&#9989;</div><div><p class="act-text"><strong>Campanha ativada:</strong> KiDelÃ­cia Instagram</p><p class="act-time">ontem</p></div></div>
+            <div class="activity-item"><div class="act-icon" style="background:#e8f5e9">&#127919;</div><div><p class="act-text"><strong>Novo lead:</strong> Farmácia Vida+ Saúde</p><p class="act-time">há 12 min</p></div></div>
+            <div class="activity-item"><div class="act-icon" style="background:#e3f2fd">&#128197;</div><div><p class="act-text"><strong>Reunião confirmada:</strong> Salão da Cris</p><p class="act-time">há 1 hora</p></div></div>
+            <div class="activity-item"><div class="act-icon" style="background:#fff8e1">&#128200;</div><div><p class="act-text"><strong>Relatório enviado:</strong> PH Maceió — março</p><p class="act-time">ontem</p></div></div>
+            <div class="activity-item"><div class="act-icon" style="background:#fce4ec">&#9989;</div><div><p class="act-text"><strong>Campanha ativada:</strong> KiDelícia Instagram</p><p class="act-time">ontem</p></div></div>
           </div>
         </div>
       </div>
@@ -4694,12 +4771,12 @@ function obFinish() {
         <div class="table-wrap">
           <div class="table-header"><h3>Todos os clientes (8)</h3><button class="t-btn primary">+ Novo cliente</button></div>
           <table class="data-table">
-            <thead><tr><th>Cliente</th><th>Tipo</th><th>ServiÃ§o</th><th>Status</th><th>Progresso</th><th>PrÃ³x. entrega</th></tr></thead>
+            <thead><tr><th>Cliente</th><th>Tipo</th><th>Serviço</th><th>Status</th><th>Progresso</th><th>Próx. entrega</th></tr></thead>
             <tbody>
-              <tr><td><div class="client-row"><div class="client-init" style="background:#4285F4">PH</div><div><p style="font-weight:600">PH MaceiÃ³</p><p style="font-size:.75rem;color:#888">Restaurante</p></div></div></td><td style="font-size:.83rem">Delivery</td><td style="font-size:.83rem">Google + Insta</td><td><span class="status-pill s-ativo">Ativo</span></td><td><div style="font-size:.78rem;color:#888">MÃªs 4</div><div class="progress-bar"><div class="progress-fill" style="width:75%;background:#4285F4"></div></div></td><td style="font-size:.83rem;color:#555">Rel. semanal â€” Sex</td></tr>
-              <tr><td><div class="client-row"><div class="client-init" style="background:#34A853">KD</div><div><p style="font-weight:600">KiDelÃ­cia Pizzaria</p><p style="font-size:.75rem;color:#888">Pizzaria</p></div></div></td><td style="font-size:.83rem">Delivery</td><td style="font-size:.83rem">Instagram Ads</td><td><span class="status-pill s-ativo">Ativo</span></td><td><div style="font-size:.78rem;color:#888">MÃªs 2</div><div class="progress-bar"><div class="progress-fill" style="width:40%;background:#34A853"></div></div></td><td style="font-size:.83rem;color:#555">Criativo â€” Ter</td></tr>
-              <tr><td><div class="client-row"><div class="client-init" style="background:#EA4335">SC</div><div><p style="font-weight:600">SalÃ£o da Cris</p><p style="font-size:.75rem;color:#888">Beleza</p></div></div></td><td style="font-size:.83rem">Local</td><td style="font-size:.83rem">Google Ads</td><td><span class="status-pill s-reuniao">ReuniÃ£o</span></td><td><div style="font-size:.78rem;color:#888">MÃªs 1</div><div class="progress-bar"><div class="progress-fill" style="width:15%;background:#EA4335"></div></div></td><td style="font-size:.83rem;color:#555">Onboarding â€” Hoje</td></tr>
-              <tr><td><div class="client-row"><div class="client-init" style="background:#FBBC05;color:#333">HC</div><div><p style="font-weight:600">Hamburgeria Central</p><p style="font-size:.75rem;color:#888">Delivery</p></div></div></td><td style="font-size:.83rem">Delivery</td><td style="font-size:.83rem">Google + Insta</td><td><span class="status-pill s-reuniao">ReuniÃ£o</span></td><td><div style="font-size:.78rem;color:#888">InÃ­cio</div><div class="progress-bar"><div class="progress-fill" style="width:5%;background:#FBBC05"></div></div></td><td style="font-size:.83rem;color:#555">Setup â€” Qua</td></tr>
+              <tr><td><div class="client-row"><div class="client-init" style="background:#4285F4">PH</div><div><p style="font-weight:600">PH Maceió</p><p style="font-size:.75rem;color:#888">Restaurante</p></div></div></td><td style="font-size:.83rem">Delivery</td><td style="font-size:.83rem">Google + Insta</td><td><span class="status-pill s-ativo">Ativo</span></td><td><div style="font-size:.78rem;color:#888">Mês 4</div><div class="progress-bar"><div class="progress-fill" style="width:75%;background:#4285F4"></div></div></td><td style="font-size:.83rem;color:#555">Rel. semanal — Sex</td></tr>
+              <tr><td><div class="client-row"><div class="client-init" style="background:#34A853">KD</div><div><p style="font-weight:600">KiDelícia Pizzaria</p><p style="font-size:.75rem;color:#888">Pizzaria</p></div></div></td><td style="font-size:.83rem">Delivery</td><td style="font-size:.83rem">Instagram Ads</td><td><span class="status-pill s-ativo">Ativo</span></td><td><div style="font-size:.78rem;color:#888">Mês 2</div><div class="progress-bar"><div class="progress-fill" style="width:40%;background:#34A853"></div></div></td><td style="font-size:.83rem;color:#555">Criativo — Ter</td></tr>
+              <tr><td><div class="client-row"><div class="client-init" style="background:#EA4335">SC</div><div><p style="font-weight:600">Salão da Cris</p><p style="font-size:.75rem;color:#888">Beleza</p></div></div></td><td style="font-size:.83rem">Local</td><td style="font-size:.83rem">Google Ads</td><td><span class="status-pill s-reuniao">Reunião</span></td><td><div style="font-size:.78rem;color:#888">Mês 1</div><div class="progress-bar"><div class="progress-fill" style="width:15%;background:#EA4335"></div></div></td><td style="font-size:.83rem;color:#555">Onboarding — Hoje</td></tr>
+              <tr><td><div class="client-row"><div class="client-init" style="background:#FBBC05;color:#333">HC</div><div><p style="font-weight:600">Hamburgeria Central</p><p style="font-size:.75rem;color:#888">Delivery</p></div></div></td><td style="font-size:.83rem">Delivery</td><td style="font-size:.83rem">Google + Insta</td><td><span class="status-pill s-reuniao">Reunião</span></td><td><div style="font-size:.78rem;color:#888">Início</div><div class="progress-bar"><div class="progress-fill" style="width:5%;background:#FBBC05"></div></div></td><td style="font-size:.83rem;color:#555">Setup — Qua</td></tr>
             </tbody>
           </table>
         </div>
@@ -4707,7 +4784,7 @@ function obFinish() {
 
       <div class="dash-section" id="dash-leads">
         <p class="page-title">Leads</p>
-        <p class="page-sub">Gerencie os leads capturados pelo site e formulÃ¡rios</p>
+        <p class="page-sub">Gerencie os leads capturados pelo site e formulários</p>
         <div style="display:flex;gap:1rem;margin-bottom:1.5rem">
           <button class="t-btn primary" onclick="document.getElementById('new-lead-form').style.display='block'">+ Cadastrar lead</button>
           <button class="t-btn">Importar lista</button>
@@ -4716,11 +4793,11 @@ function obFinish() {
           <div class="lead-form-dash">
             <p style="font-weight:700;font-size:.95rem;margin-bottom:1rem;color:#111">Novo lead</p>
             <div class="lf-grid">
-              <div class="lf-group"><label>Nome</label><input type="text" placeholder="Nome do responsÃ¡vel"></div>
+              <div class="lf-group"><label>Nome</label><input type="text" placeholder="Nome do responsável"></div>
               <div class="lf-group"><label>WhatsApp</label><input type="tel" placeholder="(00) 00000-0000"></div>
-              <div class="lf-group"><label>NegÃ³cio</label><input type="text" placeholder="Nome do negÃ³cio"></div>
-              <div class="lf-group"><label>Segmento</label><select><option>Delivery</option><option>Loja fÃ­sica</option><option>ServiÃ§os</option><option>Outro</option></select></div>
-              <div class="lf-group full"><label>ObservaÃ§Ã£o</label><textarea rows="2" placeholder="Como chegou, interesse principal..."></textarea></div>
+              <div class="lf-group"><label>Negócio</label><input type="text" placeholder="Nome do negócio"></div>
+              <div class="lf-group"><label>Segmento</label><select><option>Delivery</option><option>Loja física</option><option>Serviços</option><option>Outro</option></select></div>
+              <div class="lf-group full"><label>Observação</label><textarea rows="2" placeholder="Como chegou, interesse principal..."></textarea></div>
             </div>
             <div class="lf-actions">
               <button class="lf-submit" onclick="alert('Lead cadastrado!');document.getElementById('new-lead-form').style.display='none'">Salvar lead</button>
@@ -4731,11 +4808,11 @@ function obFinish() {
         <div class="table-wrap">
           <div class="table-header"><h3>Leads recentes (3 novos)</h3></div>
           <table class="data-table">
-            <thead><tr><th>Nome</th><th>NegÃ³cio</th><th>Origem</th><th>Status</th><th>Data</th></tr></thead>
+            <thead><tr><th>Nome</th><th>Negócio</th><th>Origem</th><th>Status</th><th>Data</th></tr></thead>
             <tbody>
-              <tr><td style="font-weight:600">Marcos Lima</td><td>FarmÃ¡cia Vida+ SaÃºde</td><td><span style="font-size:.78rem;color:#4285F4;font-weight:600">Site</span></td><td><span class="status-pill s-prospect">Novo</span></td><td style="font-size:.83rem;color:#888">02/04/2026</td></tr>
-              <tr><td style="font-weight:600">Ana Beatriz</td><td>EspaÃ§o Glow Beauty</td><td><span style="font-size:.78rem;color:#EA4335;font-weight:600">Instagram</span></td><td><span class="status-pill s-reuniao">Contatado</span></td><td style="font-size:.83rem;color:#888">01/04/2026</td></tr>
-              <tr><td style="font-weight:600">Roberto Neto</td><td>Auto PeÃ§as Neto</td><td><span style="font-size:.78rem;color:#34A853;font-weight:600">WhatsApp</span></td><td><span class="status-pill s-ativo">Proposta</span></td><td style="font-size:.83rem;color:#888">31/03/2026</td></tr>
+              <tr><td style="font-weight:600">Marcos Lima</td><td>Farmácia Vida+ Saúde</td><td><span style="font-size:.78rem;color:#4285F4;font-weight:600">Site</span></td><td><span class="status-pill s-prospect">Novo</span></td><td style="font-size:.83rem;color:#888">02/04/2026</td></tr>
+              <tr><td style="font-weight:600">Ana Beatriz</td><td>Espaço Glow Beauty</td><td><span style="font-size:.78rem;color:#EA4335;font-weight:600">Instagram</span></td><td><span class="status-pill s-reuniao">Contatado</span></td><td style="font-size:.83rem;color:#888">01/04/2026</td></tr>
+              <tr><td style="font-weight:600">Roberto Neto</td><td>Auto Peças Neto</td><td><span style="font-size:.78rem;color:#34A853;font-weight:600">WhatsApp</span></td><td><span class="status-pill s-ativo">Proposta</span></td><td style="font-size:.83rem;color:#888">31/03/2026</td></tr>
             </tbody>
           </table>
         </div>
@@ -4743,16 +4820,16 @@ function obFinish() {
 
       <div class="dash-section" id="dash-agenda">
         <p class="page-title">Agenda da equipe</p>
-        <p class="page-sub">ReuniÃµes agendadas pelos clientes e prospects</p>
+        <p class="page-sub">Reuniões agendadas pelos clientes e prospects</p>
         <div class="table-wrap">
-          <div class="table-header"><h3>PrÃ³ximas reuniÃµes</h3><button class="t-btn primary">+ Agendar</button></div>
+          <div class="table-header"><h3>Próximas reuniões</h3><button class="t-btn primary">+ Agendar</button></div>
           <table class="data-table">
-            <thead><tr><th>Data</th><th>HorÃ¡rio</th><th>Cliente / Lead</th><th>Tipo</th><th>Status</th></tr></thead>
+            <thead><tr><th>Data</th><th>Horário</th><th>Cliente / Lead</th><th>Tipo</th><th>Status</th></tr></thead>
             <tbody>
               <tr><td>Hoje, 02/04</td><td>09:00</td><td style="font-weight:600">Hamburgeria Central</td><td style="font-size:.83rem">Onboarding</td><td><span class="status-pill s-ativo">Confirmado</span></td></tr>
-              <tr><td>Hoje, 02/04</td><td>11:30</td><td style="font-weight:600">SalÃ£o da Cris</td><td style="font-size:.83rem">Resultados</td><td><span class="status-pill s-ativo">Confirmado</span></td></tr>
-              <tr><td>Hoje, 02/04</td><td>15:00</td><td style="font-weight:600">Ã“tica VisÃ£o Clara</td><td style="font-size:.83rem">DiagnÃ³stico</td><td><span class="status-pill s-reuniao">Pendente</span></td></tr>
-              <tr><td>04/04</td><td>10:00</td><td style="font-weight:600">Marcos Lima â€” FarmÃ¡cia</td><td style="font-size:.83rem">Proposta</td><td><span class="status-pill s-prospect">Aguardando</span></td></tr>
+              <tr><td>Hoje, 02/04</td><td>11:30</td><td style="font-weight:600">Salão da Cris</td><td style="font-size:.83rem">Resultados</td><td><span class="status-pill s-ativo">Confirmado</span></td></tr>
+              <tr><td>Hoje, 02/04</td><td>15:00</td><td style="font-weight:600">Ótica Visão Clara</td><td style="font-size:.83rem">Diagnóstico</td><td><span class="status-pill s-reuniao">Pendente</span></td></tr>
+              <tr><td>04/04</td><td>10:00</td><td style="font-weight:600">Marcos Lima — Farmácia</td><td style="font-size:.83rem">Proposta</td><td><span class="status-pill s-prospect">Aguardando</span></td></tr>
             </tbody>
           </table>
         </div>
@@ -4764,25 +4841,25 @@ function obFinish() {
         <div class="table-wrap">
           <div class="table-header"><h3>Esta semana</h3><button class="t-btn primary">+ Nova tarefa</button></div>
           <table class="data-table">
-            <thead><tr><th>Tarefa</th><th>Cliente</th><th>Prazo</th><th>ResponsÃ¡vel</th><th>Status</th></tr></thead>
+            <thead><tr><th>Tarefa</th><th>Cliente</th><th>Prazo</th><th>Responsável</th><th>Status</th></tr></thead>
             <tbody>
-              <tr><td style="font-weight:600">RelatÃ³rio semanal</td><td>PH MaceiÃ³</td><td>06/04</td><td>Time</td><td><span class="status-pill s-reuniao">Em andamento</span></td></tr>
-              <tr><td style="font-weight:600">Criar criativo Stories</td><td>KiDelÃ­cia</td><td>04/04</td><td>Design</td><td><span class="status-pill s-prospect">A fazer</span></td></tr>
-              <tr><td style="font-weight:600">Otimizar palavras-chave</td><td>SalÃ£o da Cris</td><td>03/04</td><td>MÃ­dia</td><td><span class="status-pill s-ativo">ConcluÃ­do</span></td></tr>
-              <tr><td style="font-weight:600">Setup campanha Google</td><td>Hamburgeria Central</td><td>05/04</td><td>MÃ­dia</td><td><span class="status-pill s-reuniao">Em andamento</span></td></tr>
+              <tr><td style="font-weight:600">Relatório semanal</td><td>PH Maceió</td><td>06/04</td><td>Time</td><td><span class="status-pill s-reuniao">Em andamento</span></td></tr>
+              <tr><td style="font-weight:600">Criar criativo Stories</td><td>KiDelícia</td><td>04/04</td><td>Design</td><td><span class="status-pill s-prospect">A fazer</span></td></tr>
+              <tr><td style="font-weight:600">Otimizar palavras-chave</td><td>Salão da Cris</td><td>03/04</td><td>Mídia</td><td><span class="status-pill s-ativo">Concluído</span></td></tr>
+              <tr><td style="font-weight:600">Setup campanha Google</td><td>Hamburgeria Central</td><td>05/04</td><td>Mídia</td><td><span class="status-pill s-reuniao">Em andamento</span></td></tr>
             </tbody>
           </table>
         </div>
       </div>
 
       <div class="dash-section" id="dash-relatorios">
-        <p class="page-title">RelatÃ³rios</p>
+        <p class="page-title">Relatórios</p>
         <p class="page-sub">Resultados consolidados de todos os clientes</p>
         <div class="kpi-row">
-          <div class="kpi"><p class="kpi-label">Investimento gerenciado</p><p class="kpi-val" style="color:#4285F4">R$18.4k</p><p class="kpi-delta delta-up">â–² +22% vs marÃ§o</p></div>
-          <div class="kpi"><p class="kpi-label">Leads gerados (abril)</p><p class="kpi-val" style="color:#34A853">347</p><p class="kpi-delta delta-up">â–² +41 leads</p></div>
-          <div class="kpi"><p class="kpi-label">ROAS mÃ©dio</p><p class="kpi-val" style="color:#FBBC05">4.2x</p><p class="kpi-delta delta-up">â–² +0.6x</p></div>
-          <div class="kpi"><p class="kpi-label">SatisfaÃ§Ã£o dos clientes</p><p class="kpi-val" style="color:#EA4335">100%</p><p class="kpi-delta" style="color:#888">NPS 9.4</p></div>
+          <div class="kpi"><p class="kpi-label">Investimento gerenciado</p><p class="kpi-val" style="color:#4285F4">R$18.4k</p><p class="kpi-delta delta-up">▲ +22% vs março</p></div>
+          <div class="kpi"><p class="kpi-label">Leads gerados (abril)</p><p class="kpi-val" style="color:#34A853">347</p><p class="kpi-delta delta-up">▲ +41 leads</p></div>
+          <div class="kpi"><p class="kpi-label">ROAS médio</p><p class="kpi-val" style="color:#FBBC05">4.2x</p><p class="kpi-delta delta-up">▲ +0.6x</p></div>
+          <div class="kpi"><p class="kpi-label">Satisfação dos clientes</p><p class="kpi-val" style="color:#EA4335">100%</p><p class="kpi-delta" style="color:#888">NPS 9.4</p></div>
         </div>
       </div>
 
@@ -4818,10 +4895,10 @@ function showDash(s,el){
 var calDate=new Date(2026,3,1),selDay=null,selTime=null;
 var unavailTimes=['10:30','12:00','14:00'];
 function renderCal(){
-  var months=['Janeiro','Fevereiro','MarÃ§o','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+  var months=['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
   document.getElementById('cal-title').textContent=months[calDate.getMonth()]+' '+calDate.getFullYear();
   var grid=document.getElementById('cal-grid');grid.innerHTML='';
-  ['Dom','Seg','Ter','Qua','Qui','Sex','SÃ¡b'].forEach(function(d){var el=document.createElement('div');el.className='cal-day-name';el.textContent=d;grid.appendChild(el);});
+  ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'].forEach(function(d){var el=document.createElement('div');el.className='cal-day-name';el.textContent=d;grid.appendChild(el);});
   var first=new Date(calDate.getFullYear(),calDate.getMonth(),1).getDay();
   var days=new Date(calDate.getFullYear(),calDate.getMonth()+1,0).getDate();
   var today=new Date();
@@ -4853,7 +4930,7 @@ function showTimes(day){
   document.getElementById('confirm-btn-wrap').style.display='none';
 }
 function changeMonth(d){calDate.setMonth(calDate.getMonth()+d);selDay=null;selTime=null;document.getElementById('time-section').style.display='none';renderCal();}
-function confirmBooking(){if(selDay&&selTime)alert('ReuniÃ£o agendada para '+selDay+'/04/2026 Ã s '+selTime+'!\nVocÃª receberÃ¡ uma confirmaÃ§Ã£o por WhatsApp.');}
+function confirmBooking(){if(selDay&&selTime)alert('Reunião agendada para '+selDay+'/04/2026 às '+selTime+'!\nVocê receberá uma confirmação por WhatsApp.');}
 renderCal();
 
 

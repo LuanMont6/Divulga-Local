@@ -82,6 +82,23 @@ const TEMPLATE_THEMES = {
     '--amber-bg': '#fff7dc',
     '--blue': '#1d5f9e',
     '--blue-bg': '#e8f3ff'
+  },
+  yellow: {
+    '--bg': '#fffde7',
+    '--surface': '#ffffff',
+    '--text': '#3e2800',
+    '--text-muted': '#7a5c00',
+    '--text-hint': '#b08f3a',
+    '--border': 'rgba(245,127,23,0.15)',
+    '--border-md': 'rgba(245,127,23,0.28)',
+    '--accent': '#f57f17',
+    '--accent-fg': '#ffffff',
+    '--green': '#2e7d32',
+    '--green-bg': '#e9f8ec',
+    '--amber': '#a86500',
+    '--amber-bg': '#fff2db',
+    '--blue': '#0e5fa3',
+    '--blue-bg': '#e7f2ff'
   }
 };
 
@@ -283,7 +300,12 @@ let editingItemId = null;
 let ownerFilter = 'todos';
 let ownerView = 'cardapio';
 
-const DEFAULT_API_BASE = 'http://localhost:3001';
+// window.API_BASE_URL can be set before this script loads to point to production backend
+const DEFAULT_API_BASE = (typeof window.API_BASE_URL === 'string' && window.API_BASE_URL)
+  ? window.API_BASE_URL
+  : (location.hostname === 'localhost' || location.hostname === '127.0.0.1')
+    ? 'http://localhost:3001'
+    : `${location.protocol}//${location.hostname}:3001`;
 
 function getApiBaseUrl() {
   const fromQuery = (urlParams.get('api') || '').trim();
@@ -638,7 +660,8 @@ function sectionLabel(section) {
     lanches: 'Lanche',
     bebidas: 'Bebida',
     sobremesas: 'Sobremesa',
-    porcoes: 'Porcao'
+    porcoes: 'Porcao',
+    combos: 'Combo'
   };
   return labels[section] || 'Item';
 }
@@ -784,16 +807,16 @@ function ownerMainContent(items, filteredItems, isOpen, deliveryLabel) {
       </div>
       <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px">
         ${plans.map(p=>`
-          <div style="border-radius:12px;padding:16px;border:${p.id===currentPlan?'2px solid #34A853':'1px solid rgba(255,255,255,.1)'};background:${p.id===currentPlan?'rgba(52,168,83,.07)':'transparent'}">
+          <div style="border-radius:12px;padding:16px;border:${p.id===currentPlan?'2px solid #34A853':'1px solid var(--border-md)'};background:${p.id===currentPlan?'rgba(52,168,83,.07)':'var(--surface)'}">
             ${p.id===currentPlan?'<span style="font-size:10px;background:#34A853;color:#fff;padding:2px 8px;border-radius:8px;font-weight:700">ATUAL</span><br>':''}
-            <p style="font-size:.85rem;font-weight:700;color:#f5f7ff;margin:8px 0 2px">${p.label}</p>
-            <p style="font-size:1.3rem;font-weight:800;color:#f5f7ff">${p.price}<span style="font-size:.75rem;font-weight:400;color:rgba(255,255,255,.45)">${p.period}</span></p>
+            <p style="font-size:.85rem;font-weight:700;color:var(--text);margin:8px 0 2px">${p.label}</p>
+            <p style="font-size:1.3rem;font-weight:800;color:var(--text)">${p.price}<span style="font-size:.75rem;font-weight:400;color:var(--text-muted)">${p.period}</span></p>
             <div style="margin-top:10px;display:flex;flex-direction:column;gap:5px">
-              ${p.feats.map(f=>`<span style="font-size:.75rem;color:rgba(255,255,255,.65)">✓ ${f}</span>`).join('')}
+              ${p.feats.map(f=>`<span style="font-size:.75rem;color:var(--text-muted)">✓ ${f}</span>`).join('')}
             </div>
           </div>`).join('')}
       </div>
-      <p style="font-size:.75rem;color:rgba(255,255,255,.35);margin-top:14px;text-align:center">Para mudar de plano, entre em contato com o suporte.</p>`;
+      <p style="font-size:.75rem;color:var(--text-hint);margin-top:14px;text-align:center">Para mudar de plano, entre em contato com o suporte.</p>`;
   }
 
   return `
@@ -815,6 +838,7 @@ function ownerMainContent(items, filteredItems, isOpen, deliveryLabel) {
       <button class="owner-chip ${ownerFilter === 'lanches' ? 'active' : ''}" data-owner-filter="lanches">Lanches</button>
       <button class="owner-chip ${ownerFilter === 'bebidas' ? 'active' : ''}" data-owner-filter="bebidas">Bebidas</button>
       <button class="owner-chip ${ownerFilter === 'sobremesas' ? 'active' : ''}" data-owner-filter="sobremesas">Sobremesas</button>
+      <button class="owner-chip ${ownerFilter === 'combos' ? 'active' : ''}" data-owner-filter="combos">Combos</button>
     </div>
     <div class="owner-list">
       ${filteredItems.map((item) => `
@@ -888,6 +912,10 @@ function renderOwnerDashboard() {
       const tplId = card.getAttribute('data-tpl-id');
       runtimeConfig.tpl = tplId;
       applyTemplateTheme(tplId);
+      // update URL so public link reflects the new template
+      const u = new URL(location.href);
+      u.searchParams.set('tpl', tplId);
+      history.replaceState(null, '', u.toString());
       saveCustomMenuState();
       renderOwnerDashboard();
     });
@@ -967,10 +995,21 @@ function renderOwnerDashboard() {
 
 function applySectionLabels(segment) {
   const labels = SECTION_LABELS_BY_SEGMENT[segment] || SECTION_LABELS_BY_SEGMENT.restaurante;
+  // collect all renamed labels to detect duplicates with existing nav buttons
+  const renamedLabels = new Set(Object.values(labels).map(l => l.toLowerCase()));
   Object.entries(labels).forEach(([sec, label]) => {
     const navBtn = document.querySelector(`.nav-btn[data-sec="${sec}"]`);
     if (navBtn) {
       navBtn.textContent = label;
+    }
+  });
+  // hide nav buttons whose label would duplicate a renamed section
+  document.querySelectorAll('.nav-btn').forEach(btn => {
+    const sec = btn.getAttribute('data-sec');
+    if (!labels[sec] && renamedLabels.has(btn.textContent.trim().toLowerCase())) {
+      btn.style.display = 'none';
+    } else {
+      btn.style.display = '';
     }
   });
 }
@@ -1144,7 +1183,7 @@ function decorateDefaultCardsForRemove() {
 
 function normalizeSection(input) {
   const value = (input || '').toLowerCase().trim();
-  const accepted = ['destaques', 'pratos', 'lanches', 'bebidas', 'sobremesas', 'porcoes'];
+  const accepted = ['destaques', 'pratos', 'lanches', 'bebidas', 'sobremesas', 'porcoes', 'combos'];
   if (accepted.includes(value)) {
     return value;
   }
