@@ -1,8 +1,9 @@
 *{margin:0;padding:0;box-sizing:border-box}
 :root{
-  --g-blue:#4285F4;--g-red:#EA4335;--g-yellow:#FBBC05;--g-green:#34A853;
+  --g-blue:#7C3AED;--g-red:#A855F7;--g-yellow:#C4B5FD;--g-green:#6D28D9;
   --dark:#1a1a2e;--darker:#0f0f1a;--white:#fff;--light:#f8f9ff;
   --gray:#6b7280;--border:#e5e7eb;
+  --maind:#7C3AED;--maind-light:#A855F7;--maind-dark:#4C1D95;
   --font:'Plus Jakarta Sans',sans-serif;
 }
 body{font-family:var(--font);background:var(--darker);color:var(--white);overflow-x:hidden}
@@ -31,7 +32,7 @@ nav{background:rgba(15,15,26,0.96);backdrop-filter:blur(16px);padding:1rem 5%;di
 .g-dots-sm{display:flex;gap:3px}
 .dot-sm{width:7px;height:7px;border-radius:50%}
 h1.hero-title{font-size:clamp(2.5rem,6vw,5rem);font-weight:800;line-height:1.08;letter-spacing:-0.03em;margin-bottom:1.5rem;max-width:750px}
-.word-blue{color:var(--g-blue)}.word-red{color:var(--g-red)}.word-yellow{color:var(--g-yellow)}.word-green{color:var(--g-green)}
+.word-blue{color:#A855F7}.word-red{color:#C4B5FD}.word-yellow{color:#7C3AED}.word-green{color:#DDD6FE}
 .hero-sub{font-size:1.1rem;color:rgba(255,255,255,0.55);max-width:500px;line-height:1.75;margin-bottom:2.5rem}
 .hero-actions{display:flex;gap:1rem;flex-wrap:wrap;margin-bottom:4rem}
 .btn-hero{padding:.95rem 2.2rem;border-radius:3rem;font-weight:700;font-size:.95rem;cursor:pointer;border:none;transition:all .2s;text-decoration:none;display:inline-block}
@@ -82,12 +83,12 @@ h1.hero-title{font-size:clamp(2.5rem,6vw,5rem);font-weight:800;line-height:1.08;
 .cal-day{text-align:center;padding:.55rem;border-radius:8px;font-size:.85rem;cursor:pointer;transition:all .2s;border:1px solid transparent}
 .cal-day.empty{opacity:0}
 .cal-day.available:hover{background:rgba(66,133,244,0.15);border-color:rgba(66,133,244,0.3)}
-.cal-day.selected{background:var(--g-blue);color:#fff;font-weight:700}
+.cal-day.selected{background:#7C3AED;color:#fff;font-weight:700}
 .cal-day.past{color:rgba(255,255,255,0.2);cursor:default}
 .time-slots{display:grid;grid-template-columns:repeat(auto-fill,minmax(100px,1fr));gap:.6rem}
 .time-slot{padding:.6rem;text-align:center;border-radius:8px;border:1px solid rgba(255,255,255,0.1);font-size:.85rem;cursor:pointer;transition:all .2s}
-.time-slot:hover{border-color:var(--g-blue);color:var(--g-blue)}
-.time-slot.selected{background:var(--g-blue);color:#fff;border-color:var(--g-blue)}
+.time-slot:hover{border-color:#7C3AED;color:#7C3AED}
+.time-slot.selected{background:#7C3AED;color:#fff;border-color:#7C3AED}
 .time-slot.unavail{opacity:.3;cursor:default}
 
 .form-wrap{max-width:560px;margin:0 auto;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);border-radius:20px;padding:2.5rem}
@@ -96,9 +97,9 @@ h1.hero-title{font-size:clamp(2.5rem,6vw,5rem);font-weight:800;line-height:1.08;
 .form-group.full{grid-column:span 2}
 .form-group label{font-size:.82rem;font-weight:600;color:rgba(255,255,255,0.6)}
 .form-group input,.form-group select,.form-group textarea{background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:.75rem 1rem;color:#fff;font-family:var(--font);font-size:.9rem;outline:none;transition:border-color .2s}
-.form-group input:focus,.form-group select:focus{border-color:var(--g-blue)}
+.form-group input:focus,.form-group select:focus{border-color:#7C3AED}
 .form-group select option{background:#1a1a2e}
-.submit-btn{width:100%;padding:1rem;border-radius:10px;background:var(--g-blue);color:#fff;font-weight:700;font-size:.95rem;border:none;cursor:pointer;margin-top:.5rem}
+.submit-btn{width:100%;padding:1rem;border-radius:10px;background:#7C3AED;color:#fff;font-weight:700;font-size:.95rem;border:none;cursor:pointer;margin-top:.5rem}
 .submit-btn:hover{opacity:.88}
 
 footer{background:#080810;padding:2rem 5%;border-top:1px solid rgba(255,255,255,0.06);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1rem}
@@ -114,7 +115,7 @@ footer p{font-size:.82rem;color:rgba(255,255,255,0.3)}
 .sidebar-section{font-size:.72rem;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:#aaa;margin:1.2rem 0 .5rem .5rem}
 .sidebar-item{display:flex;align-items:center;gap:.7rem;padding:.6rem .8rem;border-radius:8px;font-size:.88rem;font-weight:500;color:#555;cursor:pointer;transition:all .15s;margin-bottom:2px}
 .sidebar-item:hover{background:#f0f2f8;color:#111}
-.sidebar-item.active{background:rgba(66,133,244,0.1);color:var(--g-blue);font-weight:700}
+.sidebar-item.active{background:rgba(124,58,237,0.1);color:#7C3AED;font-weight:700}
 .badge-count{margin-left:auto;background:var(--g-red);color:#fff;font-size:.7rem;font-weight:700;padding:2px 7px;border-radius:10px}
 .dash-main{padding:2rem;overflow-y:auto}
 .dash-section{display:none}
@@ -132,7 +133,7 @@ footer p{font-size:.82rem;color:rgba(255,255,255,0.3)}
 .table-header h3{font-size:.95rem;font-weight:700}
 .t-btn{padding:.4rem 1rem;border-radius:6px;font-size:.82rem;font-weight:600;cursor:pointer;border:1px solid #e5e7eb;background:#fff;color:#555;transition:all .15s}
 .t-btn:hover{background:#f0f2f8}
-.t-btn.primary{background:var(--g-blue);color:#fff;border-color:var(--g-blue)}
+.t-btn.primary{background:#7C3AED;color:#fff;border-color:#7C3AED}
 table.data-table{width:100%;border-collapse:collapse}
 table.data-table th{padding:.7rem 1.5rem;text-align:left;font-size:.78rem;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:.05em;border-bottom:1.5px solid #e5e7eb;background:#fafafa}
 table.data-table td{padding:.85rem 1.5rem;font-size:.88rem;border-bottom:1px solid #f0f2f8;vertical-align:middle}
@@ -152,7 +153,7 @@ table.data-table tr:hover td{background:#fafbff}
 .mini-card h4{font-size:.88rem;font-weight:700;margin-bottom:1rem}
 .appt-item{display:flex;align-items:center;gap:.8rem;padding:.6rem 0;border-bottom:1px solid #f0f2f8}
 .appt-item:last-child{border-bottom:none}
-.appt-time{font-size:.78rem;font-weight:700;color:var(--g-blue);min-width:48px}
+.appt-time{font-size:.78rem;font-weight:700;color:#7C3AED;min-width:48px}
 .appt-info{flex:1}
 .appt-info p{font-size:.85rem;font-weight:600;color:#111}
 .appt-info span{font-size:.75rem;color:#888}
