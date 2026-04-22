@@ -591,6 +591,7 @@ body.owner-dashboard-enabled #owner-fab{display:none!important}
   'use strict';
   var API = (new URLSearchParams(location.search).get('api') ||
              localStorage.getItem('webcardapio:api-base') ||
+             (typeof window.API_BASE_URL === 'string' && window.API_BASE_URL ? window.API_BASE_URL : null) ||
              'http://localhost:3001').replace(/\/+$/,'');
 
   var SLUG = (new URLSearchParams(location.search).get('store')||'')
