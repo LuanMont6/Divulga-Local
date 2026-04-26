@@ -1,7 +1,7 @@
 import jwt from 'jsonwebtoken';
 
-export function createToken(userId, jwtSecret) {
-  return jwt.sign({ sub: userId }, jwtSecret, { expiresIn: '7d' });
+export function createToken(userId, plan, jwtSecret) {
+  return jwt.sign({ sub: userId, plan }, jwtSecret, { expiresIn: '7d' });
 }
 
 export function authRequired(jwtSecret) {

@@ -14,6 +14,16 @@ const ITEM_ALIAS = {
 };
 const DEFAULT_STORE_NAME = 'Web Cardapio';
 
+/** Helper para rastreamento do Facebook Pixel */
+function fbTrack(event, data = {}) {
+  if (typeof window.fbq === 'function') {
+    window.fbq('track', event, data);
+  } else {
+    console.debug('[Pixel] Event:', event, data);
+  }
+}
+
+
 const TEMPLATE_THEMES = {
   clean: {
     '--bg': '#F7F5F0',
@@ -524,23 +534,23 @@ function applyMediaBranding() {
   const logoUrl = (runtimeConfig.logoUrl || '').trim();
   const coverUrl = (runtimeConfig.coverUrl || '').trim();
 
-  if (logoUrl) {
-    const logoContainer = document.querySelector('.logo');
-    if (logoContainer) {
-      logoContainer.innerHTML = '';
-      const image = document.createElement('img');
-      image.src = logoUrl;
-      image.alt = 'Logo do estabelecimento';
-      logoContainer.appendChild(image);
+  const logoContainer = document.querySelector('.logo');
+  if (logoContainer) {
+    if (logoUrl) {
+      logoContainer.innerHTML = `<img src="${escapeHtml(logoUrl)}" alt="Logo" onerror="this.parentElement.innerHTML='<div class=\'logo-placeholder\'></div>'">`;
+    } else {
+      logoContainer.innerHTML = '<div class="logo-placeholder"></div>';
     }
   }
 
-  if (coverUrl) {
-    const hero = document.querySelector('.hero');
-    if (hero) {
-      hero.style.backgroundImage = `linear-gradient(rgba(12,16,20,0.55), rgba(12,16,20,0.55)), url('${coverUrl}')`;
+  const hero = document.querySelector('.hero');
+  if (hero) {
+    if (coverUrl) {
+      hero.style.backgroundImage = `linear-gradient(rgba(12,16,20,0.5), rgba(12,16,20,0.5)), url('${coverUrl}')`;
       hero.style.backgroundSize = 'cover';
       hero.style.backgroundPosition = 'center';
+    } else {
+      hero.style.backgroundImage = ''; // Volta pro CSS padrão
     }
   }
 }
@@ -729,7 +739,6 @@ function ownerMainContent(items, filteredItems, isOpen, deliveryLabel) {
       </div>
       <div class="owner-grid">
         <div class="owner-field full"><label>URL da logo (link direto para imagem)</label><input id="brand-logo" placeholder="https://..." value="${escapeHtml(runtimeConfig.logoUrl||'')}"></div>
-        <div class="owner-field full"><label>URL da foto de capa</label><input id="brand-cover" placeholder="https://..." value="${escapeHtml(runtimeConfig.coverUrl||'')}"></div>
       </div>
       <p style="font-size:.78rem;color:#aaa;margin-top:8px">Dica: use o Google Fotos ou Imgur para hospedar suas imagens e copie o link direto.</p>`;
   }
@@ -922,13 +931,24 @@ function renderOwnerDashboard() {
   });
 
   // aparencia save
-  document.getElementById('owner-save-brand')?.addEventListener('click', () => {
-    runtimeConfig.logoUrl = (document.getElementById('brand-logo')?.value||'').trim();
-    runtimeConfig.coverUrl = (document.getElementById('brand-cover')?.value||'').trim();
+  document.getElementById('owner-save-brand')?.addEventListener('click', async () => {
+    runtimeConfig.logoUrl  = (document.getElementById('brand-logo')?.value||'').trim();
+    runtimeConfig.coverUrl = ''; // Campo removido — sempre limpa
+    
     applyMediaBranding();
-    saveCustomMenuState();
+    saveCustomMenuState(); // Salva local
+    
     const b = document.getElementById('owner-save-brand');
-    if(b){b.textContent='Salvo!'; setTimeout(()=>{b.textContent='Salvar';},1200);}
+    if(b){ b.disabled = true; b.textContent = 'Salvando...'; }
+    
+    try {
+      await syncRemoteMenuData(); // Força sincronização com o banco
+      if(b){ b.textContent = 'Salvo! ✅'; }
+    } catch (e) {
+      if(b){ b.textContent = 'Erro ao salvar'; }
+    } finally {
+      setTimeout(()=>{ if(b){ b.disabled = false; b.textContent = 'Salvar'; } }, 2000);
+    }
   });
 
   shell.querySelectorAll('[data-owner-filter]').forEach((button) => {
@@ -1117,12 +1137,14 @@ function sectionContainer(section) {
 }
 
 function cardMarkup(item) {
+  const imgHtml = item.imageUrl
+    ? `<img src="${escapeHtml(item.imageUrl)}" alt="${escapeHtml(item.name)}" class="card-img-photo" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+       <div class="card-img card-img-fallback" style="display:none"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2"><circle cx="12" cy="12" r="9"/><path d="M8 12h8"/></svg></div>`
+    : `<div class="card-img"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2"><circle cx="12" cy="12" r="9"/><path d="M8 12h8"/></svg></div>`;
   return `
     <button class="edit-item-btn" onclick="openEditItemModal('${item.id}')">Editar</button>
     <button class="remove-item-btn" onclick="removeMenuItem('${item.id}')">Remover</button>
-    <div class="card-img">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2"><circle cx="12" cy="12" r="9"/><path d="M8 12h8"/></svg>
-    </div>
+    ${imgHtml}
     <div class="card-body">
       <p class="card-name">${escapeHtml(item.name)}</p>
       <p class="card-desc">${escapeHtml(item.desc)}</p>
@@ -1243,25 +1265,28 @@ function openEditItemModal(itemId) {
   const added   = customMenuState.added?.find((a) => a.id === key) || {};
   const base    = ITEMS[key] || ITEMS[itemId] || {};
 
-  const name    = updated.name    || added.name    || base.name    || '';
-  const price   = updated.price   !== undefined ? updated.price
-                  : (added.price  !== undefined ? added.price : (base.price || 0));
-  const desc    = updated.desc    || added.desc    || '';
-  const section = updated.section || added.section || resolveItemSection(itemId) || 'pratos';
+  const name      = updated.name     || added.name     || base.name     || '';
+  const price     = updated.price    !== undefined ? updated.price
+                    : (added.price   !== undefined ? added.price : (base.price || 0));
+  const desc      = updated.desc     || added.desc     || '';
+  const section   = updated.section  || added.section  || resolveItemSection(itemId) || 'pratos';
+  const imageUrl  = updated.imageUrl || added.imageUrl || base.imageUrl || '';
 
-  const sectionInput = document.getElementById('editor-section');
-  const nameInput    = document.getElementById('editor-name');
-  const priceInput   = document.getElementById('editor-price');
-  const descInput    = document.getElementById('editor-desc');
-  const titleEl      = document.getElementById('editor-modal-title');
-  const submitBtn    = document.querySelector('.editor-btn-primary');
+  const sectionInput   = document.getElementById('editor-section');
+  const nameInput      = document.getElementById('editor-name');
+  const priceInput     = document.getElementById('editor-price');
+  const descInput      = document.getElementById('editor-desc');
+  const imageUrlInput  = document.getElementById('editor-imageUrl');
+  const titleEl        = document.getElementById('editor-modal-title');
+  const submitBtn      = document.querySelector('.editor-btn-primary');
 
-  if (sectionInput) sectionInput.value = normalizeSection(section) || 'pratos';
-  if (nameInput)    nameInput.value    = name;
-  if (priceInput)   priceInput.value  = Number.isFinite(Number(price)) ? Number(price).toFixed(2) : '';
-  if (descInput)    descInput.value   = desc;
-  if (titleEl)      titleEl.textContent = 'Editar item';
-  if (submitBtn)    submitBtn.textContent = 'Salvar alterações';
+  if (sectionInput)  sectionInput.value  = normalizeSection(section) || 'pratos';
+  if (nameInput)     nameInput.value     = name;
+  if (priceInput)    priceInput.value    = Number.isFinite(Number(price)) ? Number(price).toFixed(2) : '';
+  if (descInput)     descInput.value     = desc;
+  if (imageUrlInput) imageUrlInput.value = imageUrl;
+  if (titleEl)       titleEl.textContent = 'Editar item';
+  if (submitBtn)     submitBtn.textContent = 'Salvar alteracoes';
 
   const modal = document.getElementById('editor-modal');
   if (modal) {
@@ -1281,10 +1306,11 @@ function closeAddItemModal() {
 }
 
 function submitAddItemModal() {
-  const sectionValue = (document.getElementById('editor-section')?.value || '').trim();
-  const nameValue = (document.getElementById('editor-name')?.value || '').trim();
-  const priceRaw = (document.getElementById('editor-price')?.value || '').replace(',', '.').trim();
-  const descValue = (document.getElementById('editor-desc')?.value || '').trim();
+  const sectionValue  = (document.getElementById('editor-section')?.value  || '').trim();
+  const nameValue     = (document.getElementById('editor-name')?.value     || '').trim();
+  const priceRaw      = (document.getElementById('editor-price')?.value    || '').replace(',', '.').trim();
+  const descValue     = (document.getElementById('editor-desc')?.value     || '').trim();
+  const imageUrlValue = (document.getElementById('editor-imageUrl')?.value || '').trim();
 
   const section = normalizeSection(sectionValue);
   if (!section) {
@@ -1308,14 +1334,16 @@ function submitAddItemModal() {
       section,
       name: nameValue,
       price,
-      desc: descValue || 'Novo item do cardapio'
+      desc: descValue || 'Novo item do cardapio',
+      imageUrl: imageUrlValue
     });
   } else {
     addCustomItem({
       section,
       name: nameValue,
       price,
-      desc: descValue || 'Novo item do cardapio'
+      desc: descValue || 'Novo item do cardapio',
+      imageUrl: imageUrlValue
     });
   }
 
@@ -1357,23 +1385,49 @@ function updateMenuItem(itemId, patch) {
     }
   });
 
+  // Update image in card if provided
+  if (patch.imageUrl !== undefined) {
+    related.forEach((relatedId) => {
+      const ctrl2 = document.getElementById('ctrl-' + relatedId);
+      const card2 = ctrl2 ? ctrl2.closest('.card') : null;
+      if (!card2) return;
+      // Rebuild image area
+      const oldImg = card2.querySelector('.card-img-photo');
+      const oldFallback = card2.querySelector('.card-img-fallback');
+      const oldDefault  = card2.querySelector('.card-img:not(.card-img-fallback)');
+      if (oldImg) oldImg.remove();
+      if (oldFallback) oldFallback.remove();
+      if (oldDefault) oldDefault.remove();
+      const firstChild = card2.querySelector('.card-body');
+      if (patch.imageUrl) {
+        const img = document.createElement('img');
+        img.src = patch.imageUrl;
+        img.alt = patch.name || '';
+        img.className = 'card-img-photo';
+        img.onerror = function() { this.style.display = 'none'; };
+        card2.insertBefore(img, firstChild);
+      } else {
+        const fallback = document.createElement('div');
+        fallback.className = 'card-img';
+        fallback.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2"><circle cx="12" cy="12" r="9"/><path d="M8 12h8"/></svg>';
+        card2.insertBefore(fallback, firstChild);
+      }
+      if (ITEMS[relatedId]) ITEMS[relatedId].imageUrl = patch.imageUrl;
+    });
+  }
+
   if (key.startsWith('custom-')) {
     customMenuState.added = customMenuState.added.map((item) => {
       if (item.id !== key) return item;
-      return {
-        ...item,
-        section: patch.section,
-        name: patch.name,
-        desc: patch.desc,
-        price: patch.price
-      };
+      return { ...item, section: patch.section, name: patch.name, desc: patch.desc, price: patch.price, imageUrl: patch.imageUrl };
     });
   } else {
     customMenuState.updated[key] = {
-      section: patch.section,
-      name: patch.name,
-      desc: patch.desc,
-      price: patch.price
+      section:  patch.section,
+      name:     patch.name,
+      desc:     patch.desc,
+      price:    patch.price,
+      imageUrl: patch.imageUrl
     };
   }
 
@@ -1404,13 +1458,14 @@ function addCustomItem(itemInput) {
   const id = `custom-${Date.now()}-${Math.floor(Math.random() * 10000)}`;
   const item = {
     id,
-    section: itemInput.section,
-    name: itemInput.name,
-    price: itemInput.price,
-    desc: itemInput.desc
+    section:  itemInput.section,
+    name:     itemInput.name,
+    price:    itemInput.price,
+    desc:     itemInput.desc,
+    imageUrl: itemInput.imageUrl || ''
   };
 
-  ITEMS[id] = { name: item.name, price: item.price };
+  ITEMS[id] = { name: item.name, price: item.price, imageUrl: item.imageUrl };
   addCardToSection(item);
   renderCtrl(id);
 
@@ -1560,6 +1615,18 @@ function add(id) {
   const key = canonicalItemId(id);
   cart[key] = (cart[key] || 0) + 1;
 
+  // Rastreamento: Adicionar ao Carrinho
+  const item = ITEMS[key];
+  if (item) {
+    fbTrack('AddToCart', {
+      content_name: item.name,
+      content_ids: [key],
+      content_type: 'product',
+      value: item.price,
+      currency: 'BRL'
+    });
+  }
+
   relatedItemIds(id).forEach((itemId) => renderCtrl(itemId));
   saveCart();
   updateCartBar();
@@ -1634,25 +1701,254 @@ function loadCart() {
 
 function sendToWhatsApp() {
   const entries = Object.entries(cart).filter(([id, qty]) => qty > 0 && ITEMS[id]);
-  let msg = 'Olá! Gostaria de fazer um pedido:\n\n';
 
-  if (entries.length > 0) {
-    let total = 0;
+  if (entries.length === 0) {
+    // No items — just open WhatsApp with generic message
+    const msg = 'Olá! Quero ver o cardápio completo e fazer um pedido.';
+    fbTrack('Contact', { method: 'WhatsApp', content_name: getConfiguredStoreName() });
+    window.open('https://wa.me/' + configuredWaNumber + '?text=' + encodeURIComponent(msg), '_blank');
+    return;
+  }
 
+  // Show address modal before sending
+  showAddressModal(entries);
+}
+
+function showAddressModal(entries) {
+  // Remove existing modal if any
+  const existing = document.getElementById('address-modal');
+  if (existing) existing.remove();
+
+  // Calculate total
+  let total = 0;
+  entries.forEach(([id, qty]) => {
+    total += (ITEMS[id].price || 0) * qty;
+  });
+
+  const modal = document.createElement('div');
+  modal.id = 'address-modal';
+  modal.className = 'address-modal open';
+  modal.innerHTML = `
+    <div class="address-card">
+      <div class="address-header">
+        <h3>Finalizar pedido</h3>
+        <button class="address-close" id="address-close-btn">&times;</button>
+      </div>
+
+      <div class="address-summary">
+        <p>${entries.length} ${entries.length === 1 ? 'item' : 'itens'} · <strong>${formatBRL(total)}</strong></p>
+      </div>
+
+      <div class="address-toggle-wrap">
+        <button class="address-toggle active" data-mode="entrega" id="toggle-entrega">🛵 Entrega</button>
+        <button class="address-toggle" data-mode="retirada" id="toggle-retirada">🏪 Retirada</button>
+      </div>
+
+      <div class="address-form" id="address-form-fields">
+        <div class="address-row">
+          <label>Seu nome *</label>
+          <input type="text" id="addr-nome" placeholder="Ex: João Silva" autocomplete="name">
+        </div>
+
+        <div id="addr-delivery-fields">
+          <div class="address-row">
+            <label>Rua / Avenida *</label>
+            <input type="text" id="addr-rua" placeholder="Ex: Rua das Flores" autocomplete="street-address">
+          </div>
+          <div class="address-row-double">
+            <div class="address-row">
+              <label>Número *</label>
+              <input type="text" id="addr-numero" placeholder="123" autocomplete="address-line2">
+            </div>
+            <div class="address-row">
+              <label>Bairro *</label>
+              <input type="text" id="addr-bairro" placeholder="Centro" autocomplete="address-level3">
+            </div>
+          </div>
+          <div class="address-row">
+            <label>Complemento</label>
+            <input type="text" id="addr-complemento" placeholder="Apto, bloco, referência..." autocomplete="address-line3">
+          </div>
+          <div class="address-row">
+            <label>Ponto de referência</label>
+            <input type="text" id="addr-referencia" placeholder="Próximo ao mercado...">
+          </div>
+        </div>
+
+        <div class="address-row">
+          <label>Forma de pagamento *</label>
+          <select id="addr-pagamento">
+            <option value="">Selecione...</option>
+            <option value="Pagamento Online">Pagamento Online (Cartão/Pix)</option>
+            <option value="Pix">Pix (na entrega)</option>
+            <option value="Dinheiro">Dinheiro</option>
+            <option value="Cartão de crédito">Cartão (na entrega)</option>
+            <option value="Cartão de débito">Débito (na entrega)</option>
+          </select>
+          <small id="payment-hint" style="font-size: 11px; color: var(--text-hint); margin-top: 4px; display: block;"></small>
+        </div>
+
+        <div class="address-row">
+          <label>Observação do pedido</label>
+          <input type="text" id="addr-obs" placeholder="Sem cebola, sem gelo, etc...">
+        </div>
+      </div>
+
+      <button class="address-submit" id="address-submit-btn">
+        <svg viewBox="0 0 24 24" fill="currentColor" width="18" height="18">
+          <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/>
+          <path d="M12 0C5.373 0 0 5.373 0 12c0 2.122.551 4.116 1.515 5.847L.057 23.547a.5.5 0 0 0 .604.635l5.882-1.542A11.944 11.944 0 0 0 12 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 22c-1.885 0-3.656-.493-5.193-1.359l-.37-.217-3.84 1.007 1.026-3.748-.237-.386A9.951 9.951 0 0 1 2 12C2 6.477 6.477 2 12 2s10 4.477 10 10-4.477 10-10 10z"/>
+        </svg>
+        Enviar pedido pelo WhatsApp
+      </button>
+    </div>
+  `;
+
+  document.body.appendChild(modal);
+
+  // Toggle entrega / retirada
+  let deliveryMode = 'entrega';
+  const toggleEntrega = document.getElementById('toggle-entrega');
+  const toggleRetirada = document.getElementById('toggle-retirada');
+  const deliveryFields = document.getElementById('addr-delivery-fields');
+
+  toggleEntrega.addEventListener('click', () => {
+    deliveryMode = 'entrega';
+    toggleEntrega.classList.add('active');
+    toggleRetirada.classList.remove('active');
+    deliveryFields.style.display = 'block';
+  });
+
+  toggleRetirada.addEventListener('click', () => {
+    deliveryMode = 'retirada';
+    toggleRetirada.classList.add('active');
+    toggleEntrega.classList.remove('active');
+    deliveryFields.style.display = 'none';
+  });
+
+  // Close modal
+  document.getElementById('address-close-btn').addEventListener('click', () => modal.remove());
+  modal.addEventListener('click', (e) => { if (e.target === modal) modal.remove(); });
+
+  // Submit
+  document.getElementById('address-submit-btn').addEventListener('click', async () => {
+    const nome = (document.getElementById('addr-nome').value || '').trim();
+    if (!nome) {
+      alert('Informe seu nome para continuar.');
+      document.getElementById('addr-nome').focus();
+      return;
+    }
+
+    const pagamento = (document.getElementById('addr-pagamento').value || '').trim();
+    if (!pagamento) {
+      alert('Selecione uma forma de pagamento.');
+      document.getElementById('addr-pagamento').focus();
+      return;
+    }
+
+    if (deliveryMode === 'entrega') {
+      const rua = (document.getElementById('addr-rua').value || '').trim();
+      const numero = (document.getElementById('addr-numero').value || '').trim();
+      const bairro = (document.getElementById('addr-bairro').value || '').trim();
+
+      if (!rua || !numero || !bairro) {
+        alert('Preencha rua, número e bairro para entrega.');
+        return;
+      }
+    }
+
+    const btn = document.getElementById('address-submit-btn');
+    const originalText = btn.innerHTML;
+
+    // SE FOR PAGAMENTO ONLINE
+    if (pagamento === 'Pagamento Online') {
+      btn.disabled = true;
+      btn.innerHTML = 'Processando pagamento...';
+
+      try {
+        const apiBase = getApiBaseUrl();
+        const orderItems = entries.map(([id, qty]) => ({
+          id,
+          qty,
+          name: ITEMS[id].name,
+          price: ITEMS[id].price
+        }));
+
+        const res = await fetch(`${apiBase}/api/payments/create-preference`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ items: orderItems })
+        });
+
+        const data = await res.json();
+        if (data.init_point) {
+          // Salva os dados do pedido no localStorage para recuperar depois do pagamento se necessário
+          localStorage.setItem('pending_order_info', JSON.stringify({
+            nome, deliveryMode, pagamento, items: orderItems
+          }));
+          
+          window.location.href = data.init_point;
+          return;
+        } else {
+          throw new Error('Falha ao gerar link');
+        }
+      } catch (e) {
+        alert('Erro ao processar pagamento online. Tente outra forma ou fale conosco.');
+        btn.disabled = false;
+        btn.innerHTML = originalText;
+        return;
+      }
+    }
+
+    // Build WhatsApp message
+    let msg = `Olá! Gostaria de fazer um pedido:\n\n`;
+    msg += `*Nome:* ${nome}\n`;
+    msg += `*Tipo:* ${deliveryMode === 'entrega' ? 'Entrega' : 'Retirada no local'}\n`;
+
+    if (deliveryMode === 'entrega') {
+      const rua = document.getElementById('addr-rua').value.trim();
+      const numero = document.getElementById('addr-numero').value.trim();
+      const bairro = document.getElementById('addr-bairro').value.trim();
+      const complemento = (document.getElementById('addr-complemento').value || '').trim();
+      const referencia = (document.getElementById('addr-referencia').value || '').trim();
+
+      msg += `*Endereço:* ${rua}, ${numero}`;
+      if (complemento) msg += ` — ${complemento}`;
+      msg += `\n*Bairro:* ${bairro}\n`;
+      if (referencia) msg += `*Ref:* ${referencia}\n`;
+    }
+
+    if (pagamento) msg += `*Pagamento:* ${pagamento}\n`;
+
+    const obs = (document.getElementById('addr-obs').value || '').trim();
+    if (obs) msg += `*Obs:* ${obs}\n`;
+
+    msg += `\n────────────────\n\n`;
+
+    let orderTotal = 0;
     entries.forEach(([id, qty]) => {
       const item = ITEMS[id];
       const subtotal = item.price * qty;
-      total += subtotal;
+      orderTotal += subtotal;
       msg += `• ${qty}x ${item.name} — R$ ${subtotal.toFixed(2).replace('.', ',')}\n`;
     });
 
-    msg += `\n*Total: R$ ${total.toFixed(2).replace('.', ',')}*`;
-    msg += '\n\nPode confirmar meu pedido? 😊';
-  } else {
-    msg += 'Quero ver o cardápio completo e fazer um pedido.';
-  }
+    msg += `\n*Total: R$ ${orderTotal.toFixed(2).replace('.', ',')}*`;
+    msg += '\n\nPode confirmar meu pedido?';
 
-  window.open('https://wa.me/' + configuredWaNumber + '?text=' + encodeURIComponent(msg), '_blank');
+    // Tracking
+    fbTrack('InitiateCheckout', {
+      content_ids: entries.map(e => e[0]),
+      content_type: 'product',
+      value: orderTotal,
+      currency: 'BRL',
+      num_items: entries.reduce((acc, curr) => acc + curr[1], 0)
+    });
+    fbTrack('Contact', { method: 'WhatsApp', content_name: getConfiguredStoreName() });
+
+    modal.remove();
+    window.open('https://wa.me/' + configuredWaNumber + '?text=' + encodeURIComponent(msg), '_blank');
+  });
 }
 
 function setupNavigation() {

@@ -1,957 +1,1632 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="pt-BR">
+
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>MAIND | Estratégia & Conteúdo</title>
-<meta name="theme-color" content="#0f111a">
-<link rel="icon" type="image/svg+xml" href="favicon.svg">
-<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="styles.css">
-<script>
-  window.API_BASE_URL = 'https://divulga-local-production.up.railway.app';
-</script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MAIND | Estratégia & Conteúdo</title>
+  <meta name="theme-color" content="#0f111a">
+  <link rel="icon" type="image/svg+xml" href="MAIND favicon.svg?v=2">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap"
+    rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+  <script>
+    // Backend: usa localhost em dev, Railway em produção
+    window.API_BASE_URL = (location.hostname === 'localhost' || location.hostname === '127.0.0.1')
+      ? 'http://localhost:3001'
+      : 'https://divulga-local-production.up.railway.app';
+    console.log('[API] Base URL:', window.API_BASE_URL);
+  </script>
+
+  <!-- Facebook Pixel -->
+  <!-- TROCAR 'SEU_PIXEL_ID_AQUI' pelo ID real do pixel (ex: 123456789012345) -->
+  <script>
+    !function(f,b,e,v,n,t,s)
+    {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+    n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+    if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+    n.queue=[];t=b.createElement(e);t.async=!0;
+    t.src=v;s=b.getElementsByTagName(e)[0];
+    s.parentNode.insertBefore(t,s)}(window, document,'script',
+    'https://connect.facebook.net/en_US/fbevents.js');
+    fbq('init', 'SEU_PIXEL_ID_AQUI');
+    fbq('track', 'PageView');
+  </script>
+  <noscript><img height="1" width="1" style="display:none"
+    src="https://www.facebook.com/tr?id=SEU_PIXEL_ID_AQUI&ev=PageView&noscript=1"/></noscript>
+  <!-- End Facebook Pixel -->
 </head>
+
 <body>
 
-<nav>
-  <div class="logo-mark">
-    <div style="width:32px;height:32px;border-radius:50%;background:#7C3AED;display:flex;align-items:center;justify-content:center;flex-shrink:0">
-      <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M2 13L6.5 3L8 7L9.5 3L14 13" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-    </div>
-    <span class="logo-text">MAIND</span>
-  </div>
-  <div class="nav-tabs">
-    <button class="nav-tab active" onclick="showPage('site')">Site público</button>
-    <button class="nav-tab" onclick="showPage('cardapio-landing')">Cardápio Digital</button>
-    <button class="nav-tab" onclick="showPage('dash')">Painel interno</button>
-  </div>
-  <div class="nav-right">
-    <button class="nav-btn btn-ghost" onclick="showPage('dash')">Entrar</button>
-    <button class="nav-btn btn-cta" onclick="showPage('cardapio-landing')" style="background:#7C3AED;border-color:#7C3AED">Cardápio grátis 7 dias</button>
-  </div>
-</nav>
-
-<!-- SITE PÚBLICO -->
-<div id="page-site" class="page active">
-
-  <div class="hero">
-    <div class="google-badge">
-      <div style="width:18px;height:18px;border-radius:50%;background:#7C3AED;display:flex;align-items:center;justify-content:center">
-        <svg width="10" height="10" viewBox="0 0 16 16" fill="none"><path d="M2 13L6.5 3L8 7L9.5 3L14 13" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-      </div>
-      Parceiros Google &amp; Instagram Ads
-    </div>
-    <h1 class="hero-title">
-      Seu negócio local<br>
-      <span class="word-blue">aparecendo</span>,
-      <span class="word-green">crescendo</span><br>
-      e <span class="word-red">vendendo</span> mais
-    </h1>
-    <p class="hero-sub">Estratégias de tráfego pago no Google e Instagram feitas especialmente para negócios locais e deliverys que querem escalar o faturamento.</p>
-    <div class="hero-actions">
-      <a href="#contato" class="btn-hero btn-primary-hero" onclick="document.getElementById('contato').scrollIntoView({behavior:'smooth'});return false">Quero mais clientes →</a>
-      <a href="#cases" class="btn-hero btn-outline-hero" onclick="document.getElementById('cases').scrollIntoView({behavior:'smooth'});return false">Ver resultados reais</a>
-    </div>
-    <div class="stats-row">
-      <div class="stat-item"><strong style="color:#7C3AED">3x</strong><p>crescimento médio</p></div>
-      <div class="stat-item"><strong style="color:#6D28D9">+50</strong><p>negócios atendidos</p></div>
-      <div class="stat-item"><strong style="color:#C4B5FD">Google</strong><p>+ Instagram Ads</p></div>
-      <div class="stat-item"><strong style="color:#A855F7">90</strong><p>dias p/ resultados</p></div>
-    </div>
-  </div>
-
-  <div class="section section-dark">
-    <p class="s-label" style="color:#7C3AED">Serviços</p>
-    <h2 class="s-title">Tudo que seu negócio precisa<br>para <span style="color:#7C3AED">dominar a região</span></h2>
-    <div class="services-grid">
-      <div class="svc-card"><div class="svc-accent" style="background:#7C3AED"></div><h3>Google Ads Local</h3><p>Apareça no topo quando seu cliente buscar exatamente o que você oferece na sua cidade.</p></div>
-      <div class="svc-card"><div class="svc-accent" style="background:#A855F7"></div><h3>Instagram Ads</h3><p>Criativos que param o scroll e geram pedidos, reservas e visitas direto pelo Instagram.</p></div>
-      <div class="svc-card"><div class="svc-accent" style="background:#C4B5FD"></div><h3>Captação de Leads</h3><p>Formulários e landing pages otimizados para transformar cliques em contatos qualificados.</p></div>
-      <div class="svc-card"><div class="svc-accent" style="background:#6D28D9"></div><h3>Gestão e Relatórios</h3><p>Acompanhamento semanal com métricas claras: custo por lead, ROAS e crescimento real.</p></div>
-    </div>
-  </div>
-
-  <div class="section section-alt" id="cases">
-    <p class="s-label" style="color:#6D28D9">Cases reais</p>
-    <h2 class="s-title" style="color:#fff">Clientes que <span style="color:#6D28D9">triplicaram</span> o faturamento</h2>
-    <div class="cases-grid">
-      <div class="case-card">
-        <div class="case-logo" style="background:#7C3AED">PH</div>
-        <h3>PH Maceió</h3>
-        <p class="case-type">Restaurante / Delivery</p>
-        <div class="case-metrics">
-          <div class="metric"><strong style="color:#7C3AED">3.2x</strong><span>faturamento</span></div>
-          <div class="metric"><strong style="color:#6D28D9">-42%</strong><span>custo/pedido</span></div>
-          <div class="metric"><strong style="color:#A855F7">60</strong><span>dias</span></div>
-        </div>
-        <p class="case-quote" style="border-color:#7C3AED">"A MAIND transformou o fluxo de clientes. Em 60 dias já sentimos no caixa." — Hugo, Diretor</p>
-      </div>
-      <div class="case-card">
-        <div class="case-logo" style="background:#6D28D9">KD</div>
-        <h3>KiDelícia Pizzaria</h3>
-        <p class="case-type">Pizzaria / Delivery</p>
-        <div class="case-metrics">
-          <div class="metric"><strong style="color:#6D28D9">2.8x</strong><span>pedidos</span></div>
-          <div class="metric"><strong style="color:#C4B5FD">+180%</strong><span>alcance local</span></div>
-          <div class="metric"><strong style="color:#A855F7">45</strong><span>dias</span></div>
-        </div>
-        <p class="case-quote" style="border-color:#6D28D9">"Nossa pizza agora aparece pra todo mundo da cidade que busca pizza no Google."</p>
-      </div>
-      <div class="case-card">
-        <div class="case-logo" style="background:#C4B5FD;color:#333">+N</div>
-        <h3>Seu negócio aqui</h3>
-        <p class="case-type">Próximo case de sucesso</p>
-        <div class="case-metrics">
-          <div class="metric"><strong style="color:#C4B5FD">?x</strong><span>crescimento</span></div>
-          <div class="metric"><strong style="color:#7C3AED">0 →</strong><span>escala</span></div>
-        </div>
-        <p class="case-quote" style="border-color:#C4B5FD;color:#aaa">"Fale com a gente e descubra o potencial do seu negócio na sua região."</p>
-      </div>
-    </div>
-  </div>
-
-  <div class="section section-dark">
-    <p class="s-label" style="color:#C4B5FD">Como funciona</p>
-    <h2 class="s-title">Do diagnóstico ao <span style="color:#C4B5FD">resultado</span></h2>
-    <div class="steps-row">
-      <div class="step-item"><div class="step-bar" style="background:#7C3AED"></div><div class="step-num" style="color:#7C3AED">01</div><h3>Diagnóstico grátis</h3><p>Analisamos seu negócio, público e concorrentes na sua região sem custo.</p></div>
-      <div class="step-item"><div class="step-bar" style="background:#A855F7"></div><div class="step-num" style="color:#A855F7">02</div><h3>Estratégia sob medida</h3><p>Montamos um plano de mídia personalizado para o seu tipo de negócio.</p></div>
-      <div class="step-item"><div class="step-bar" style="background:#C4B5FD"></div><div class="step-num" style="color:#C4B5FD">03</div><h3>Campanhas no ar</h3><p>Ativamos Google e Instagram Ads com criativos testados e segmentação precisa.</p></div>
-      <div class="step-item"><div class="step-bar" style="background:#6D28D9"></div><div class="step-num" style="color:#6D28D9">04</div><h3>Escala contínua</h3><p>Otimizamos semanalmente para reduzir custo e aumentar retorno.</p></div>
-    </div>
-  </div>
-
-  <div class="section section-alt" id="agendamento">
-    <p class="s-label" style="color:#7C3AED">Agendar reunião</p>
-    <h2 class="s-title" style="color:#fff">Escolha o melhor <span style="color:#7C3AED">horário para você</span></h2>
-    <div class="schedule-wrap">
-      <div class="calendar-header">
-        <button class="cal-nav" onclick="changeMonth(-1)">&#8249;</button>
-        <span id="cal-title" style="font-weight:700;font-size:1rem"></span>
-        <button class="cal-nav" onclick="changeMonth(1)">&#8250;</button>
-      </div>
-      <div class="cal-grid" id="cal-grid"></div>
-      <div id="time-section" style="display:none">
-        <p style="font-size:.88rem;color:rgba(255,255,255,0.5);margin-bottom:.8rem">Horários disponíveis — <span id="sel-date" style="color:#fff;font-weight:600"></span></p>
-        <div class="time-slots" id="time-slots"></div>
-        <div id="confirm-btn-wrap" style="display:none;margin-top:1.2rem">
-          <button class="submit-btn" style="max-width:280px" onclick="confirmBooking()">Confirmar reunião →</button>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <div class="section" style="background:#0d0d1e" id="contato">
-    <p class="s-label" style="color:#A855F7">Fale conosco</p>
-    <h2 class="s-title" style="color:#fff">Pronto para <span style="color:#A855F7">começar</span>?</h2>
-    <div class="form-wrap">
-      <div class="form-grid">
-        <div class="form-group"><label>Nome</label><input type="text" placeholder="Seu nome"></div>
-        <div class="form-group"><label>WhatsApp</label><input type="tel" placeholder="(00) 00000-0000"></div>
-        <div class="form-group"><label>Nome do negócio</label><input type="text" placeholder="Ex: Pizzaria do João"></div>
-        <div class="form-group"><label>Tipo de negócio</label><select><option>Restaurante / Delivery</option><option>Loja física</option><option>Serviços locais</option><option>E-commerce</option><option>Outro</option></select></div>
-        <div class="form-group full"><label>Faturamento mensal aproximado</label><select><option>Até R$10 mil</option><option>R$10k–R$30k</option><option>R$30k–R$100k</option><option>Acima de R$100k</option></select></div>
-        <div class="form-group full"><label>Como podemos ajudar?</label><textarea rows="3" placeholder="Conte um pouco sobre seu negócio e objetivos..."></textarea></div>
-      </div>
-      <button class="submit-btn" onclick="alert('Lead enviado! Entraremos em contato em breve.')">Quero meu diagnóstico gratuito →</button>
-    </div>
-  </div>
-
-  <footer>
+  <nav>
     <div class="logo-mark">
-      <div class="logo-dots">
-        <div class="dot" style="background:#7C3AED"></div>
-        <div class="dot" style="background:#A855F7"></div>
-        <div class="dot" style="background:#C4B5FD"></div>
-        <div class="dot" style="background:#6D28D9"></div>
-      </div>
+      <img src="MAIND favicon.svg" alt="MAIND Logo"
+        style="width:32px;height:32px;border-radius:50%;flex-shrink:0;object-fit:cover">
       <span class="logo-text">MAIND</span>
     </div>
-    <p>© 2026 MAIND. Estratégia & Conteúdo.</p>
-  </footer>
-</div>
-
-<!-- CARDÁPIO DIGITAL LANDING -->
-<div id="page-cardapio-landing" class="page" style="display:none">
-
-  <div class="hero" style="background:#0a0a0a;padding:72px 20px 60px;text-align:center">
-    <div style="display:inline-flex;align-items:center;gap:8px;background:rgba(52,168,83,.15);border:1px solid rgba(52,168,83,.3);border-radius:20px;padding:6px 16px;margin-bottom:24px">
-      <div style="width:7px;height:7px;border-radius:50%;background:#6D28D9;animation:pulse-g 2s infinite"></div>
-      <span style="font-size:12px;color:#6D28D9;font-weight:600;letter-spacing:.04em">NOVO PRODUTO</span>
+    <div class="nav-tabs">
+      <button class="nav-tab active" onclick="showPage('site')">Site público</button>
+      <button class="nav-tab" onclick="showPage('cardapio-landing')">Cardápio Digital</button>
+      <button class="nav-tab" onclick="showPage('dash')">Painel interno</button>
     </div>
-    <h1 style="font-size:clamp(2rem,5vw,3.2rem);font-weight:800;color:#fff;line-height:1.1;max-width:700px;margin:0 auto 20px">
-      Cardápio digital bonito,<br><span style="color:#6D28D9">em 5 minutos</span>, com pedidos<br>direto no seu WhatsApp
-    </h1>
-    <p style="font-size:1.05rem;color:rgba(255,255,255,.55);max-width:480px;margin:0 auto 36px;line-height:1.6">
-      Seu cliente abre o link, monta o pedido e manda pro seu WhatsApp. Você escolhe o template, edita os itens e pronto — sem precisar de ninguém.
-    </p>
-    <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap">
-      <button onclick="showPage('cardapio-onboarding')" style="background:#6D28D9;color:#fff;border:none;border-radius:10px;padding:14px 32px;font-family:inherit;font-size:1rem;font-weight:700;cursor:pointer">Criar meu cardápio grátis →</button>
-      <button onclick="document.getElementById('cd-demo').scrollIntoView({behavior:'smooth'})" style="background:transparent;color:rgba(255,255,255,.7);border:1px solid rgba(255,255,255,.2);border-radius:10px;padding:14px 28px;font-family:inherit;font-size:1rem;cursor:pointer">Ver como funciona</button>
+    <div class="nav-right">
+      <button class="nav-btn btn-ghost" onclick="showPage('dash')">Entrar</button>
+      <button class="nav-btn btn-cta" onclick="showPage('cardapio-landing')"
+        style="background:#7C3AED;border-color:#7C3AED">Cardápio grátis 7 dias</button>
     </div>
-    <p style="font-size:12px;color:rgba(255,255,255,.3);margin-top:16px">7 dias grátis · sem cartão de crédito · cancele quando quiser</p>
+  </nav>
+
+  <!-- SITE PÚBLICO -->
+  <div id="page-site" class="page active">
+
+    <div class="hero">
+      <div class="google-badge">
+        <img src="MAIND favicon.svg" alt="MAIND Icon"
+          style="width:18px;height:18px;border-radius:50%;object-fit:cover;flex-shrink:0">
+        Parceiros Google &amp; Instagram Ads
+      </div>
+      <h1 class="hero-title">
+        Seu negócio local<br>
+        <span class="word-blue">aparecendo</span>,
+        <span class="word-green">crescendo</span><br>
+        e <span class="word-red">vendendo</span> mais
+      </h1>
+      <p class="hero-sub">Estratégias de tráfego pago no Google e Instagram feitas especialmente para negócios locais e
+        deliverys que querem escalar o faturamento.</p>
+      <div class="hero-actions">
+        <a href="#contato" class="btn-hero btn-primary-hero"
+          onclick="document.getElementById('contato').scrollIntoView({behavior:'smooth'});return false">Quero mais
+          clientes →</a>
+        <a href="#cases" class="btn-hero btn-outline-hero"
+          onclick="document.getElementById('cases').scrollIntoView({behavior:'smooth'});return false">Ver resultados
+          reais</a>
+      </div>
+      <div class="stats-row">
+        <div class="stat-item"><strong style="color:#7C3AED">3x</strong>
+          <p>crescimento médio</p>
+        </div>
+        <div class="stat-item"><strong style="color:#6D28D9">+50</strong>
+          <p>negócios atendidos</p>
+        </div>
+        <div class="stat-item"><strong style="color:#C4B5FD">Google</strong>
+          <p>+ Instagram Ads</p>
+        </div>
+        <div class="stat-item"><strong style="color:#A855F7">90</strong>
+          <p>dias p/ resultados</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="section section-dark">
+      <p class="s-label" style="color:#7C3AED">Serviços</p>
+      <h2 class="s-title">Tudo que seu negócio precisa<br>para <span style="color:#7C3AED">dominar a região</span></h2>
+      <div class="services-grid">
+        <div class="svc-card">
+          <div class="svc-accent" style="background:#7C3AED"></div>
+          <h3>Google Ads Local</h3>
+          <p>Apareça no topo quando seu cliente buscar exatamente o que você oferece na sua cidade.</p>
+        </div>
+        <div class="svc-card">
+          <div class="svc-accent" style="background:#A855F7"></div>
+          <h3>Instagram Ads</h3>
+          <p>Criativos que param o scroll e geram pedidos, reservas e visitas direto pelo Instagram.</p>
+        </div>
+        <div class="svc-card">
+          <div class="svc-accent" style="background:#C4B5FD"></div>
+          <h3>Captação de Leads</h3>
+          <p>Formulários e landing pages otimizados para transformar cliques em contatos qualificados.</p>
+        </div>
+        <div class="svc-card">
+          <div class="svc-accent" style="background:#6D28D9"></div>
+          <h3>Gestão e Relatórios</h3>
+          <p>Acompanhamento semanal com métricas claras: custo por lead, ROAS e crescimento real.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="section section-alt" id="cases">
+      <p class="s-label" style="color:#6D28D9">Cases reais</p>
+      <h2 class="s-title" style="color:#fff">Clientes que <span style="color:#6D28D9">triplicaram</span> o faturamento
+      </h2>
+      <div class="cases-grid">
+        <div class="case-card">
+          <div class="case-logo" style="background:#7C3AED">PH</div>
+          <h3>PH Maceió</h3>
+          <p class="case-type">Restaurante / Delivery</p>
+          <div class="case-metrics">
+            <div class="metric"><strong style="color:#7C3AED">3.2x</strong><span>faturamento</span></div>
+            <div class="metric"><strong style="color:#6D28D9">-42%</strong><span>custo/pedido</span></div>
+            <div class="metric"><strong style="color:#A855F7">60</strong><span>dias</span></div>
+          </div>
+          <p class="case-quote" style="border-color:#7C3AED">"A MAIND transformou o fluxo de clientes. Em 60 dias já
+            sentimos no caixa." — Hugo, Diretor</p>
+        </div>
+        <div class="case-card">
+          <div class="case-logo" style="background:#6D28D9">KD</div>
+          <h3>KiDelícia Pizzaria</h3>
+          <p class="case-type">Pizzaria / Delivery</p>
+          <div class="case-metrics">
+            <div class="metric"><strong style="color:#6D28D9">2.8x</strong><span>pedidos</span></div>
+            <div class="metric"><strong style="color:#C4B5FD">+180%</strong><span>alcance local</span></div>
+            <div class="metric"><strong style="color:#A855F7">45</strong><span>dias</span></div>
+          </div>
+          <p class="case-quote" style="border-color:#6D28D9">"Nossa pizza agora aparece pra todo mundo da cidade que
+            busca pizza no Google."</p>
+        </div>
+        <div class="case-card">
+          <div class="case-logo" style="background:#C4B5FD;color:#333">+N</div>
+          <h3>Seu negócio aqui</h3>
+          <p class="case-type">Próximo case de sucesso</p>
+          <div class="case-metrics">
+            <div class="metric"><strong style="color:#C4B5FD">?x</strong><span>crescimento</span></div>
+            <div class="metric"><strong style="color:#7C3AED">0 →</strong><span>escala</span></div>
+          </div>
+          <p class="case-quote" style="border-color:#C4B5FD;color:#aaa">"Fale com a gente e descubra o potencial do seu
+            negócio na sua região."</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="section section-dark">
+      <p class="s-label" style="color:#C4B5FD">Como funciona</p>
+      <h2 class="s-title">Do diagnóstico ao <span style="color:#C4B5FD">resultado</span></h2>
+      <div class="steps-row">
+        <div class="step-item">
+          <div class="step-bar" style="background:#7C3AED"></div>
+          <div class="step-num" style="color:#7C3AED">01</div>
+          <h3>Diagnóstico grátis</h3>
+          <p>Analisamos seu negócio, público e concorrentes na sua região sem custo.</p>
+        </div>
+        <div class="step-item">
+          <div class="step-bar" style="background:#A855F7"></div>
+          <div class="step-num" style="color:#A855F7">02</div>
+          <h3>Estratégia sob medida</h3>
+          <p>Montamos um plano de mídia personalizado para o seu tipo de negócio.</p>
+        </div>
+        <div class="step-item">
+          <div class="step-bar" style="background:#C4B5FD"></div>
+          <div class="step-num" style="color:#C4B5FD">03</div>
+          <h3>Campanhas no ar</h3>
+          <p>Ativamos Google e Instagram Ads com criativos testados e segmentação precisa.</p>
+        </div>
+        <div class="step-item">
+          <div class="step-bar" style="background:#6D28D9"></div>
+          <div class="step-num" style="color:#6D28D9">04</div>
+          <h3>Escala contínua</h3>
+          <p>Otimizamos semanalmente para reduzir custo e aumentar retorno.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="section section-alt" id="agendamento">
+      <p class="s-label" style="color:#7C3AED">Agendar reunião</p>
+      <h2 class="s-title" style="color:#fff">Escolha o melhor <span style="color:#7C3AED">horário para você</span></h2>
+      <div class="schedule-wrap">
+        <div class="calendar-header">
+          <button class="cal-nav" onclick="changeMonth(-1)">&#8249;</button>
+          <span id="cal-title" style="font-weight:700;font-size:1rem"></span>
+          <button class="cal-nav" onclick="changeMonth(1)">&#8250;</button>
+        </div>
+        <div class="cal-grid" id="cal-grid"></div>
+        <div id="time-section" style="display:none">
+          <p style="font-size:.88rem;color:rgba(255,255,255,0.5);margin-bottom:.8rem">Horários disponíveis — <span
+              id="sel-date" style="color:#fff;font-weight:600"></span></p>
+          <div class="time-slots" id="time-slots"></div>
+          <div id="confirm-btn-wrap" style="display:none;margin-top:1.2rem">
+            <button class="submit-btn" style="max-width:280px" onclick="confirmBooking()">Confirmar reunião →</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section" style="background:#0d0d1e" id="contato">
+      <p class="s-label" style="color:#A855F7">Fale conosco</p>
+      <h2 class="s-title" style="color:#fff">Pronto para <span style="color:#A855F7">começar</span>?</h2>
+      <div class="form-wrap">
+        <div class="form-grid">
+          <div class="form-group"><label>Nome</label><input type="text" placeholder="Seu nome"></div>
+          <div class="form-group"><label>WhatsApp</label><input type="tel" placeholder="(00) 00000-0000"></div>
+          <div class="form-group"><label>Nome do negócio</label><input type="text" placeholder="Ex: Pizzaria do João">
+          </div>
+          <div class="form-group"><label>Tipo de negócio</label><select>
+              <option>Restaurante / Delivery</option>
+              <option>Loja física</option>
+              <option>Serviços locais</option>
+              <option>E-commerce</option>
+              <option>Outro</option>
+            </select></div>
+          <div class="form-group full"><label>Faturamento mensal aproximado</label><select>
+              <option>Até R$10 mil</option>
+              <option>R$10k–R$30k</option>
+              <option>R$30k–R$100k</option>
+              <option>Acima de R$100k</option>
+            </select></div>
+          <div class="form-group full"><label>Como podemos ajudar?</label><textarea rows="3"
+              placeholder="Conte um pouco sobre seu negócio e objetivos..."></textarea></div>
+        </div>
+        <button class="submit-btn" onclick="alert('Lead enviado! Entraremos em contato em breve.')">Quero meu
+          diagnóstico gratuito →</button>
+      </div>
+    </div>
+
+    <footer>
+      <div class="logo-mark">
+        <img src="MAIND favicon.svg" alt="MAIND Logo"
+          style="width:24px;height:24px;border-radius:50%;object-fit:cover;flex-shrink:0">
+        <span class="logo-text">MAIND</span>
+      </div>
+      <p>© 2026 MAIND. Estratégia & Conteúdo.</p>
+    </footer>
   </div>
 
-  <div style="background:#f9f9f9;padding:60px 20px" id="cd-demo">
-    <p style="text-align:center;font-size:.8rem;font-weight:700;letter-spacing:.1em;color:#6D28D9;margin-bottom:12px">COMO FUNCIONA</p>
-    <h2 style="text-align:center;font-size:clamp(1.5rem,3vw,2rem);font-weight:800;color:#111;margin-bottom:48px">3 passos. Do zero ao link ativo.</h2>
-    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:24px;max-width:800px;margin:0 auto 48px">
-      <div style="background:#fff;border-radius:16px;padding:28px 24px;border:1px solid #eee">
-        <div style="width:40px;height:40px;border-radius:10px;background:#E8F5E9;display:flex;align-items:center;justify-content:center;margin-bottom:16px">
-          <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><rect x="3" y="3" width="14" height="14" rx="3" stroke="#6D28D9" stroke-width="1.6"/><path d="M7 10h6M10 7v6" stroke="#6D28D9" stroke-width="1.6" stroke-linecap="round"/></svg>
-        </div>
-        <div style="font-size:.75rem;font-weight:700;color:#6D28D9;margin-bottom:6px">PASSO 1</div>
-        <h3 style="font-size:1rem;font-weight:700;color:#111;margin-bottom:8px">Escolha o template</h3>
-        <p style="font-size:.88rem;color:#666;line-height:1.6">Clean, dark, colorido ou rústico — você escolhe o visual que combina com o seu negócio.</p>
+  <!-- CARDÁPIO DIGITAL LANDING -->
+  <div id="page-cardapio-landing" class="page" style="display:none">
+
+    <div class="hero" style="background:#0a0a0a;padding:72px 20px 60px;text-align:center">
+      <div
+        style="display:inline-flex;align-items:center;gap:8px;background:rgba(52,168,83,.15);border:1px solid rgba(52,168,83,.3);border-radius:20px;padding:6px 16px;margin-bottom:24px">
+        <div style="width:7px;height:7px;border-radius:50%;background:#6D28D9;animation:pulse-g 2s infinite"></div>
+        <span style="font-size:12px;color:#6D28D9;font-weight:600;letter-spacing:.04em">NOVO PRODUTO</span>
       </div>
-      <div style="background:#fff;border-radius:16px;padding:28px 24px;border:1px solid #eee">
-        <div style="width:40px;height:40px;border-radius:10px;background:#E8F5E9;display:flex;align-items:center;justify-content:center;margin-bottom:16px">
-          <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M4 6h12M4 10h8M4 14h10" stroke="#6D28D9" stroke-width="1.6" stroke-linecap="round"/></svg>
-        </div>
-        <div style="font-size:.75rem;font-weight:700;color:#6D28D9;margin-bottom:6px">PASSO 2</div>
-        <h3 style="font-size:1rem;font-weight:700;color:#111;margin-bottom:8px">Adicione seus itens</h3>
-        <p style="font-size:.88rem;color:#666;line-height:1.6">Nome, preço, categoria e foto. Adicione, edite ou remova quando quiser, na palma da mão.</p>
+      <h1
+        style="font-size:clamp(2rem,5vw,3.2rem);font-weight:800;color:#fff;line-height:1.1;max-width:700px;margin:0 auto 20px">
+        Cardápio digital bonito,<br><span style="color:#6D28D9">em 5 minutos</span>, com pedidos<br>direto no seu
+        WhatsApp
+      </h1>
+      <p style="font-size:1.05rem;color:rgba(255,255,255,.55);max-width:480px;margin:0 auto 36px;line-height:1.6">
+        Seu cliente abre o link, monta o pedido e manda pro seu WhatsApp. Você escolhe o template, edita os itens e
+        pronto — sem precisar de ninguém.
+      </p>
+      <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap">
+        <button onclick="showPage('cardapio-onboarding')"
+          style="background:#6D28D9;color:#fff;border:none;border-radius:10px;padding:14px 32px;font-family:inherit;font-size:1rem;font-weight:700;cursor:pointer">Criar
+          meu cardápio grátis →</button>
+        <button onclick="document.getElementById('cd-demo').scrollIntoView({behavior:'smooth'})"
+          style="background:transparent;color:rgba(255,255,255,.7);border:1px solid rgba(255,255,255,.2);border-radius:10px;padding:14px 28px;font-family:inherit;font-size:1rem;cursor:pointer">Ver
+          como funciona</button>
       </div>
-      <div style="background:#fff;border-radius:16px;padding:28px 24px;border:1px solid #eee">
-        <div style="width:40px;height:40px;border-radius:10px;background:#E8F5E9;display:flex;align-items:center;justify-content:center;margin-bottom:16px">
-          <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M14.5 11.5c-.25-.125-1.465-.723-1.692-.806-.228-.083-.393-.124-.558.125-.165.248-.64.806-.784.972-.144.165-.289.186-.537.062-.248-.124-1.046-.386-1.992-1.23-.736-.657-1.233-1.468-1.378-1.716-.144-.248-.015-.382.108-.505.112-.111.249-.29.372-.433.124-.145.165-.249.249-.414.083-.165.041-.31-.021-.434-.062-.124-.558-1.344-.764-1.84-.201-.483-.406-.417-.558-.425-.144-.007-.31-.008-.475-.008-.165 0-.434.062-.661.31-.228.248-.868.848-.868 2.067 0 1.218.888 2.396 1.011 2.562.124.166 1.748 2.668 4.231 3.74.591.255 1.052.408 1.412.521.593.19 1.133.163 1.56.099.476-.071 1.465-.6 1.672-1.179.207-.578.207-1.073.145-1.178-.062-.103-.227-.165-.475-.289z" fill="#6D28D9"/></svg>
+      <p style="font-size:12px;color:rgba(255,255,255,.3);margin-top:16px">7 dias grátis · sem cartão de crédito ·
+        cancele quando quiser</p>
+    </div>
+
+    <div style="background:#f9f9f9;padding:60px 20px" id="cd-demo">
+      <p style="text-align:center;font-size:.8rem;font-weight:700;letter-spacing:.1em;color:#6D28D9;margin-bottom:12px">
+        COMO FUNCIONA</p>
+      <h2 style="text-align:center;font-size:clamp(1.5rem,3vw,2rem);font-weight:800;color:#111;margin-bottom:48px">3
+        passos. Do zero ao link ativo.</h2>
+      <div
+        style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:24px;max-width:800px;margin:0 auto 48px">
+        <div style="background:#fff;border-radius:16px;padding:28px 24px;border:1px solid #eee">
+          <div
+            style="width:40px;height:40px;border-radius:10px;background:#E8F5E9;display:flex;align-items:center;justify-content:center;margin-bottom:16px">
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+              <rect x="3" y="3" width="14" height="14" rx="3" stroke="#6D28D9" stroke-width="1.6" />
+              <path d="M7 10h6M10 7v6" stroke="#6D28D9" stroke-width="1.6" stroke-linecap="round" />
+            </svg>
+          </div>
+          <div style="font-size:.75rem;font-weight:700;color:#6D28D9;margin-bottom:6px">PASSO 1</div>
+          <h3 style="font-size:1rem;font-weight:700;color:#111;margin-bottom:8px">Escolha o template</h3>
+          <p style="font-size:.88rem;color:#666;line-height:1.6">Clean, dark, colorido ou rústico — você escolhe o
+            visual que combina com o seu negócio.</p>
         </div>
-        <div style="font-size:.75rem;font-weight:700;color:#6D28D9;margin-bottom:6px">PASSO 3</div>
-        <h3 style="font-size:1rem;font-weight:700;color:#111;margin-bottom:8px">Compartilhe o link</h3>
-        <p style="font-size:.88rem;color:#666;line-height:1.6">Seu link <strong>webcardapio.com/seunome</strong> está no ar. Cliente pede, cai direto no seu WhatsApp.</p>
+        <div style="background:#fff;border-radius:16px;padding:28px 24px;border:1px solid #eee">
+          <div
+            style="width:40px;height:40px;border-radius:10px;background:#E8F5E9;display:flex;align-items:center;justify-content:center;margin-bottom:16px">
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+              <path d="M4 6h12M4 10h8M4 14h10" stroke="#6D28D9" stroke-width="1.6" stroke-linecap="round" />
+            </svg>
+          </div>
+          <div style="font-size:.75rem;font-weight:700;color:#6D28D9;margin-bottom:6px">PASSO 2</div>
+          <h3 style="font-size:1rem;font-weight:700;color:#111;margin-bottom:8px">Adicione seus itens</h3>
+          <p style="font-size:.88rem;color:#666;line-height:1.6">Nome, preço, categoria e foto. Adicione, edite ou
+            remova quando quiser, na palma da mão.</p>
+        </div>
+        <div style="background:#fff;border-radius:16px;padding:28px 24px;border:1px solid #eee">
+          <div
+            style="width:40px;height:40px;border-radius:10px;background:#E8F5E9;display:flex;align-items:center;justify-content:center;margin-bottom:16px">
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+              <path
+                d="M14.5 11.5c-.25-.125-1.465-.723-1.692-.806-.228-.083-.393-.124-.558.125-.165.248-.64.806-.784.972-.144.165-.289.186-.537.062-.248-.124-1.046-.386-1.992-1.23-.736-.657-1.233-1.468-1.378-1.716-.144-.248-.015-.382.108-.505.112-.111.249-.29.372-.433.124-.145.165-.249.249-.414.083-.165.041-.31-.021-.434-.062-.124-.558-1.344-.764-1.84-.201-.483-.406-.417-.558-.425-.144-.007-.31-.008-.475-.008-.165 0-.434.062-.661.31-.228.248-.868.848-.868 2.067 0 1.218.888 2.396 1.011 2.562.124.166 1.748 2.668 4.231 3.74.591.255 1.052.408 1.412.521.593.19 1.133.163 1.56.099.476-.071 1.465-.6 1.672-1.179.207-.578.207-1.073.145-1.178-.062-.103-.227-.165-.475-.289z"
+                fill="#6D28D9" />
+            </svg>
+          </div>
+          <div style="font-size:.75rem;font-weight:700;color:#6D28D9;margin-bottom:6px">PASSO 3</div>
+          <h3 style="font-size:1rem;font-weight:700;color:#111;margin-bottom:8px">Compartilhe o link</h3>
+          <p style="font-size:.88rem;color:#666;line-height:1.6">Seu link <strong>webcardapio.com/seunome</strong> está
+            no ar. Cliente pede, cai direto no seu WhatsApp.</p>
+        </div>
       </div>
     </div>
+
+    <div style="background:#fff;padding:60px 20px">
+      <p style="text-align:center;font-size:.8rem;font-weight:700;letter-spacing:.1em;color:#7C3AED;margin-bottom:12px">
+        TEMPLATES</p>
+      <h2 style="text-align:center;font-size:clamp(1.4rem,3vw,1.9rem);font-weight:800;color:#111;margin-bottom:36px">
+        Para cada tipo de negócio, um visual único</h2>
+      <div
+        style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:16px;max-width:860px;margin:0 auto 40px">
+        <div style="border-radius:14px;overflow:hidden;border:1px solid #eee;cursor:pointer"
+          onclick="showPage('cardapio-onboarding')">
+          <div
+            style="height:100px;background:#F7F5F0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px">
+            <div style="width:36px;height:5px;background:#1a1a18;border-radius:3px"></div>
+            <div style="width:52px;height:3px;background:#ccc;border-radius:3px"></div>
+            <div style="width:44px;height:3px;background:#ccc;border-radius:3px"></div>
+          </div>
+          <div style="padding:10px 12px">
+            <p style="font-size:13px;font-weight:700;color:#111">Clean & moderno</p>
+            <p style="font-size:11px;color:#888">Restaurante, café</p>
+          </div>
+        </div>
+        <div style="border-radius:14px;overflow:hidden;border:1px solid #eee;cursor:pointer"
+          onclick="showPage('cardapio-onboarding')">
+          <div
+            style="height:100px;background:#1a1a18;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px">
+            <div style="width:36px;height:5px;background:#fff;border-radius:3px;opacity:.9"></div>
+            <div style="width:52px;height:3px;background:#444;border-radius:3px"></div>
+            <div style="width:44px;height:3px;background:#444;border-radius:3px"></div>
+          </div>
+          <div style="padding:10px 12px">
+            <p style="font-size:13px;font-weight:700;color:#111">Dark premium</p>
+            <p style="font-size:11px;color:#888">Bar, hamburgueria</p>
+          </div>
+        </div>
+        <div style="border-radius:14px;overflow:hidden;border:1px solid #eee;cursor:pointer"
+          onclick="showPage('cardapio-onboarding')">
+          <div
+            style="height:100px;background:#FFF0F0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px">
+            <div style="width:36px;height:5px;background:#C0392B;border-radius:3px"></div>
+            <div style="width:52px;height:3px;background:#ddd;border-radius:3px"></div>
+            <div style="width:44px;height:3px;background:#ddd;border-radius:3px"></div>
+          </div>
+          <div style="padding:10px 12px">
+            <p style="font-size:13px;font-weight:700;color:#111">Vermelho & bold</p>
+            <p style="font-size:11px;color:#888">Pizzaria, delivery</p>
+          </div>
+        </div>
+        <div style="border-radius:14px;overflow:hidden;border:1px solid #eee;cursor:pointer"
+          onclick="showPage('cardapio-onboarding')">
+          <div
+            style="height:100px;background:#F0FFF4;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px">
+            <div style="width:36px;height:5px;background:#1B5E20;border-radius:3px"></div>
+            <div style="width:52px;height:3px;background:#ccc;border-radius:3px"></div>
+            <div style="width:44px;height:3px;background:#ddd;border-radius:3px"></div>
+          </div>
+          <div style="padding:10px 12px">
+            <p style="font-size:13px;font-weight:700;color:#111">Verde natural</p>
+            <p style="font-size:11px;color:#888">Açaí, saudável</p>
+          </div>
+        </div>
+        <div style="border-radius:14px;overflow:hidden;border:1px solid #eee;cursor:pointer"
+          onclick="showPage('cardapio-onboarding')">
+          <div
+            style="height:100px;background:#FFFDE7;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px">
+            <div style="width:36px;height:5px;background:#F57F17;border-radius:3px"></div>
+            <div style="width:52px;height:3px;background:#ddd;border-radius:3px"></div>
+            <div style="width:44px;height:3px;background:#ddd;border-radius:3px"></div>
+          </div>
+          <div style="padding:10px 12px">
+            <p style="font-size:13px;font-weight:700;color:#111">Amarelo vibrante</p>
+            <p style="font-size:11px;color:#888">Lanchonete</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div style="background:#f9f9f9;padding:60px 20px">
+      <p style="text-align:center;font-size:.8rem;font-weight:700;letter-spacing:.1em;color:#C4B5FD;margin-bottom:12px">
+        PLANOS</p>
+      <h2 style="text-align:center;font-size:clamp(1.4rem,3vw,1.9rem);font-weight:800;color:#111;margin-bottom:36px">
+        Simples, sem surpresas</h2>
+      <div
+        style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:20px;max-width:780px;margin:0 auto">
+        <div style="background:#fff;border-radius:16px;padding:28px 24px;border:1px solid #eee">
+          <p style="font-size:1.8rem;font-weight:800;color:#111">R$29<span
+              style="font-size:1rem;font-weight:400;color:#888">/mês</span></p>
+          <p style="font-weight:700;color:#111;margin:8px 0 16px">Básico</p>
+          <div style="display:flex;flex-direction:column;gap:8px;font-size:.88rem;color:#555">
+            <div>✓ 1 template</div>
+            <div>✓ Até 20 itens</div>
+            <div>✓ Link público</div>
+            <div>✓ Botão WhatsApp</div>
+          </div>
+          <button onclick="showPage('cardapio-onboarding')"
+            style="width:100%;margin-top:20px;padding:11px;border-radius:8px;border:1.5px solid #111;background:transparent;font-family:inherit;font-size:.9rem;font-weight:700;cursor:pointer">Começar
+            grátis</button>
+        </div>
+        <div style="background:#111;border-radius:16px;padding:28px 24px;border:2px solid #6D28D9;position:relative">
+          <div
+            style="position:absolute;top:-12px;left:50%;transform:translateX(-50%);background:#6D28D9;color:#fff;font-size:11px;font-weight:700;padding:4px 14px;border-radius:20px;white-space:nowrap">
+            MAIS POPULAR</div>
+          <p style="font-size:1.8rem;font-weight:800;color:#fff">R$59<span
+              style="font-size:1rem;font-weight:400;color:rgba(255,255,255,.5)">/mês</span></p>
+          <p style="font-weight:700;color:#fff;margin:8px 0 16px">Pro</p>
+          <div style="display:flex;flex-direction:column;gap:8px;font-size:.88rem;color:rgba(255,255,255,.7)">
+            <div>✓ Todos os templates</div>
+            <div>✓ Itens ilimitados</div>
+            <div>✓ Link personalizado</div>
+            <div>✓ Painel de pedidos</div>
+            <div>✓ Estatísticas</div>
+          </div>
+          <button onclick="showPage('cardapio-onboarding')"
+            style="width:100%;margin-top:20px;padding:11px;border-radius:8px;border:none;background:#6D28D9;color:#fff;font-family:inherit;font-size:.9rem;font-weight:700;cursor:pointer">Começar
+            grátis</button>
+        </div>
+        <div style="background:#fff;border-radius:16px;padding:28px 24px;border:1px solid #eee">
+          <p style="font-size:1.8rem;font-weight:800;color:#111">R$99<span
+              style="font-size:1rem;font-weight:400;color:#888">/mês</span></p>
+          <p style="font-weight:700;color:#111;margin:8px 0 16px">Business</p>
+          <div style="display:flex;flex-direction:column;gap:8px;font-size:.88rem;color:#555">
+            <div>✓ Tudo do Pro</div>
+            <div>✓ Domínio próprio</div>
+            <div>✓ Multi-unidades</div>
+            <div>✓ Relatórios avançados</div>
+            <div>✓ Suporte prioritário</div>
+          </div>
+          <button onclick="showPage('cardapio-onboarding')"
+            style="width:100%;margin-top:20px;padding:11px;border-radius:8px;border:1.5px solid #111;background:transparent;font-family:inherit;font-size:.9rem;font-weight:700;cursor:pointer">Começar
+            grátis</button>
+        </div>
+      </div>
+      <p style="text-align:center;font-size:12px;color:#aaa;margin-top:20px">7 dias grátis em todos os planos ·
+        Pagamento via Pix ou cartão · Cancele quando quiser</p>
+    </div>
+
+    <div style="background:#0a0a0a;padding:60px 20px;text-align:center">
+      <h2 style="font-size:clamp(1.6rem,3vw,2.2rem);font-weight:800;color:#fff;margin-bottom:12px">Pronto para ter seu
+        cardápio no ar?</h2>
+      <p style="color:rgba(255,255,255,.5);margin-bottom:28px">Leva 5 minutos. Sem precisar de ninguém.</p>
+      <button onclick="showPage('cardapio-onboarding')"
+        style="background:#6D28D9;color:#fff;border:none;border-radius:10px;padding:16px 40px;font-family:inherit;font-size:1rem;font-weight:700;cursor:pointer">Criar
+        meu cardápio grátis →</button>
+    </div>
+
   </div>
 
-  <div style="background:#fff;padding:60px 20px">
-    <p style="text-align:center;font-size:.8rem;font-weight:700;letter-spacing:.1em;color:#7C3AED;margin-bottom:12px">TEMPLATES</p>
-    <h2 style="text-align:center;font-size:clamp(1.4rem,3vw,1.9rem);font-weight:800;color:#111;margin-bottom:36px">Para cada tipo de negócio, um visual único</h2>
-    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:16px;max-width:860px;margin:0 auto 40px">
-      <div style="border-radius:14px;overflow:hidden;border:1px solid #eee;cursor:pointer" onclick="showPage('cardapio-onboarding')">
-        <div style="height:100px;background:#F7F5F0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px">
-          <div style="width:36px;height:5px;background:#1a1a18;border-radius:3px"></div>
-          <div style="width:52px;height:3px;background:#ccc;border-radius:3px"></div>
-          <div style="width:44px;height:3px;background:#ccc;border-radius:3px"></div>
-        </div>
-        <div style="padding:10px 12px"><p style="font-size:13px;font-weight:700;color:#111">Clean & moderno</p><p style="font-size:11px;color:#888">Restaurante, café</p></div>
-      </div>
-      <div style="border-radius:14px;overflow:hidden;border:1px solid #eee;cursor:pointer" onclick="showPage('cardapio-onboarding')">
-        <div style="height:100px;background:#1a1a18;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px">
-          <div style="width:36px;height:5px;background:#fff;border-radius:3px;opacity:.9"></div>
-          <div style="width:52px;height:3px;background:#444;border-radius:3px"></div>
-          <div style="width:44px;height:3px;background:#444;border-radius:3px"></div>
-        </div>
-        <div style="padding:10px 12px"><p style="font-size:13px;font-weight:700;color:#111">Dark premium</p><p style="font-size:11px;color:#888">Bar, hamburgueria</p></div>
-      </div>
-      <div style="border-radius:14px;overflow:hidden;border:1px solid #eee;cursor:pointer" onclick="showPage('cardapio-onboarding')">
-        <div style="height:100px;background:#FFF0F0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px">
-          <div style="width:36px;height:5px;background:#C0392B;border-radius:3px"></div>
-          <div style="width:52px;height:3px;background:#ddd;border-radius:3px"></div>
-          <div style="width:44px;height:3px;background:#ddd;border-radius:3px"></div>
-        </div>
-        <div style="padding:10px 12px"><p style="font-size:13px;font-weight:700;color:#111">Vermelho & bold</p><p style="font-size:11px;color:#888">Pizzaria, delivery</p></div>
-      </div>
-      <div style="border-radius:14px;overflow:hidden;border:1px solid #eee;cursor:pointer" onclick="showPage('cardapio-onboarding')">
-        <div style="height:100px;background:#F0FFF4;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px">
-          <div style="width:36px;height:5px;background:#1B5E20;border-radius:3px"></div>
-          <div style="width:52px;height:3px;background:#ccc;border-radius:3px"></div>
-          <div style="width:44px;height:3px;background:#ddd;border-radius:3px"></div>
-        </div>
-        <div style="padding:10px 12px"><p style="font-size:13px;font-weight:700;color:#111">Verde natural</p><p style="font-size:11px;color:#888">Açaí, saudável</p></div>
-      </div>
-      <div style="border-radius:14px;overflow:hidden;border:1px solid #eee;cursor:pointer" onclick="showPage('cardapio-onboarding')">
-        <div style="height:100px;background:#FFFDE7;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px">
-          <div style="width:36px;height:5px;background:#F57F17;border-radius:3px"></div>
-          <div style="width:52px;height:3px;background:#ddd;border-radius:3px"></div>
-          <div style="width:44px;height:3px;background:#ddd;border-radius:3px"></div>
-        </div>
-        <div style="padding:10px 12px"><p style="font-size:13px;font-weight:700;color:#111">Amarelo vibrante</p><p style="font-size:11px;color:#888">Lanchonete</p></div>
-      </div>
-    </div>
-  </div>
+  <!-- CARDÁPIO ONBOARDING -->
+  <div id="page-cardapio-onboarding" class="page" style="display:none">
+    <div style="max-width:560px;margin:0 auto;padding:48px 20px 80px">
+      <button onclick="obBackToLanding()"
+        style="background:none;border:none;color:rgba(255,255,255,.78);font-size:.88rem;cursor:pointer;margin-bottom:28px;font-family:inherit">←
+        Voltar</button>
 
-  <div style="background:#f9f9f9;padding:60px 20px">
-    <p style="text-align:center;font-size:.8rem;font-weight:700;letter-spacing:.1em;color:#C4B5FD;margin-bottom:12px">PLANOS</p>
-    <h2 style="text-align:center;font-size:clamp(1.4rem,3vw,1.9rem);font-weight:800;color:#111;margin-bottom:36px">Simples, sem surpresas</h2>
-    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:20px;max-width:780px;margin:0 auto">
-      <div style="background:#fff;border-radius:16px;padding:28px 24px;border:1px solid #eee">
-        <p style="font-size:1.8rem;font-weight:800;color:#111">R$29<span style="font-size:1rem;font-weight:400;color:#888">/mês</span></p>
-        <p style="font-weight:700;color:#111;margin:8px 0 16px">Básico</p>
-        <div style="display:flex;flex-direction:column;gap:8px;font-size:.88rem;color:#555">
-          <div>✓ 1 template</div><div>✓ Até 20 itens</div><div>✓ Link público</div><div>✓ Botão WhatsApp</div>
+      <div style="display:flex;gap:8px;margin-bottom:32px" id="ob-steps">
+        <div class="ob-step active" data-step="1">1</div>
+        <div style="flex:1;height:2px;background:#eee;margin:auto;border-radius:2px">
+          <div id="ob-bar" style="height:100%;width:0%;background:#6D28D9;border-radius:2px;transition:width .3s"></div>
         </div>
-        <button onclick="showPage('cardapio-onboarding')" style="width:100%;margin-top:20px;padding:11px;border-radius:8px;border:1.5px solid #111;background:transparent;font-family:inherit;font-size:.9rem;font-weight:700;cursor:pointer">Começar grátis</button>
+        <div class="ob-step" data-step="2">2</div>
+        <div style="flex:1;height:2px;background:#eee;margin:auto;border-radius:2px"></div>
+        <div class="ob-step" data-step="3">3</div>
+        <div style="flex:1;height:2px;background:#eee;margin:auto;border-radius:2px"></div>
+        <div class="ob-step" data-step="4">4</div>
+        <div style="flex:1;height:2px;background:#eee;margin:auto;border-radius:2px"></div>
+        <div class="ob-step" data-step="5">5</div>
       </div>
-      <div style="background:#111;border-radius:16px;padding:28px 24px;border:2px solid #6D28D9;position:relative">
-        <div style="position:absolute;top:-12px;left:50%;transform:translateX(-50%);background:#6D28D9;color:#fff;font-size:11px;font-weight:700;padding:4px 14px;border-radius:20px;white-space:nowrap">MAIS POPULAR</div>
-        <p style="font-size:1.8rem;font-weight:800;color:#fff">R$59<span style="font-size:1rem;font-weight:400;color:rgba(255,255,255,.5)">/mês</span></p>
-        <p style="font-weight:700;color:#fff;margin:8px 0 16px">Pro</p>
-        <div style="display:flex;flex-direction:column;gap:8px;font-size:.88rem;color:rgba(255,255,255,.7)">
-          <div>✓ Todos os templates</div><div>✓ Itens ilimitados</div><div>✓ Link personalizado</div><div>✓ Painel de pedidos</div><div>✓ Estatísticas</div>
-        </div>
-        <button onclick="showPage('cardapio-onboarding')" style="width:100%;margin-top:20px;padding:11px;border-radius:8px;border:none;background:#6D28D9;color:#fff;font-family:inherit;font-size:.9rem;font-weight:700;cursor:pointer">Começar grátis</button>
-      </div>
-      <div style="background:#fff;border-radius:16px;padding:28px 24px;border:1px solid #eee">
-        <p style="font-size:1.8rem;font-weight:800;color:#111">R$99<span style="font-size:1rem;font-weight:400;color:#888">/mês</span></p>
-        <p style="font-weight:700;color:#111;margin:8px 0 16px">Business</p>
-        <div style="display:flex;flex-direction:column;gap:8px;font-size:.88rem;color:#555">
-          <div>✓ Tudo do Pro</div><div>✓ Domínio próprio</div><div>✓ Multi-unidades</div><div>✓ Relatórios avançados</div><div>✓ Suporte prioritário</div>
-        </div>
-        <button onclick="showPage('cardapio-onboarding')" style="width:100%;margin-top:20px;padding:11px;border-radius:8px;border:1.5px solid #111;background:transparent;font-family:inherit;font-size:.9rem;font-weight:700;cursor:pointer">Começar grátis</button>
-      </div>
-    </div>
-    <p style="text-align:center;font-size:12px;color:#aaa;margin-top:20px">7 dias grátis em todos os planos · Pagamento via Pix ou cartão · Cancele quando quiser</p>
-  </div>
 
-  <div style="background:#0a0a0a;padding:60px 20px;text-align:center">
-    <h2 style="font-size:clamp(1.6rem,3vw,2.2rem);font-weight:800;color:#fff;margin-bottom:12px">Pronto para ter seu cardápio no ar?</h2>
-    <p style="color:rgba(255,255,255,.5);margin-bottom:28px">Leva 5 minutos. Sem precisar de ninguém.</p>
-    <button onclick="showPage('cardapio-onboarding')" style="background:#6D28D9;color:#fff;border:none;border-radius:10px;padding:16px 40px;font-family:inherit;font-size:1rem;font-weight:700;cursor:pointer">Criar meu cardápio grátis →</button>
-  </div>
-
-</div>
-
-<!-- CARDÁPIO ONBOARDING -->
-<div id="page-cardapio-onboarding" class="page" style="display:none">
-  <div style="max-width:560px;margin:0 auto;padding:48px 20px 80px">
-    <button onclick="obBackToLanding()" style="background:none;border:none;color:rgba(255,255,255,.78);font-size:.88rem;cursor:pointer;margin-bottom:28px;font-family:inherit">← Voltar</button>
-
-    <div style="display:flex;gap:8px;margin-bottom:32px" id="ob-steps">
-      <div class="ob-step active" data-step="1">1</div>
-      <div style="flex:1;height:2px;background:#eee;margin:auto;border-radius:2px"><div id="ob-bar" style="height:100%;width:0%;background:#6D28D9;border-radius:2px;transition:width .3s"></div></div>
-      <div class="ob-step" data-step="2">2</div>
-      <div style="flex:1;height:2px;background:#eee;margin:auto;border-radius:2px"></div>
-      <div class="ob-step" data-step="3">3</div>
-      <div style="flex:1;height:2px;background:#eee;margin:auto;border-radius:2px"></div>
-      <div class="ob-step" data-step="4">4</div>
-      <div style="flex:1;height:2px;background:#eee;margin:auto;border-radius:2px"></div>
-      <div class="ob-step" data-step="5">5</div>
-    </div>
-
-    <div id="ob-panel-1">
-      <p style="font-size:.75rem;font-weight:700;letter-spacing:.1em;color:#6D28D9;margin-bottom:8px">PASSO 1 DE 4</p>
-      <h2 style="font-size:1.6rem;font-weight:800;color:#111;margin-bottom:6px">Sobre o seu negócio</h2>
-      <p style="color:#888;font-size:.9rem;margin-bottom:28px">Vamos configurar seu cardápio em minutos.</p>
-      <div style="display:flex;flex-direction:column;gap:16px">
-        <div>
-          <label style="display:block;font-size:.83rem;font-weight:600;color:#444;margin-bottom:6px">Nome do estabelecimento</label>
-          <input id="ob-nome" type="text" placeholder="Ex: Burguer do Zé" style="width:100%;padding:12px 14px;border:1.5px solid #ddd;border-radius:10px;font-size:.95rem;font-family:inherit;outline:none" onfocus="this.style.borderColor='#6D28D9'" onblur="this.style.borderColor='#ddd'">
-        </div>
-        <div>
-          <label style="display:block;font-size:.83rem;font-weight:600;color:#444;margin-bottom:6px">WhatsApp (com DDD)</label>
-          <input id="ob-wa" type="tel" placeholder="(82) 99999-9999" style="width:100%;padding:12px 14px;border:1.5px solid #ddd;border-radius:10px;font-size:.95rem;font-family:inherit;outline:none" onfocus="this.style.borderColor='#6D28D9'" onblur="this.style.borderColor='#ddd'">
-        </div>
-        <div>
-          <label style="display:block;font-size:.83rem;font-weight:600;color:#444;margin-bottom:8px">Tipo de negócio</label>
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px" id="ob-tipos">
-            <button class="ob-tipo active" data-val="restaurante">Restaurante</button>
-            <button class="ob-tipo" data-val="hamburgueria">Hamburgueria</button>
-            <button class="ob-tipo" data-val="pizzaria">Pizzaria</button>
-            <button class="ob-tipo" data-val="cafe">Café / Confeitaria</button>
-            <button class="ob-tipo" data-val="bar">Bar / Boteco</button>
-            <button class="ob-tipo" data-val="outro">Outro</button>
-          </div>
-        </div>
-      </div>
-      <button onclick="obNext(2)" style="width:100%;margin-top:28px;padding:14px;border-radius:10px;background:#6D28D9;color:#fff;border:none;font-family:inherit;font-size:1rem;font-weight:700;cursor:pointer">Continuar →</button>
-    </div>
-
-    <div id="ob-panel-2" style="display:none">
-      <p style="font-size:.75rem;font-weight:700;letter-spacing:.1em;color:#6D28D9;margin-bottom:8px">PASSO 2 DE 4</p>
-      <h2 style="font-size:1.6rem;font-weight:800;color:#f5f7ff;margin-bottom:6px">Escolha o seu template</h2>
-      <p style="color:rgba(255,255,255,.68);font-size:.9rem;margin-bottom:24px">Pode trocar depois, sem perder os dados.</p>
-      <div style="display:flex;flex-direction:column;gap:12px" id="ob-templates">
-        <div class="ob-tpl active" data-tpl="clean" style="display:flex;align-items:center;gap:14px;border:1.5px solid #eee;border-radius:12px;padding:14px 16px;cursor:pointer" onclick="selectTplOb(this)">
-          <div style="width:48px;height:48px;border-radius:8px;background:#F7F5F0;flex-shrink:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px">
-            <div style="width:28px;height:4px;background:#1a1a18;border-radius:2px"></div>
-            <div style="width:36px;height:2px;background:#ccc;border-radius:2px"></div>
-          </div>
-          <div><p style="font-weight:700;color:#f5f7ff;font-size:.9rem">Clean & moderno</p><p style="font-size:.8rem;color:rgba(255,255,255,.68)">Restaurante, café</p></div>
-          <div class="ob-tpl-check" style="margin-left:auto;width:20px;height:20px;border-radius:50%;background:#6D28D9;display:flex;align-items:center;justify-content:center;flex-shrink:0">
-            <svg width="10" height="10" viewBox="0 0 10 10"><path d="M2 5l2.5 2.5L8 3" stroke="#fff" stroke-width="1.5" fill="none"/></svg>
-          </div>
-        </div>
-        <div class="ob-tpl" data-tpl="dark" style="display:flex;align-items:center;gap:14px;border:1.5px solid #eee;border-radius:12px;padding:14px 16px;cursor:pointer" onclick="selectTplOb(this)">
-          <div style="width:48px;height:48px;border-radius:8px;background:#1a1a18;flex-shrink:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px">
-            <div style="width:28px;height:4px;background:#fff;border-radius:2px;opacity:.9"></div>
-            <div style="width:36px;height:2px;background:#555;border-radius:2px"></div>
-          </div>
-          <div><p style="font-weight:700;color:#f5f7ff;font-size:.9rem">Dark premium</p><p style="font-size:.8rem;color:rgba(255,255,255,.68)">Bar, hamburgueria</p></div>
-          <div class="ob-tpl-check" style="margin-left:auto;width:20px;height:20px;border-radius:50%;background:#6D28D9;display:flex;align-items:center;justify-content:center;flex-shrink:0">
-            <svg width="10" height="10" viewBox="0 0 10 10"><path d="M2 5l2.5 2.5L8 3" stroke="#fff" stroke-width="1.5" fill="none"/></svg>
-          </div>
-        </div>
-        <div class="ob-tpl" data-tpl="red" style="display:flex;align-items:center;gap:14px;border:1.5px solid #eee;border-radius:12px;padding:14px 16px;cursor:pointer" onclick="selectTplOb(this)">
-          <div style="width:48px;height:48px;border-radius:8px;background:#FFF0F0;flex-shrink:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px">
-            <div style="width:28px;height:4px;background:#C0392B;border-radius:2px"></div>
-            <div style="width:36px;height:2px;background:#ddd;border-radius:2px"></div>
-          </div>
-          <div><p style="font-weight:700;color:#f5f7ff;font-size:.9rem">Vermelho & bold</p><p style="font-size:.8rem;color:rgba(255,255,255,.68)">Pizzaria, delivery</p></div>
-          <div class="ob-tpl-check" style="margin-left:auto;width:20px;height:20px;border-radius:50%;background:#6D28D9;display:flex;align-items:center;justify-content:center;flex-shrink:0">
-            <svg width="10" height="10" viewBox="0 0 10 10"><path d="M2 5l2.5 2.5L8 3" stroke="#fff" stroke-width="1.5" fill="none"/></svg>
-          </div>
-        </div>
-        <div class="ob-tpl" data-tpl="green" style="display:flex;align-items:center;gap:14px;border:1.5px solid #eee;border-radius:12px;padding:14px 16px;cursor:pointer" onclick="selectTplOb(this)">
-          <div style="width:48px;height:48px;border-radius:8px;background:#F0FFF4;flex-shrink:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px">
-            <div style="width:28px;height:4px;background:#1B5E20;border-radius:2px"></div>
-            <div style="width:36px;height:2px;background:#ccc;border-radius:2px"></div>
-          </div>
-          <div><p style="font-weight:700;color:#f5f7ff;font-size:.9rem">Verde natural</p><p style="font-size:.8rem;color:rgba(255,255,255,.68)">Açaí, saudável</p></div>
-          <div class="ob-tpl-check" style="margin-left:auto;width:20px;height:20px;border-radius:50%;background:#6D28D9;display:flex;align-items:center;justify-content:center;flex-shrink:0">
-            <svg width="10" height="10" viewBox="0 0 10 10"><path d="M2 5l2.5 2.5L8 3" stroke="#fff" stroke-width="1.5" fill="none"/></svg>
-          </div>
-        </div>
-      </div>
-      <div style="display:flex;gap:12px;margin-top:28px">
-        <button onclick="obNext(1)" style="padding:14px 20px;border-radius:10px;border:1.5px solid rgba(255,255,255,.72);background:transparent;color:#f5f7ff;font-family:inherit;font-size:.95rem;cursor:pointer">← Voltar</button>
-        <button onclick="obNext(3)" style="flex:1;padding:14px;border-radius:10px;background:#6D28D9;color:#fff;border:none;font-family:inherit;font-size:1rem;font-weight:700;cursor:pointer">Continuar →</button>
-      </div>
-    </div>
-
-    <div id="ob-panel-3" style="display:none">
-      <p style="font-size:.75rem;font-weight:700;letter-spacing:.1em;color:#6D28D9;margin-bottom:8px">PASSO 3 DE 5</p>
-      <h2 style="font-size:1.4rem;font-weight:800;color:#f5f7ff;margin-bottom:6px">Veja como ficou seu cardápio 👀</h2>
-      <p style="color:rgba(255,255,255,.68);font-size:.85rem;margin-bottom:16px">É exatamente assim que seus clientes vão ver. Gostou? Escolha seu plano e publique.</p>
-      <div id="ob-preview-wrap" style="position:relative;border-radius:16px;overflow:hidden;box-shadow:0 4px 32px rgba(0,0,0,.45);background:#111;margin-bottom:20px">
-        <div style="background:#111;padding:8px 16px 4px;display:flex;align-items:center;justify-content:space-between">
-          <span style="color:#fff;font-size:.7rem;font-weight:700">9:41</span>
-          <div style="display:flex;gap:5px;align-items:center">
-            <svg width="12" height="10" viewBox="0 0 12 10" fill="white"><rect x="0" y="4" width="2" height="6" rx="1"/><rect x="3" y="2" width="2" height="8" rx="1"/><rect x="6" y="0" width="2" height="10" rx="1"/><rect x="9" y="1" width="2" height="9" rx="1" opacity=".4"/></svg>
-            <svg width="14" height="10" viewBox="0 0 14 10" fill="white"><rect x="1" y="2" width="10" height="7" rx="1" stroke="white" stroke-width="1.2" fill="none"/><rect x="11" y="4" width="2" height="3" rx="1"/><rect x="2" y="3" width="7" height="5" rx=".5"/></svg>
-          </div>
-        </div>
-        <div style="background:#1c1c1e;padding:5px 12px;display:flex;align-items:center;gap:8px">
-          <div style="flex:1;background:#2c2c2e;border-radius:6px;padding:5px 10px;font-size:.7rem;color:rgba(255,255,255,.5);white-space:nowrap;overflow:hidden;text-overflow:ellipsis" id="ob-preview-url">webcardapio.com/seu-negocio</div>
-        </div>
-        <iframe id="ob-preview-iframe" style="width:100%;height:480px;border:none;display:block;background:#fff" src="about:blank" title="Preview do cardápio" sandbox="allow-scripts allow-same-origin"></iframe>
-        <div id="ob-preview-loading" style="position:absolute;inset:0;top:56px;background:rgba(17,17,17,.85);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px">
-          <div style="width:36px;height:36px;border:3px solid rgba(255,255,255,.15);border-top-color:#6D28D9;border-radius:50%;animation:ob-spin 0.8s linear infinite"></div>
-          <span style="color:rgba(255,255,255,.6);font-size:.85rem">Carregando seu cardápio…</span>
-        </div>
-      </div>
-      <div style="display:flex;gap:12px">
-        <button onclick="obNext(2)" style="padding:14px 20px;border-radius:10px;border:1.5px solid rgba(255,255,255,.72);background:transparent;color:#f5f7ff;font-family:inherit;font-size:.95rem;cursor:pointer">← Ajustar</button>
-        <button onclick="obNext(4)" style="flex:1;padding:14px;border-radius:10px;background:#6D28D9;color:#fff;border:none;font-family:inherit;font-size:1rem;font-weight:700;cursor:pointer">Ficou ótimo! Ver planos →</button>
-      </div>
-    </div>
-
-    <!-- STEP 4: PLANO -->
-    <div id="ob-panel-4" style="display:none">
-      <p style="font-size:.75rem;font-weight:700;letter-spacing:.1em;color:#6D28D9;margin-bottom:8px">PASSO 4 DE 5</p>
-      <h2 style="font-size:1.6rem;font-weight:800;color:#f5f7ff;margin-bottom:6px">Escolha seu plano</h2>
-      <p style="color:rgba(255,255,255,.7);font-size:.9rem;margin-bottom:24px">7 dias grátis em todos. Sem cartão de crédito.</p>
-      <div style="display:flex;flex-direction:column;gap:10px">
-        <div class="ob-plan" data-plan="basico" onclick="selectPlan(this)" style="border:1.5px solid #eee;border-radius:12px;padding:16px;cursor:pointer;display:flex;justify-content:space-between;align-items:center">
-          <div><p class="ob-plan-title">Básico</p><p class="ob-plan-sub">1 template · 20 itens · botão WhatsApp</p></div>
-          <p class="ob-plan-price">R$29<span>/mês</span></p>
-        </div>
-        <div class="ob-plan active" data-plan="pro" onclick="selectPlan(this)" style="border:1.5px solid #eee;border-radius:12px;padding:16px;cursor:pointer;display:flex;justify-content:space-between;align-items:center">
+      <div id="ob-panel-1">
+        <p style="font-size:.75rem;font-weight:700;letter-spacing:.1em;color:#6D28D9;margin-bottom:8px">PASSO 1 DE 4</p>
+        <h2 style="font-size:1.6rem;font-weight:800;color:#111;margin-bottom:6px">Sobre o seu negócio</h2>
+        <p style="color:#888;font-size:.9rem;margin-bottom:28px">Vamos configurar seu cardápio em minutos.</p>
+        <div style="display:flex;flex-direction:column;gap:16px">
           <div>
-            <div style="display:flex;align-items:center;gap:8px;margin-bottom:2px"><p class="ob-plan-title">Pro</p><span style="font-size:10px;background:#6D28D9;color:#fff;padding:2px 8px;border-radius:10px;font-weight:700">RECOMENDADO</span></div>
-            <p class="ob-plan-sub">Templates ilimitados · itens ilimitados · painel</p>
+            <label style="display:block;font-size:.83rem;font-weight:600;color:#444;margin-bottom:6px">Nome do
+              estabelecimento</label>
+            <input id="ob-nome" type="text" placeholder="Ex: Burguer do Zé"
+              style="width:100%;padding:12px 14px;border:1.5px solid #ddd;border-radius:10px;font-size:.95rem;font-family:inherit;outline:none"
+              onfocus="this.style.borderColor='#6D28D9'" onblur="this.style.borderColor='#ddd'">
           </div>
-          <p class="ob-plan-price">R$59<span>/mês</span></p>
-        </div>
-        <div class="ob-plan" data-plan="business" onclick="selectPlan(this)" style="border:1.5px solid #eee;border-radius:12px;padding:16px;cursor:pointer;display:flex;justify-content:space-between;align-items:center">
-          <div><p class="ob-plan-title">Business</p><p class="ob-plan-sub">Tudo do Pro + domínio próprio + multi-unidades</p></div>
-          <p class="ob-plan-price">R$99<span>/mês</span></p>
-        </div>
-      </div>
-      <div style="background:#f9f9f9;border-radius:10px;padding:14px 16px;margin-top:20px;font-size:.83rem;color:#555;line-height:1.6">
-        ✓ 7 dias grátis, sem cartão &nbsp;·&nbsp; ✓ Pague via Pix ou cartão &nbsp;·&nbsp; ✓ Cancele quando quiser
-      </div>
-      <div style="display:flex;gap:12px;margin-top:20px">
-        <button onclick="obNext(3)" style="padding:14px 20px;border-radius:10px;border:1.5px solid rgba(255,255,255,.72);background:transparent;color:#f5f7ff;font-family:inherit;font-size:.95rem;cursor:pointer">← Voltar</button>
-        <button onclick="obNext(5)" style="flex:1;padding:14px;border-radius:10px;background:#6D28D9;color:#fff;border:none;font-family:inherit;font-size:1rem;font-weight:700;cursor:pointer">Continuar →</button>
-      </div>
-    </div>
-
-    <div id="ob-panel-5" style="display:none">
-      <h2 style="font-size:1.6rem;font-weight:800;color:#f5f7ff;margin-bottom:6px">Crie sua conta</h2>
-      <p style="color:rgba(255,255,255,.68);font-size:.9rem;margin-bottom:28px">Informe email e senha do dono para acessar e editar o cardápio depois.</p>
-      <div style="display:flex;flex-direction:column;gap:16px">
-        <div>
-          <label style="display:block;font-size:.83rem;font-weight:600;color:rgba(255,255,255,.8);margin-bottom:6px">E-mail</label>
-          <input id="ob-email" type="email" placeholder="seu@email.com" style="width:100%;padding:12px 14px;border:1.5px solid #ddd;border-radius:10px;font-size:.95rem;font-family:inherit;outline:none;box-sizing:border-box" onfocus="this.style.borderColor='#6D28D9'" onblur="this.style.borderColor='#ddd'">
-        </div>
-        <div>
-          <label style="display:block;font-size:.83rem;font-weight:600;color:rgba(255,255,255,.8);margin-bottom:6px">Senha</label>
-          <div style="position:relative">
-            <input id="ob-senha" type="password" placeholder="Mínimo 6 caracteres" style="width:100%;padding:12px 44px 12px 14px;border:1.5px solid #ddd;border-radius:10px;font-size:.95rem;font-family:inherit;outline:none;box-sizing:border-box" onfocus="this.style.borderColor='#6D28D9'" onblur="this.style.borderColor='#ddd'">
-            <button type="button" onclick="toggleSenha('ob-senha',this)" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:rgba(255,255,255,.5);font-size:.8rem;font-family:inherit">mostrar</button>
+          <div>
+            <label style="display:block;font-size:.83rem;font-weight:600;color:#444;margin-bottom:6px">WhatsApp (com
+              DDD)</label>
+            <input id="ob-wa" type="tel" placeholder="(82) 99999-9999"
+              style="width:100%;padding:12px 14px;border:1.5px solid #ddd;border-radius:10px;font-size:.95rem;font-family:inherit;outline:none"
+              onfocus="this.style.borderColor='#6D28D9'" onblur="this.style.borderColor='#ddd'">
           </div>
-        </div>
-        <div>
-          <label style="display:block;font-size:.83rem;font-weight:600;color:rgba(255,255,255,.8);margin-bottom:6px">Confirmar senha</label>
-          <div style="position:relative">
-            <input id="ob-senha2" type="password" placeholder="Repita a senha" style="width:100%;padding:12px 44px 12px 14px;border:1.5px solid #ddd;border-radius:10px;font-size:.95rem;font-family:inherit;outline:none;box-sizing:border-box" onfocus="this.style.borderColor='#6D28D9'" onblur="this.style.borderColor='#ddd'">
-            <button type="button" onclick="toggleSenha('ob-senha2',this)" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:rgba(255,255,255,.5);font-size:.8rem;font-family:inherit">mostrar</button>
-          </div>
-        </div>
-      </div>
-      <div style="display:flex;gap:12px;margin-top:28px">
-        <button onclick="obNext(4)" style="padding:14px 20px;border-radius:10px;border:1.5px solid rgba(255,255,255,.72);background:transparent;color:#f5f7ff;font-family:inherit;font-size:.95rem;cursor:pointer">← Voltar</button>
-        <button onclick="obFinish()" style="flex:1;padding:14px;border-radius:10px;background:#6D28D9;color:#fff;border:none;font-family:inherit;font-size:1rem;font-weight:700;cursor:pointer">Criar meu cardápio grátis →</button>
-      </div>
-    </div>
-
-    <div id="ob-panel-sucesso" style="display:none;text-align:center;padding:20px 0">
-      <div style="width:64px;height:64px;background:#E8F5E9;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 20px">
-        <svg width="28" height="28" viewBox="0 0 28 28" fill="none"><path d="M6 14l5.5 5.5L22 8" stroke="#6D28D9" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-      </div>
-      <h2 style="font-size:1.6rem;font-weight:800;color:#f5f7ff;margin-bottom:8px">Cardápio criado!</h2>
-      <p style="color:rgba(255,255,255,.72);margin-bottom:8px">Seu link já está no ar:</p>
-      <div id="ob-link-display" style="background:#f4f4f4;border-radius:8px;padding:12px 16px;font-weight:700;color:#6D28D9;font-size:1rem;margin-bottom:24px">https://webcardapio.com/seu-negocio</div>
-      <p style="font-size:.85rem;color:rgba(255,255,255,.58);margin-bottom:20px">Você receberá as instruções de acesso pelo WhatsApp em instantes.</p>
-      <button onclick="obExitToSite()" style="padding:12px 28px;border-radius:10px;border:1.5px solid rgba(255,255,255,.72);background:transparent;color:#f5f7ff;font-family:inherit;font-size:.9rem;cursor:pointer">Voltar ao site</button>
-    </div>
-  </div>
-</div>
-
-<style>
-.ob-step{width:28px;height:28px;border-radius:50%;border:2px solid #ddd;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#aaa;flex-shrink:0;transition:all .2s}
-.ob-step.active{border-color:#6D28D9;color:#6D28D9}
-.ob-step.done{background:#6D28D9;border-color:#6D28D9;color:#fff}
-@keyframes ob-spin{to{transform:rotate(360deg)}}
-.ob-tipo{padding:10px 12px;border-radius:8px;border:1.5px solid #d9d9d9;background:#fff;font-family:inherit;font-size:.85rem;cursor:pointer;text-align:left;transition:border-color .15s,background-color .15s,color .15s,box-shadow .15s}
-.ob-tipo.active{border-color:#2ea44f;background:#2ea44f;color:#fff;box-shadow:0 4px 12px rgba(46,164,79,.28)}
-.ob-tpl{transition:border-color .15s,background-color .15s}
-.ob-tpl.active{border-color:#6D28D9 !important;background:rgba(52,168,83,.08)}
-.ob-tpl-check{opacity:0;transform:scale(.85);transition:opacity .15s,transform .15s}
-.ob-tpl.active .ob-tpl-check{opacity:1;transform:scale(1)}
-.ob-plan-title{font-weight:700;color:#f5f7ff}
-.ob-plan-sub{font-size:.8rem;color:rgba(255,255,255,.7)}
-.ob-plan-price{font-weight:800;color:#f5f7ff;white-space:nowrap;margin-left:12px}
-.ob-plan-price span{font-size:.75rem;font-weight:400;color:rgba(255,255,255,.62)}
-.ob-plan.active{border-color:#6D28D9 !important;background:#f9fff9 !important}
-.ob-plan.active .ob-plan-title,.ob-plan.active .ob-plan-price{color:#111}
-.ob-plan.active .ob-plan-sub,.ob-plan.active .ob-plan-price span{color:#666}
-@keyframes pulse-g{0%,100%{opacity:1}50%{opacity:.4}}
-</style>
-
-<script>
-function obNext(step) {
-  ['1','2','3','4','5','sucesso'].forEach(function(s) {
-    var p = document.getElementById('ob-panel-' + s);
-    if(p) p.style.display = 'none';
-  });
-  document.getElementById('ob-panel-' + step).style.display = 'block';
-  var bar = document.getElementById('ob-bar');
-  if(bar && typeof step === 'number') bar.style.width = [0,0,25,50,75,100][step] + '%';
-  document.querySelectorAll('.ob-step').forEach(function(el) {
-    var s = parseInt(el.dataset.step);
-    el.classList.remove('active','done');
-    if(typeof step === 'number'){
-      if(s < step) el.classList.add('done');
-      else if(s === step) el.classList.add('active');
-    }
-  });
-  window.scrollTo({top:0,behavior:'smooth'});
-  // load preview iframe when entering step 3
-  if(step === 3) { obLoadPreview(); }
-}
-
-function obLoadPreview() {
-  var nome = (document.getElementById('ob-nome') ? document.getElementById('ob-nome').value.trim() : '') || 'meu-negocio';
-  var waInput = document.getElementById('ob-wa') ? document.getElementById('ob-wa').value.trim() : '';
-  var wa = normalizeWhatsApp(waInput) || '5511999999999';
-  var templateAtivo = document.querySelector('.ob-tpl.active');
-  var planoAtivo = document.querySelector('.ob-plan.active');
-  var tipoAtivo = document.querySelector('.ob-tipo.active');
-  var template = templateAtivo ? templateAtivo.dataset.tpl : 'clean';
-  var plano = planoAtivo ? planoAtivo.dataset.plan : 'pro';
-  var tipo = tipoAtivo ? tipoAtivo.dataset.val : 'restaurante';
-  var slug = nome.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/\s+/g,'-').replace(/[^a-z0-9-]/g,'').replace(/-+/g,'-').replace(/^-|-$/g,'') || 'meu-negocio';
-  var url = buildCardapioUrl(slug, nome, wa, template, plano, tipo);
-  var iframe = document.getElementById('ob-preview-iframe');
-  var loading = document.getElementById('ob-preview-loading');
-  var urlLabel = document.getElementById('ob-preview-url');
-  if(urlLabel) urlLabel.textContent = 'webcardapio.com/' + slug;
-  if(loading) loading.style.display = 'flex';
-  if(iframe) {
-    iframe.onload = function() {
-      if(loading) loading.style.display = 'none';
-    };
-    iframe.src = url;
-  }
-}
-
-function normalizeWhatsApp(raw) {
-  var digits = (raw || '').replace(/\D/g, '');
-  if (!digits) return '';
-
-  if (digits.startsWith('55')) return digits;
-  if (digits.length === 10 || digits.length === 11) return '55' + digits;
-
-  return digits;
-}
-
-function buildCardapioUrl(slug, storeName, wa, template, plan, businessType) {
-  var url = new URL('Menu digital/menu.html', window.location.href);
-  url.searchParams.set('store', slug);
-  if (storeName) url.searchParams.set('storeName', storeName);
-  if (wa) url.searchParams.set('wa', wa);
-  if (template) url.searchParams.set('tpl', template);
-  if (plan) url.searchParams.set('plan', plan);
-  if (businessType) url.searchParams.set('segmento', businessType);
-  return url.toString();
-}
-
-function markOwnerSlug(slug) {
-  try {
-    var raw = localStorage.getItem('webcardapio:owner-slugs');
-    var map = raw ? JSON.parse(raw) : {};
-    map[slug] = true;
-    localStorage.setItem('webcardapio:owner-slugs', JSON.stringify(map));
-  } catch (e) {
-    console.warn('Nao foi possivel salvar dono local', e);
-  }
-}
-
-function selectTplOb(el) {
-  document.querySelectorAll('.ob-tpl').forEach(function(t){
-    t.classList.remove('active');
-  });
-  el.classList.add('active');
-}
-
-function selectPlan(el) {
-  document.querySelectorAll('.ob-plan').forEach(function(p){
-    p.classList.remove('active');
-  });
-  el.classList.add('active');
-}
-
-document.querySelectorAll('.ob-tipo').forEach(function(btn) {
-  btn.addEventListener('click', function() {
-    document.querySelectorAll('.ob-tipo').forEach(function(b){ b.classList.remove('active'); });
-    btn.classList.add('active');
-  });
-});
-
-document.querySelectorAll('.ob-tpl').forEach(function(tpl) {
-  tpl.addEventListener('click', function() {
-    selectTplOb(tpl);
-  });
-});
-
-function resetOnboarding() {
-  obNext(1);
-
-  document.getElementById('ob-link-display').textContent = 'https://webcardapio.com/seu-negocio';
-
-  var emailEl = document.getElementById('ob-email');
-  var senhaEl = document.getElementById('ob-senha');
-  var senha2El = document.getElementById('ob-senha2');
-  if (emailEl) emailEl.value = '';
-  if (senhaEl) {
-    senhaEl.value = '';
-    senhaEl.type = 'password';
-  }
-  if (senha2El) {
-    senha2El.value = '';
-    senha2El.type = 'password';
-  }
-
-  document.querySelectorAll('.ob-tipo').forEach(function(btn){ btn.classList.remove('active'); });
-  var tipoPadrao = document.querySelector('.ob-tipo[data-val="restaurante"]');
-  if (tipoPadrao) tipoPadrao.classList.add('active');
-
-  document.querySelectorAll('.ob-tpl').forEach(function(tpl){ tpl.classList.remove('active'); });
-  var tplPadrao = document.querySelector('.ob-tpl[data-tpl="clean"]');
-  if (tplPadrao) tplPadrao.classList.add('active');
-
-  document.querySelectorAll('.ob-plan').forEach(function(plan){ plan.classList.remove('active'); });
-  var planoPadrao = document.querySelector('.ob-plan[data-plan="pro"]');
-  if (planoPadrao) planoPadrao.classList.add('active');
-}
-
-function obBackToLanding() {
-  resetOnboarding();
-  showPage('cardapio-landing');
-}
-
-function obExitToSite() {
-  resetOnboarding();
-  showPage('site');
-}
-
-function toggleSenha(fieldId, btn) {
-  var field = document.getElementById(fieldId);
-  if (!field) return;
-  if (field.type === 'password') {
-    field.type = 'text';
-    btn.textContent = 'ocultar';
-  } else {
-    field.type = 'password';
-    btn.textContent = 'mostrar';
-  }
-}
-
-function obFinish() {
-  var nome = document.getElementById('ob-nome').value.trim() || 'seu-negocio';
-  var waInput = document.getElementById('ob-wa').value.trim();
-  var wa = normalizeWhatsApp(waInput);
-
-  if (!wa || wa.length < 12 || wa.length > 13) {
-    alert('Informe um WhatsApp valido com DDD para gerar o link corretamente.');
-    return;
-  }
-
-  var email = (document.getElementById('ob-email').value || '').trim();
-  var senha = document.getElementById('ob-senha').value;
-  var senha2 = document.getElementById('ob-senha2').value;
-
-  if (!email || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) {
-    alert('Informe um e-mail valido.');
-    return;
-  }
-  if (!senha || senha.length < 1) {
-    alert('Preencha a senha.');
-    return;
-  }
-  if (senha !== senha2) {
-    alert('As senhas nao coincidem.');
-    return;
-  }
-
-  var templateAtivo = document.querySelector('.ob-tpl.active');
-  var planoAtivo = document.querySelector('.ob-plan.active');
-  var tipoAtivo = document.querySelector('.ob-tipo.active');
-
-  var template = templateAtivo ? templateAtivo.dataset.tpl : 'clean';
-  var plano = planoAtivo ? planoAtivo.dataset.plan : 'pro';
-  var tipo = tipoAtivo ? tipoAtivo.dataset.val : 'restaurante';
-
-  var slug = nome
-    .toLowerCase()
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g,'')
-    .replace(/\s+/g,'-')
-    .replace(/[^a-z0-9-]/g,'')
-    .replace(/-+/g,'-')
-    .replace(/^-|-$/g,'');
-
-  if (!slug) slug = 'seu-negocio';
-
-  if (plano === 'pro' || plano === 'business') {
-    markOwnerSlug(slug);
-  }
-
-  var cardapioUrl = buildCardapioUrl(slug, nome, wa, template, plano, tipo);
-
-  // Register account on backend
-  var apiBase = (typeof window.API_BASE_URL === 'string' && window.API_BASE_URL)
-    ? window.API_BASE_URL
-    : (location.hostname === 'localhost' || location.hostname === '127.0.0.1')
-      ? 'http://localhost:3001'
-      : location.protocol + '//' + location.hostname + ':3001';
-
-  var btnFinish = document.querySelector('[onclick="obFinish()"]');
-  if (btnFinish) { btnFinish.disabled = true; btnFinish.textContent = 'Criando conta...'; }
-
-  fetch(apiBase + '/api/auth/register', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ email: email, password: senha, plan: plano })
-  })
-  .then(function(r) { return r.json().then(function(b) { return { ok: r.ok, body: b }; }); })
-  .then(function(res) {
-    if (btnFinish) { btnFinish.disabled = false; btnFinish.textContent = 'Criar meu cardápio grátis →'; }
-    if (!res.ok && res.body.error !== 'Email já cadastrado.') {
-      alert('Erro ao criar conta: ' + (res.body.error || 'tente novamente.'));
-      return;
-    }
-    // Save token if returned
-    if (res.body.token) {
-      localStorage.setItem('webcardapio:owner-token', res.body.token);
-      localStorage.setItem('webcardapio:owner-slug', slug);
-    }
-    // Save local account info
-    try {
-      var accounts = JSON.parse(localStorage.getItem('webcardapio:accounts') || '{}');
-      accounts[slug] = { email: email, slug: slug, plan: plano };
-      localStorage.setItem('webcardapio:accounts', JSON.stringify(accounts));
-    } catch (e) {}
-
-    var linkEl = document.getElementById('ob-link-display');
-    linkEl.innerHTML = ''
-      + '<div style="margin-bottom:10px">'
-      + '<div style="font-size:11px;color:#7a7a7a;text-transform:uppercase;letter-spacing:.08em;margin-bottom:2px">Link do seu cardapio</div>'
-      + '<a href="' + cardapioUrl + '" target="_blank" rel="noopener noreferrer" style="color:#6D28D9;text-decoration:none;word-break:break-all">' + cardapioUrl + '</a>'
-      + '</div>';
-
-    obNext('sucesso');
-    var bar = document.getElementById('ob-bar');
-    if(bar) bar.style.width = '100%';
-    document.querySelectorAll('.ob-step').forEach(function(el){ el.classList.add('done'); });
-  })
-  .catch(function() {
-    if (btnFinish) { btnFinish.disabled = false; btnFinish.textContent = 'Criar meu cardápio grátis →'; }
-    alert('Não foi possível conectar ao servidor. Verifique sua conexão e tente novamente.');
-  });
-}
-</script>
-
-<!-- PAINEL INTERNO -->
-<div id="page-dash" class="page dash">
-  <div class="dash-nav">
-    <div class="logo-mark">
-      <div class="logo-dots">
-        <div class="dot" style="background:#7C3AED"></div>
-        <div class="dot" style="background:#A855F7"></div>
-        <div class="dot" style="background:#C4B5FD"></div>
-        <div class="dot" style="background:#6D28D9"></div>
-      </div>
-      <span class="logo-text" style="color:#111">Divulga<span style="color:#7C3AED">Local</span> — Painel</span>
-    </div>
-    <div class="dash-user">
-      <div class="dash-avatar">DL</div>
-      Equipe MAIND
-    </div>
-  </div>
-  <div class="dash-body">
-    <div class="sidebar">
-      <p class="sidebar-section">Principal</p>
-      <div class="sidebar-item active" onclick="showDash('overview',this)">&#128202; Visão geral</div>
-      <div class="sidebar-item" onclick="showDash('clientes',this)">&#127970; Clientes <span class="badge-count">8</span></div>
-      <div class="sidebar-item" onclick="showDash('leads',this)">&#127919; Leads <span class="badge-count">3</span></div>
-      <div class="sidebar-item" onclick="showDash('agenda',this)">&#128197; Agenda</div>
-      <p class="sidebar-section">Operações</p>
-      <div class="sidebar-item" onclick="showDash('tarefas',this)">&#9989; Tarefas</div>
-      <div class="sidebar-item" onclick="showDash('relatorios',this)">&#128200; Relatórios</div>
-    </div>
-    <div class="dash-main">
-
-      <div class="dash-section active" id="dash-overview">
-        <p class="page-title">Visão geral</p>
-        <p class="page-sub">Hoje, quinta-feira 2 de abril de 2026</p>
-        <div class="kpi-row">
-          <div class="kpi"><p class="kpi-label">Clientes ativos</p><p class="kpi-val" style="color:#7C3AED">8</p><p class="kpi-delta delta-up">▲ +2 este mês</p></div>
-          <div class="kpi"><p class="kpi-label">Leads este mês</p><p class="kpi-val" style="color:#A855F7">14</p><p class="kpi-delta delta-up">▲ +6 vs último mês</p></div>
-          <div class="kpi"><p class="kpi-label">Reuniões agendadas</p><p class="kpi-val" style="color:#C4B5FD">3</p><p class="kpi-delta" style="color:#888">Esta semana</p></div>
-          <div class="kpi"><p class="kpi-label">Taxa de conversão</p><p class="kpi-val" style="color:#6D28D9">57%</p><p class="kpi-delta delta-up">▲ +8pp</p></div>
-        </div>
-        <div class="section-row">
-          <div class="mini-card">
-            <h4>Próximas reuniões hoje</h4>
-            <div class="appt-item"><span class="appt-time">09:00</span><div class="appt-info"><p>Hamburgeria Central</p><span>Onboarding — Google Ads</span></div><div class="appt-dot" style="background:#7C3AED"></div></div>
-            <div class="appt-item"><span class="appt-time">11:30</span><div class="appt-info"><p>Salão da Cris</p><span>Reunião de resultados</span></div><div class="appt-dot" style="background:#6D28D9"></div></div>
-            <div class="appt-item"><span class="appt-time">15:00</span><div class="appt-info"><p>Ótica Visão Clara</p><span>Diagnóstico gratuito</span></div><div class="appt-dot" style="background:#C4B5FD"></div></div>
-          </div>
-          <div class="mini-card">
-            <h4>Atividade recente</h4>
-            <div class="activity-item"><div class="act-icon" style="background:#e8f5e9">&#127919;</div><div><p class="act-text"><strong>Novo lead:</strong> Farmácia Vida+ Saúde</p><p class="act-time">há 12 min</p></div></div>
-            <div class="activity-item"><div class="act-icon" style="background:#e3f2fd">&#128197;</div><div><p class="act-text"><strong>Reunião confirmada:</strong> Salão da Cris</p><p class="act-time">há 1 hora</p></div></div>
-            <div class="activity-item"><div class="act-icon" style="background:#fff8e1">&#128200;</div><div><p class="act-text"><strong>Relatório enviado:</strong> PH Maceió — março</p><p class="act-time">ontem</p></div></div>
-            <div class="activity-item"><div class="act-icon" style="background:#fce4ec">&#9989;</div><div><p class="act-text"><strong>Campanha ativada:</strong> KiDelícia Instagram</p><p class="act-time">ontem</p></div></div>
-          </div>
-        </div>
-      </div>
-
-      <div class="dash-section" id="dash-clientes">
-        <p class="page-title">Clientes</p>
-        <p class="page-sub">Gerencie todos os clientes ativos e seus procedimentos</p>
-        <div class="table-wrap">
-          <div class="table-header"><h3>Todos os clientes (8)</h3><button class="t-btn primary">+ Novo cliente</button></div>
-          <table class="data-table">
-            <thead><tr><th>Cliente</th><th>Tipo</th><th>Serviço</th><th>Status</th><th>Progresso</th><th>Próx. entrega</th></tr></thead>
-            <tbody>
-              <tr><td><div class="client-row"><div class="client-init" style="background:#7C3AED">PH</div><div><p style="font-weight:600">PH Maceió</p><p style="font-size:.75rem;color:#888">Restaurante</p></div></div></td><td style="font-size:.83rem">Delivery</td><td style="font-size:.83rem">Google + Insta</td><td><span class="status-pill s-ativo">Ativo</span></td><td><div style="font-size:.78rem;color:#888">Mês 4</div><div class="progress-bar"><div class="progress-fill" style="width:75%;background:#7C3AED"></div></div></td><td style="font-size:.83rem;color:#555">Rel. semanal — Sex</td></tr>
-              <tr><td><div class="client-row"><div class="client-init" style="background:#6D28D9">KD</div><div><p style="font-weight:600">KiDelícia Pizzaria</p><p style="font-size:.75rem;color:#888">Pizzaria</p></div></div></td><td style="font-size:.83rem">Delivery</td><td style="font-size:.83rem">Instagram Ads</td><td><span class="status-pill s-ativo">Ativo</span></td><td><div style="font-size:.78rem;color:#888">Mês 2</div><div class="progress-bar"><div class="progress-fill" style="width:40%;background:#6D28D9"></div></div></td><td style="font-size:.83rem;color:#555">Criativo — Ter</td></tr>
-              <tr><td><div class="client-row"><div class="client-init" style="background:#A855F7">SC</div><div><p style="font-weight:600">Salão da Cris</p><p style="font-size:.75rem;color:#888">Beleza</p></div></div></td><td style="font-size:.83rem">Local</td><td style="font-size:.83rem">Google Ads</td><td><span class="status-pill s-reuniao">Reunião</span></td><td><div style="font-size:.78rem;color:#888">Mês 1</div><div class="progress-bar"><div class="progress-fill" style="width:15%;background:#A855F7"></div></div></td><td style="font-size:.83rem;color:#555">Onboarding — Hoje</td></tr>
-              <tr><td><div class="client-row"><div class="client-init" style="background:#C4B5FD;color:#333">HC</div><div><p style="font-weight:600">Hamburgeria Central</p><p style="font-size:.75rem;color:#888">Delivery</p></div></div></td><td style="font-size:.83rem">Delivery</td><td style="font-size:.83rem">Google + Insta</td><td><span class="status-pill s-reuniao">Reunião</span></td><td><div style="font-size:.78rem;color:#888">Início</div><div class="progress-bar"><div class="progress-fill" style="width:5%;background:#C4B5FD"></div></div></td><td style="font-size:.83rem;color:#555">Setup — Qua</td></tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      <div class="dash-section" id="dash-leads">
-        <p class="page-title">Leads</p>
-        <p class="page-sub">Gerencie os leads capturados pelo site e formulários</p>
-        <div style="display:flex;gap:1rem;margin-bottom:1.5rem">
-          <button class="t-btn primary" onclick="document.getElementById('new-lead-form').style.display='block'">+ Cadastrar lead</button>
-          <button class="t-btn">Importar lista</button>
-        </div>
-        <div id="new-lead-form" style="display:none;margin-bottom:1.5rem">
-          <div class="lead-form-dash">
-            <p style="font-weight:700;font-size:.95rem;margin-bottom:1rem;color:#111">Novo lead</p>
-            <div class="lf-grid">
-              <div class="lf-group"><label>Nome</label><input type="text" placeholder="Nome do responsável"></div>
-              <div class="lf-group"><label>WhatsApp</label><input type="tel" placeholder="(00) 00000-0000"></div>
-              <div class="lf-group"><label>Negócio</label><input type="text" placeholder="Nome do negócio"></div>
-              <div class="lf-group"><label>Segmento</label><select><option>Delivery</option><option>Loja física</option><option>Serviços</option><option>Outro</option></select></div>
-              <div class="lf-group full"><label>Observação</label><textarea rows="2" placeholder="Como chegou, interesse principal..."></textarea></div>
-            </div>
-            <div class="lf-actions">
-              <button class="lf-submit" onclick="alert('Lead cadastrado!');document.getElementById('new-lead-form').style.display='none'">Salvar lead</button>
-              <button class="lf-cancel" onclick="document.getElementById('new-lead-form').style.display='none'">Cancelar</button>
+          <div>
+            <label style="display:block;font-size:.83rem;font-weight:600;color:#444;margin-bottom:8px">Tipo de
+              negócio</label>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px" id="ob-tipos">
+              <button class="ob-tipo active" data-val="restaurante">Restaurante</button>
+              <button class="ob-tipo" data-val="hamburgueria">Hamburgueria</button>
+              <button class="ob-tipo" data-val="pizzaria">Pizzaria</button>
+              <button class="ob-tipo" data-val="cafe">Café / Confeitaria</button>
+              <button class="ob-tipo" data-val="bar">Bar / Boteco</button>
+              <button class="ob-tipo" data-val="outro">Outro</button>
             </div>
           </div>
         </div>
-        <div class="table-wrap">
-          <div class="table-header"><h3>Leads recentes (3 novos)</h3></div>
-          <table class="data-table">
-            <thead><tr><th>Nome</th><th>Negócio</th><th>Origem</th><th>Status</th><th>Data</th></tr></thead>
-            <tbody>
-              <tr><td style="font-weight:600">Marcos Lima</td><td>Farmácia Vida+ Saúde</td><td><span style="font-size:.78rem;color:#7C3AED;font-weight:600">Site</span></td><td><span class="status-pill s-prospect">Novo</span></td><td style="font-size:.83rem;color:#888">02/04/2026</td></tr>
-              <tr><td style="font-weight:600">Ana Beatriz</td><td>Espaço Glow Beauty</td><td><span style="font-size:.78rem;color:#A855F7;font-weight:600">Instagram</span></td><td><span class="status-pill s-reuniao">Contatado</span></td><td style="font-size:.83rem;color:#888">01/04/2026</td></tr>
-              <tr><td style="font-weight:600">Roberto Neto</td><td>Auto Peças Neto</td><td><span style="font-size:.78rem;color:#6D28D9;font-weight:600">WhatsApp</span></td><td><span class="status-pill s-ativo">Proposta</span></td><td style="font-size:.83rem;color:#888">31/03/2026</td></tr>
-            </tbody>
-          </table>
+        <button onclick="obNext(2)"
+          style="width:100%;margin-top:28px;padding:14px;border-radius:10px;background:#6D28D9;color:#fff;border:none;font-family:inherit;font-size:1rem;font-weight:700;cursor:pointer">Continuar
+          →</button>
+      </div>
+
+      <div id="ob-panel-2" style="display:none">
+        <p style="font-size:.75rem;font-weight:700;letter-spacing:.1em;color:#6D28D9;margin-bottom:8px">PASSO 2 DE 4</p>
+        <h2 style="font-size:1.6rem;font-weight:800;color:#f5f7ff;margin-bottom:6px">Escolha o seu template</h2>
+        <p style="color:rgba(255,255,255,.68);font-size:.9rem;margin-bottom:24px">Pode trocar depois, sem perder os
+          dados.</p>
+        <div style="display:flex;flex-direction:column;gap:12px" id="ob-templates">
+          <div class="ob-tpl active" data-tpl="clean"
+            style="display:flex;align-items:center;gap:14px;border:1.5px solid #eee;border-radius:12px;padding:14px 16px;cursor:pointer"
+            onclick="selectTplOb(this)">
+            <div
+              style="width:48px;height:48px;border-radius:8px;background:#F7F5F0;flex-shrink:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px">
+              <div style="width:28px;height:4px;background:#1a1a18;border-radius:2px"></div>
+              <div style="width:36px;height:2px;background:#ccc;border-radius:2px"></div>
+            </div>
+            <div>
+              <p style="font-weight:700;color:#f5f7ff;font-size:.9rem">Clean & moderno</p>
+              <p style="font-size:.8rem;color:rgba(255,255,255,.68)">Restaurante, café</p>
+            </div>
+            <div class="ob-tpl-check"
+              style="margin-left:auto;width:20px;height:20px;border-radius:50%;background:#6D28D9;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+              <svg width="10" height="10" viewBox="0 0 10 10">
+                <path d="M2 5l2.5 2.5L8 3" stroke="#fff" stroke-width="1.5" fill="none" />
+              </svg>
+            </div>
+          </div>
+          <div class="ob-tpl" data-tpl="dark"
+            style="display:flex;align-items:center;gap:14px;border:1.5px solid #eee;border-radius:12px;padding:14px 16px;cursor:pointer"
+            onclick="selectTplOb(this)">
+            <div
+              style="width:48px;height:48px;border-radius:8px;background:#1a1a18;flex-shrink:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px">
+              <div style="width:28px;height:4px;background:#fff;border-radius:2px;opacity:.9"></div>
+              <div style="width:36px;height:2px;background:#555;border-radius:2px"></div>
+            </div>
+            <div>
+              <p style="font-weight:700;color:#f5f7ff;font-size:.9rem">Dark premium</p>
+              <p style="font-size:.8rem;color:rgba(255,255,255,.68)">Bar, hamburgueria</p>
+            </div>
+            <div class="ob-tpl-check"
+              style="margin-left:auto;width:20px;height:20px;border-radius:50%;background:#6D28D9;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+              <svg width="10" height="10" viewBox="0 0 10 10">
+                <path d="M2 5l2.5 2.5L8 3" stroke="#fff" stroke-width="1.5" fill="none" />
+              </svg>
+            </div>
+          </div>
+          <div class="ob-tpl" data-tpl="red"
+            style="display:flex;align-items:center;gap:14px;border:1.5px solid #eee;border-radius:12px;padding:14px 16px;cursor:pointer"
+            onclick="selectTplOb(this)">
+            <div
+              style="width:48px;height:48px;border-radius:8px;background:#FFF0F0;flex-shrink:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px">
+              <div style="width:28px;height:4px;background:#C0392B;border-radius:2px"></div>
+              <div style="width:36px;height:2px;background:#ddd;border-radius:2px"></div>
+            </div>
+            <div>
+              <p style="font-weight:700;color:#f5f7ff;font-size:.9rem">Vermelho & bold</p>
+              <p style="font-size:.8rem;color:rgba(255,255,255,.68)">Pizzaria, delivery</p>
+            </div>
+            <div class="ob-tpl-check"
+              style="margin-left:auto;width:20px;height:20px;border-radius:50%;background:#6D28D9;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+              <svg width="10" height="10" viewBox="0 0 10 10">
+                <path d="M2 5l2.5 2.5L8 3" stroke="#fff" stroke-width="1.5" fill="none" />
+              </svg>
+            </div>
+          </div>
+          <div class="ob-tpl" data-tpl="green"
+            style="display:flex;align-items:center;gap:14px;border:1.5px solid #eee;border-radius:12px;padding:14px 16px;cursor:pointer"
+            onclick="selectTplOb(this)">
+            <div
+              style="width:48px;height:48px;border-radius:8px;background:#F0FFF4;flex-shrink:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px">
+              <div style="width:28px;height:4px;background:#1B5E20;border-radius:2px"></div>
+              <div style="width:36px;height:2px;background:#ccc;border-radius:2px"></div>
+            </div>
+            <div>
+              <p style="font-weight:700;color:#f5f7ff;font-size:.9rem">Verde natural</p>
+              <p style="font-size:.8rem;color:rgba(255,255,255,.68)">Açaí, saudável</p>
+            </div>
+            <div class="ob-tpl-check"
+              style="margin-left:auto;width:20px;height:20px;border-radius:50%;background:#6D28D9;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+              <svg width="10" height="10" viewBox="0 0 10 10">
+                <path d="M2 5l2.5 2.5L8 3" stroke="#fff" stroke-width="1.5" fill="none" />
+              </svg>
+            </div>
+          </div>
+        </div>
+        <div style="display:flex;gap:12px;margin-top:28px">
+          <button onclick="obNext(1)"
+            style="padding:14px 20px;border-radius:10px;border:1.5px solid rgba(255,255,255,.72);background:transparent;color:#f5f7ff;font-family:inherit;font-size:.95rem;cursor:pointer">←
+            Voltar</button>
+          <button onclick="obNext(3)"
+            style="flex:1;padding:14px;border-radius:10px;background:#6D28D9;color:#fff;border:none;font-family:inherit;font-size:1rem;font-weight:700;cursor:pointer">Continuar
+            →</button>
         </div>
       </div>
 
-      <div class="dash-section" id="dash-agenda">
-        <p class="page-title">Agenda da equipe</p>
-        <p class="page-sub">Reuniões agendadas pelos clientes e prospects</p>
-        <div class="table-wrap">
-          <div class="table-header"><h3>Próximas reuniões</h3><button class="t-btn primary">+ Agendar</button></div>
-          <table class="data-table">
-            <thead><tr><th>Data</th><th>Horário</th><th>Cliente / Lead</th><th>Tipo</th><th>Status</th></tr></thead>
-            <tbody>
-              <tr><td>Hoje, 02/04</td><td>09:00</td><td style="font-weight:600">Hamburgeria Central</td><td style="font-size:.83rem">Onboarding</td><td><span class="status-pill s-ativo">Confirmado</span></td></tr>
-              <tr><td>Hoje, 02/04</td><td>11:30</td><td style="font-weight:600">Salão da Cris</td><td style="font-size:.83rem">Resultados</td><td><span class="status-pill s-ativo">Confirmado</span></td></tr>
-              <tr><td>Hoje, 02/04</td><td>15:00</td><td style="font-weight:600">Ótica Visão Clara</td><td style="font-size:.83rem">Diagnóstico</td><td><span class="status-pill s-reuniao">Pendente</span></td></tr>
-              <tr><td>04/04</td><td>10:00</td><td style="font-weight:600">Marcos Lima — Farmácia</td><td style="font-size:.83rem">Proposta</td><td><span class="status-pill s-prospect">Aguardando</span></td></tr>
-            </tbody>
-          </table>
+      <div id="ob-panel-3" style="display:none">
+        <p style="font-size:.75rem;font-weight:700;letter-spacing:.1em;color:#6D28D9;margin-bottom:8px">PASSO 3 DE 5</p>
+        <h2 style="font-size:1.4rem;font-weight:800;color:#f5f7ff;margin-bottom:6px">Veja como ficou seu cardápio 👀
+        </h2>
+        <p style="color:rgba(255,255,255,.68);font-size:.85rem;margin-bottom:16px">É exatamente assim que seus clientes
+          vão ver. Gostou? Escolha seu plano e publique.</p>
+        <div id="ob-preview-wrap"
+          style="position:relative;border-radius:16px;overflow:hidden;box-shadow:0 4px 32px rgba(0,0,0,.45);background:#111;margin-bottom:20px">
+          <div
+            style="background:#111;padding:8px 16px 4px;display:flex;align-items:center;justify-content:space-between">
+            <span style="color:#fff;font-size:.7rem;font-weight:700">9:41</span>
+            <div style="display:flex;gap:5px;align-items:center">
+              <svg width="12" height="10" viewBox="0 0 12 10" fill="white">
+                <rect x="0" y="4" width="2" height="6" rx="1" />
+                <rect x="3" y="2" width="2" height="8" rx="1" />
+                <rect x="6" y="0" width="2" height="10" rx="1" />
+                <rect x="9" y="1" width="2" height="9" rx="1" opacity=".4" />
+              </svg>
+              <svg width="14" height="10" viewBox="0 0 14 10" fill="white">
+                <rect x="1" y="2" width="10" height="7" rx="1" stroke="white" stroke-width="1.2" fill="none" />
+                <rect x="11" y="4" width="2" height="3" rx="1" />
+                <rect x="2" y="3" width="7" height="5" rx=".5" />
+              </svg>
+            </div>
+          </div>
+          <div style="background:#1c1c1e;padding:5px 12px;display:flex;align-items:center;gap:8px">
+            <div
+              style="flex:1;background:#2c2c2e;border-radius:6px;padding:5px 10px;font-size:.7rem;color:rgba(255,255,255,.5);white-space:nowrap;overflow:hidden;text-overflow:ellipsis"
+              id="ob-preview-url">webcardapio.com/seu-negocio</div>
+          </div>
+          <iframe id="ob-preview-iframe" style="width:100%;height:480px;border:none;display:block;background:#fff"
+            src="about:blank" title="Preview do cardápio" sandbox="allow-scripts allow-same-origin"></iframe>
+          <div id="ob-preview-loading"
+            style="position:absolute;inset:0;top:56px;background:rgba(17,17,17,.85);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px">
+            <div
+              style="width:36px;height:36px;border:3px solid rgba(255,255,255,.15);border-top-color:#6D28D9;border-radius:50%;animation:ob-spin 0.8s linear infinite">
+            </div>
+            <span style="color:rgba(255,255,255,.6);font-size:.85rem">Carregando seu cardápio…</span>
+          </div>
+        </div>
+        <div style="display:flex;gap:12px">
+          <button onclick="obNext(2)"
+            style="padding:14px 20px;border-radius:10px;border:1.5px solid rgba(255,255,255,.72);background:transparent;color:#f5f7ff;font-family:inherit;font-size:.95rem;cursor:pointer">←
+            Ajustar</button>
+          <button onclick="obNext(4)"
+            style="flex:1;padding:14px;border-radius:10px;background:#6D28D9;color:#fff;border:none;font-family:inherit;font-size:1rem;font-weight:700;cursor:pointer">Ficou
+            ótimo! Ver planos →</button>
         </div>
       </div>
 
-      <div class="dash-section" id="dash-tarefas">
-        <p class="page-title">Tarefas</p>
-        <p class="page-sub">Procedimentos e entregas para os clientes ativos</p>
-        <div class="table-wrap">
-          <div class="table-header"><h3>Esta semana</h3><button class="t-btn primary">+ Nova tarefa</button></div>
-          <table class="data-table">
-            <thead><tr><th>Tarefa</th><th>Cliente</th><th>Prazo</th><th>Responsável</th><th>Status</th></tr></thead>
-            <tbody>
-              <tr><td style="font-weight:600">Relatório semanal</td><td>PH Maceió</td><td>06/04</td><td>Time</td><td><span class="status-pill s-reuniao">Em andamento</span></td></tr>
-              <tr><td style="font-weight:600">Criar criativo Stories</td><td>KiDelícia</td><td>04/04</td><td>Design</td><td><span class="status-pill s-prospect">A fazer</span></td></tr>
-              <tr><td style="font-weight:600">Otimizar palavras-chave</td><td>Salão da Cris</td><td>03/04</td><td>Mídia</td><td><span class="status-pill s-ativo">Concluído</span></td></tr>
-              <tr><td style="font-weight:600">Setup campanha Google</td><td>Hamburgeria Central</td><td>05/04</td><td>Mídia</td><td><span class="status-pill s-reuniao">Em andamento</span></td></tr>
-            </tbody>
-          </table>
+      <!-- STEP 4: PLANO -->
+      <div id="ob-panel-4" style="display:none">
+        <p style="font-size:.75rem;font-weight:700;letter-spacing:.1em;color:#6D28D9;margin-bottom:8px">PASSO 4 DE 5</p>
+        <h2 style="font-size:1.6rem;font-weight:800;color:#f5f7ff;margin-bottom:6px">Escolha seu plano</h2>
+        <p style="color:rgba(255,255,255,.7);font-size:.9rem;margin-bottom:24px">7 dias grátis em todos. Sem cartão de
+          crédito.</p>
+        <div style="display:flex;flex-direction:column;gap:10px">
+          <div class="ob-plan" data-plan="basico" onclick="selectPlan(this)"
+            style="border:1.5px solid #eee;border-radius:12px;padding:16px;cursor:pointer;display:flex;justify-content:space-between;align-items:center">
+            <div>
+              <p class="ob-plan-title">Básico</p>
+              <p class="ob-plan-sub">1 template · 20 itens · botão WhatsApp</p>
+            </div>
+            <p class="ob-plan-price">R$29<span>/mês</span></p>
+          </div>
+          <div class="ob-plan active" data-plan="pro" onclick="selectPlan(this)"
+            style="border:1.5px solid #eee;border-radius:12px;padding:16px;cursor:pointer;display:flex;justify-content:space-between;align-items:center">
+            <div>
+              <div style="display:flex;align-items:center;gap:8px;margin-bottom:2px">
+                <p class="ob-plan-title">Pro</p><span
+                  style="font-size:10px;background:#6D28D9;color:#fff;padding:2px 8px;border-radius:10px;font-weight:700">RECOMENDADO</span>
+              </div>
+              <p class="ob-plan-sub">Templates ilimitados · itens ilimitados · painel</p>
+            </div>
+            <p class="ob-plan-price">R$59<span>/mês</span></p>
+          </div>
+          <div class="ob-plan" data-plan="business" onclick="selectPlan(this)"
+            style="border:1.5px solid #eee;border-radius:12px;padding:16px;cursor:pointer;display:flex;justify-content:space-between;align-items:center">
+            <div>
+              <p class="ob-plan-title">Business</p>
+              <p class="ob-plan-sub">Tudo do Pro + domínio próprio + multi-unidades</p>
+            </div>
+            <p class="ob-plan-price">R$99<span>/mês</span></p>
+          </div>
+        </div>
+        <div
+          style="background:#f9f9f9;border-radius:10px;padding:14px 16px;margin-top:20px;font-size:.83rem;color:#555;line-height:1.6">
+          ✓ 7 dias grátis, sem cartão &nbsp;·&nbsp; ✓ Pague via Pix ou cartão &nbsp;·&nbsp; ✓ Cancele quando quiser
+        </div>
+        <div style="display:flex;gap:12px;margin-top:20px">
+          <button onclick="obNext(3)"
+            style="padding:14px 20px;border-radius:10px;border:1.5px solid rgba(255,255,255,.72);background:transparent;color:#f5f7ff;font-family:inherit;font-size:.95rem;cursor:pointer">←
+            Voltar</button>
+          <button onclick="obNext(5)"
+            style="flex:1;padding:14px;border-radius:10px;background:#6D28D9;color:#fff;border:none;font-family:inherit;font-size:1rem;font-weight:700;cursor:pointer">Continuar
+            →</button>
         </div>
       </div>
 
-      <div class="dash-section" id="dash-relatorios">
-        <p class="page-title">Relatórios</p>
-        <p class="page-sub">Resultados consolidados de todos os clientes</p>
-        <div class="kpi-row">
-          <div class="kpi"><p class="kpi-label">Investimento gerenciado</p><p class="kpi-val" style="color:#7C3AED">R$18.4k</p><p class="kpi-delta delta-up">▲ +22% vs março</p></div>
-          <div class="kpi"><p class="kpi-label">Leads gerados (abril)</p><p class="kpi-val" style="color:#6D28D9">347</p><p class="kpi-delta delta-up">▲ +41 leads</p></div>
-          <div class="kpi"><p class="kpi-label">ROAS médio</p><p class="kpi-val" style="color:#C4B5FD">4.2x</p><p class="kpi-delta delta-up">▲ +0.6x</p></div>
-          <div class="kpi"><p class="kpi-label">Satisfação dos clientes</p><p class="kpi-val" style="color:#A855F7">100%</p><p class="kpi-delta" style="color:#888">NPS 9.4</p></div>
+      <div id="ob-panel-5" style="display:none">
+        <h2 style="font-size:1.6rem;font-weight:800;color:#f5f7ff;margin-bottom:6px">Crie sua conta</h2>
+        <p style="color:rgba(255,255,255,.68);font-size:.9rem;margin-bottom:28px">Informe email e senha do dono para
+          acessar e editar o cardápio depois.</p>
+        <div style="display:flex;flex-direction:column;gap:16px">
+          <div>
+            <label
+              style="display:block;font-size:.83rem;font-weight:600;color:rgba(255,255,255,.8);margin-bottom:6px">E-mail</label>
+            <input id="ob-email" type="email" placeholder="seu@email.com"
+              style="width:100%;padding:12px 14px;border:1.5px solid #ddd;border-radius:10px;font-size:.95rem;font-family:inherit;outline:none;box-sizing:border-box"
+              onfocus="this.style.borderColor='#6D28D9'" onblur="this.style.borderColor='#ddd'">
+          </div>
+          <div>
+            <label
+              style="display:block;font-size:.83rem;font-weight:600;color:rgba(255,255,255,.8);margin-bottom:6px">Senha</label>
+            <div style="position:relative">
+              <input id="ob-senha" type="password" placeholder="Mínimo 6 caracteres"
+                style="width:100%;padding:12px 44px 12px 14px;border:1.5px solid #ddd;border-radius:10px;font-size:.95rem;font-family:inherit;outline:none;box-sizing:border-box"
+                onfocus="this.style.borderColor='#6D28D9'" onblur="this.style.borderColor='#ddd'">
+              <button type="button" onclick="toggleSenha('ob-senha',this)"
+                style="position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:rgba(255,255,255,.5);font-size:.8rem;font-family:inherit">mostrar</button>
+            </div>
+          </div>
+          <div>
+            <label
+              style="display:block;font-size:.83rem;font-weight:600;color:rgba(255,255,255,.8);margin-bottom:6px">Confirmar
+              senha</label>
+            <div style="position:relative">
+              <input id="ob-senha2" type="password" placeholder="Repita a senha"
+                style="width:100%;padding:12px 44px 12px 14px;border:1.5px solid #ddd;border-radius:10px;font-size:.95rem;font-family:inherit;outline:none;box-sizing:border-box"
+                onfocus="this.style.borderColor='#6D28D9'" onblur="this.style.borderColor='#ddd'">
+              <button type="button" onclick="toggleSenha('ob-senha2',this)"
+                style="position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:rgba(255,255,255,.5);font-size:.8rem;font-family:inherit">mostrar</button>
+            </div>
+          </div>
+        </div>
+        <div style="display:flex;gap:12px;margin-top:28px">
+          <button onclick="obNext(4)"
+            style="padding:14px 20px;border-radius:10px;border:1.5px solid rgba(255,255,255,.72);background:transparent;color:#f5f7ff;font-family:inherit;font-size:.95rem;cursor:pointer">←
+            Voltar</button>
+          <button onclick="obFinish()"
+            style="flex:1;padding:14px;border-radius:10px;background:#6D28D9;color:#fff;border:none;font-family:inherit;font-size:1rem;font-weight:700;cursor:pointer">Criar
+            meu cardápio grátis →</button>
         </div>
       </div>
 
+      <div id="ob-panel-sucesso" style="display:none;text-align:center;padding:20px 0">
+        <div
+          style="width:64px;height:64px;background:#E8F5E9;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 20px">
+          <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
+            <path d="M6 14l5.5 5.5L22 8" stroke="#6D28D9" stroke-width="2.5" stroke-linecap="round"
+              stroke-linejoin="round" />
+          </svg>
+        </div>
+        <h2 style="font-size:1.6rem;font-weight:800;color:#f5f7ff;margin-bottom:8px">Cardápio criado!</h2>
+        <p style="color:rgba(255,255,255,.72);margin-bottom:8px">Seu link já está no ar:</p>
+        <div id="ob-link-display"
+          style="background:#f4f4f4;border-radius:8px;padding:12px 16px;font-weight:700;color:#6D28D9;font-size:1rem;margin-bottom:24px">
+          https://webcardapio.com/seu-negocio</div>
+        <p style="font-size:.85rem;color:rgba(255,255,255,.58);margin-bottom:20px">Você receberá as instruções de acesso
+          pelo WhatsApp em instantes.</p>
+        <button onclick="obExitToSite()"
+          style="padding:12px 28px;border-radius:10px;border:1.5px solid rgba(255,255,255,.72);background:transparent;color:#f5f7ff;font-family:inherit;font-size:.9rem;cursor:pointer">Voltar
+          ao site</button>
+      </div>
     </div>
   </div>
-</div>
 
-<script src="script.js"></script>
+  <style>
+    .ob-step {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      border: 2px solid #ddd;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      font-weight: 700;
+      color: #aaa;
+      flex-shrink: 0;
+      transition: all .2s
+    }
+
+    .ob-step.active {
+      border-color: #6D28D9;
+      color: #6D28D9
+    }
+
+    .ob-step.done {
+      background: #6D28D9;
+      border-color: #6D28D9;
+      color: #fff
+    }
+
+    @keyframes ob-spin {
+      to {
+        transform: rotate(360deg)
+      }
+    }
+
+    .ob-tipo {
+      padding: 10px 12px;
+      border-radius: 8px;
+      border: 1.5px solid #d9d9d9;
+      background: #fff;
+      font-family: inherit;
+      font-size: .85rem;
+      cursor: pointer;
+      text-align: left;
+      transition: border-color .15s, background-color .15s, color .15s, box-shadow .15s
+    }
+
+    .ob-tipo.active {
+      border-color: #7f3bec;
+      background: #7f3bec;
+      color: #fff;
+      box-shadow: 0 4px 12px rgba(46, 164, 79, .28)
+    }
+
+    .ob-tpl {
+      transition: border-color .15s, background-color .15s
+    }
+
+    .ob-tpl.active {
+      border-color: #6D28D9 !important;
+      background: rgba(52, 168, 83, .08)
+    }
+
+    .ob-tpl-check {
+      opacity: 0;
+      transform: scale(.85);
+      transition: opacity .15s, transform .15s
+    }
+
+    .ob-tpl.active .ob-tpl-check {
+      opacity: 1;
+      transform: scale(1)
+    }
+
+    .ob-plan-title {
+      font-weight: 700;
+      color: #f5f7ff
+    }
+
+    .ob-plan-sub {
+      font-size: .8rem;
+      color: rgba(255, 255, 255, .7)
+    }
+
+    .ob-plan-price {
+      font-weight: 800;
+      color: #f5f7ff;
+      white-space: nowrap;
+      margin-left: 12px
+    }
+
+    .ob-plan-price span {
+      font-size: .75rem;
+      font-weight: 400;
+      color: rgba(255, 255, 255, .62)
+    }
+
+    .ob-plan.active {
+      border-color: #6D28D9 !important;
+      background: #f9fff9 !important
+    }
+
+    .ob-plan.active .ob-plan-title,
+    .ob-plan.active .ob-plan-price {
+      color: #111
+    }
+
+    .ob-plan.active .ob-plan-sub,
+    .ob-plan.active .ob-plan-price span {
+      color: #666
+    }
+
+    @keyframes pulse-g {
+
+      0%,
+      100% {
+        opacity: 1
+      }
+
+      50% {
+        opacity: .4
+      }
+    }
+  </style>
+
+  <script>
+    function obNext(step) {
+      ['1', '2', '3', '4', '5', 'sucesso'].forEach(function (s) {
+        var p = document.getElementById('ob-panel-' + s);
+        if (p) p.style.display = 'none';
+      });
+      document.getElementById('ob-panel-' + step).style.display = 'block';
+      var bar = document.getElementById('ob-bar');
+      if (bar && typeof step === 'number') bar.style.width = [0, 0, 25, 50, 75, 100][step] + '%';
+      document.querySelectorAll('.ob-step').forEach(function (el) {
+        var s = parseInt(el.dataset.step);
+        el.classList.remove('active', 'done');
+        if (typeof step === 'number') {
+          if (s < step) el.classList.add('done');
+          else if (s === step) el.classList.add('active');
+        }
+      });
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      // load preview iframe when entering step 3
+      if (step === 3) { obLoadPreview(); }
+    }
+
+    function obLoadPreview() {
+      var nome = (document.getElementById('ob-nome') ? document.getElementById('ob-nome').value.trim() : '') || 'meu-negocio';
+      var waInput = document.getElementById('ob-wa') ? document.getElementById('ob-wa').value.trim() : '';
+      var wa = normalizeWhatsApp(waInput) || '5511999999999';
+      var templateAtivo = document.querySelector('.ob-tpl.active');
+      var planoAtivo = document.querySelector('.ob-plan.active');
+      var tipoAtivo = document.querySelector('.ob-tipo.active');
+      var template = templateAtivo ? templateAtivo.dataset.tpl : 'clean';
+      var plano = planoAtivo ? planoAtivo.dataset.plan : 'pro';
+      var tipo = tipoAtivo ? tipoAtivo.dataset.val : 'restaurante';
+      var slug = nome.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '').replace(/-+/g, '-').replace(/^-|-$/g, '') || 'meu-negocio';
+      var url = buildCardapioUrl(slug, nome, wa, template, plano, tipo);
+      var iframe = document.getElementById('ob-preview-iframe');
+      var loading = document.getElementById('ob-preview-loading');
+      var urlLabel = document.getElementById('ob-preview-url');
+      if (urlLabel) urlLabel.textContent = 'webcardapio.com/' + slug;
+      if (loading) loading.style.display = 'flex';
+      if (iframe) {
+        iframe.onload = function () {
+          if (loading) loading.style.display = 'none';
+        };
+        iframe.src = url;
+      }
+    }
+
+    function normalizeWhatsApp(raw) {
+      var digits = (raw || '').replace(/\D/g, '');
+      if (!digits) return '';
+
+      if (digits.startsWith('55')) return digits;
+      if (digits.length === 10 || digits.length === 11) return '55' + digits;
+
+      return digits;
+    }
+
+    function buildCardapioUrl(slug, storeName, wa, template, plan, businessType) {
+      var url = new URL('Menu digital/menu.html', window.location.href);
+      url.searchParams.set('store', slug);
+      if (storeName) url.searchParams.set('storeName', storeName);
+      if (wa) url.searchParams.set('wa', wa);
+      if (template) url.searchParams.set('tpl', template);
+      if (plan) url.searchParams.set('plan', plan);
+      if (businessType) url.searchParams.set('segmento', businessType);
+      return url.toString();
+    }
+
+    function markOwnerSlug(slug) {
+      try {
+        var raw = localStorage.getItem('webcardapio:owner-slugs');
+        var map = raw ? JSON.parse(raw) : {};
+        map[slug] = true;
+        localStorage.setItem('webcardapio:owner-slugs', JSON.stringify(map));
+      } catch (e) {
+        console.warn('Nao foi possivel salvar dono local', e);
+      }
+    }
+
+    function selectTplOb(el) {
+      document.querySelectorAll('.ob-tpl').forEach(function (t) {
+        t.classList.remove('active');
+      });
+      el.classList.add('active');
+    }
+
+    function selectPlan(el) {
+      document.querySelectorAll('.ob-plan').forEach(function (p) {
+        p.classList.remove('active');
+      });
+      el.classList.add('active');
+    }
+
+    document.querySelectorAll('.ob-tipo').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        document.querySelectorAll('.ob-tipo').forEach(function (b) { b.classList.remove('active'); });
+        btn.classList.add('active');
+      });
+    });
+
+    document.querySelectorAll('.ob-tpl').forEach(function (tpl) {
+      tpl.addEventListener('click', function () {
+        selectTplOb(tpl);
+      });
+    });
+
+    function resetOnboarding() {
+      obNext(1);
+
+      document.getElementById('ob-link-display').textContent = 'https://webcardapio.com/seu-negocio';
+
+      var emailEl = document.getElementById('ob-email');
+      var senhaEl = document.getElementById('ob-senha');
+      var senha2El = document.getElementById('ob-senha2');
+      if (emailEl) emailEl.value = '';
+      if (senhaEl) {
+        senhaEl.value = '';
+        senhaEl.type = 'password';
+      }
+      if (senha2El) {
+        senha2El.value = '';
+        senha2El.type = 'password';
+      }
+
+      document.querySelectorAll('.ob-tipo').forEach(function (btn) { btn.classList.remove('active'); });
+      var tipoPadrao = document.querySelector('.ob-tipo[data-val="restaurante"]');
+      if (tipoPadrao) tipoPadrao.classList.add('active');
+
+      document.querySelectorAll('.ob-tpl').forEach(function (tpl) { tpl.classList.remove('active'); });
+      var tplPadrao = document.querySelector('.ob-tpl[data-tpl="clean"]');
+      if (tplPadrao) tplPadrao.classList.add('active');
+
+      document.querySelectorAll('.ob-plan').forEach(function (plan) { plan.classList.remove('active'); });
+      var planoPadrao = document.querySelector('.ob-plan[data-plan="pro"]');
+      if (planoPadrao) planoPadrao.classList.add('active');
+    }
+
+    function obBackToLanding() {
+      resetOnboarding();
+      showPage('cardapio-landing');
+    }
+
+    function obExitToSite() {
+      resetOnboarding();
+      showPage('site');
+    }
+
+    function toggleSenha(fieldId, btn) {
+      var field = document.getElementById(fieldId);
+      if (!field) return;
+      if (field.type === 'password') {
+        field.type = 'text';
+        btn.textContent = 'ocultar';
+      } else {
+        field.type = 'password';
+        btn.textContent = 'mostrar';
+      }
+    }
+
+    function obFinish() {
+      var nome = document.getElementById('ob-nome').value.trim() || 'seu-negocio';
+      var waInput = document.getElementById('ob-wa').value.trim();
+      var wa = normalizeWhatsApp(waInput);
+
+      if (!wa || wa.length < 12 || wa.length > 13) {
+        alert('Informe um WhatsApp valido com DDD para gerar o link corretamente.');
+        return;
+      }
+
+      var email = (document.getElementById('ob-email').value || '').trim();
+      var senha = document.getElementById('ob-senha').value;
+      var senha2 = document.getElementById('ob-senha2').value;
+
+      if (!email || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) {
+        alert('Informe um e-mail valido.');
+        return;
+      }
+      if (!senha || senha.length < 1) {
+        alert('Preencha a senha.');
+        return;
+      }
+      if (senha !== senha2) {
+        alert('As senhas nao coincidem.');
+        return;
+      }
+
+      var templateAtivo = document.querySelector('.ob-tpl.active');
+      var planoAtivo = document.querySelector('.ob-plan.active');
+      var tipoAtivo = document.querySelector('.ob-tipo.active');
+
+      var template = templateAtivo ? templateAtivo.dataset.tpl : 'clean';
+      var plano = planoAtivo ? planoAtivo.dataset.plan : 'pro';
+      var tipo = tipoAtivo ? tipoAtivo.dataset.val : 'restaurante';
+
+      var slug = nome
+        .toLowerCase()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .replace(/\s+/g, '-')
+        .replace(/[^a-z0-9-]/g, '')
+        .replace(/-+/g, '-')
+        .replace(/^-|-$/g, '');
+
+      if (!slug) slug = 'seu-negocio';
+
+      if (plano === 'pro' || plano === 'business') {
+        markOwnerSlug(slug);
+      }
+
+      var cardapioUrl = buildCardapioUrl(slug, nome, wa, template, plano, tipo);
+
+      // Register account on backend
+      var apiBase = (typeof window.API_BASE_URL === 'string' && window.API_BASE_URL)
+        ? window.API_BASE_URL
+        : (location.hostname === 'localhost' || location.hostname === '127.0.0.1')
+          ? 'http://localhost:3001'
+          : location.protocol + '//' + location.hostname + ':3001';
+
+      var btnFinish = document.querySelector('[onclick="obFinish()"]');
+      if (btnFinish) { btnFinish.disabled = true; btnFinish.textContent = 'Criando conta...'; }
+
+      console.log('[DEBUG] apiBase =', apiBase);
+      console.log('[DEBUG] Enviando registro para:', apiBase + '/api/auth/register');
+
+      fetch(apiBase + '/api/auth/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: email, password: senha, plan: plano, slug: slug })
+      })
+        .then(function (r) {
+          console.log('[DEBUG] Response status:', r.status);
+          return r.json().then(function (b) { return { ok: r.ok, body: b }; });
+        })
+        .then(function (res) {
+          if (btnFinish) { btnFinish.disabled = false; btnFinish.textContent = 'Criar meu cardápio grátis →'; }
+          if (!res.ok && res.body.error !== 'Email já cadastrado.') {
+            alert('Erro ao criar conta: ' + (res.body.error || 'tente novamente.'));
+            return;
+          }
+          // Save token if returned
+          if (res.body.token) {
+            localStorage.setItem('webcardapio:owner-token', res.body.token);
+            localStorage.setItem('webcardapio:owner-slug', slug);
+          }
+          // Save local account info
+          try {
+            var accounts = JSON.parse(localStorage.getItem('webcardapio:accounts') || '{}');
+            accounts[slug] = { email: email, slug: slug, plan: plano };
+            localStorage.setItem('webcardapio:accounts', JSON.stringify(accounts));
+          } catch (e) { }
+
+          var linkEl = document.getElementById('ob-link-display');
+          linkEl.innerHTML = ''
+            + '<div style="margin-bottom:10px">'
+            + '<div style="font-size:11px;color:#7a7a7a;text-transform:uppercase;letter-spacing:.08em;margin-bottom:2px">Link do seu cardapio</div>'
+            + '<a href="' + cardapioUrl + '" target="_blank" rel="noopener noreferrer" style="color:#6D28D9;text-decoration:none;word-break:break-all">' + cardapioUrl + '</a>'
+            + '</div>';
+
+          // Facebook Pixel: rastrear cadastro como Lead
+          if (typeof fbq === 'function') {
+            fbq('track', 'Lead', { content_name: nome, content_category: plano });
+            fbq('track', 'CompleteRegistration', { content_name: slug, value: 0, currency: 'BRL' });
+          }
+
+          obNext('sucesso');
+          var bar = document.getElementById('ob-bar');
+          if (bar) bar.style.width = '100%';
+          document.querySelectorAll('.ob-step').forEach(function (el) { el.classList.add('done'); });
+        })
+        .catch(function (err) {
+          console.error('[DEBUG] Erro completo:', err);
+          if (btnFinish) { btnFinish.disabled = false; btnFinish.textContent = 'Criar meu cardápio grátis →'; }
+          alert('ERRO DEBUG:\nURL: ' + apiBase + '/api/auth/register\nErro: ' + (err.message || err) + '\n\nVerifique o Console (F12) para mais detalhes.');
+        });
+    }
+  </script>
+
+  <!-- PAINEL INTERNO -->
+  <div id="page-dash" class="page dash">
+    <div class="dash-nav">
+      <div class="logo-mark">
+        <img src="MAIND favicon.svg" alt="MAIND Logo"
+          style="width:24px;height:24px;border-radius:50%;object-fit:cover;flex-shrink:0">
+        <span class="logo-text" style="color:#111">Divulga<span style="color:#7C3AED">Local</span> — Painel</span>
+      </div>
+      <div class="dash-user">
+        <div class="dash-avatar">DL</div>
+        Equipe MAIND
+      </div>
+    </div>
+    <div class="dash-body">
+      <div class="sidebar">
+        <p class="sidebar-section">Principal</p>
+        <div class="sidebar-item active" onclick="showDash('overview',this)">&#128202; Visão geral</div>
+        <div class="sidebar-item" onclick="showDash('clientes',this)">&#127970; Clientes <span
+            class="badge-count">8</span></div>
+        <div class="sidebar-item" onclick="showDash('leads',this)">&#127919; Leads <span class="badge-count">3</span>
+        </div>
+        <div class="sidebar-item" onclick="showDash('agenda',this)">&#128197; Agenda</div>
+        <p class="sidebar-section">Operações</p>
+        <div class="sidebar-item" onclick="showDash('tarefas',this)">&#9989; Tarefas</div>
+        <div class="sidebar-item" onclick="showDash('relatorios',this)">&#128200; Relatórios</div>
+      </div>
+      <div class="dash-main">
+
+        <div class="dash-section active" id="dash-overview">
+          <p class="page-title">Visão geral</p>
+          <p class="page-sub">Hoje, quinta-feira 2 de abril de 2026</p>
+          <div class="kpi-row">
+            <div class="kpi">
+              <p class="kpi-label">Clientes ativos</p>
+              <p class="kpi-val" style="color:#7C3AED">8</p>
+              <p class="kpi-delta delta-up">▲ +2 este mês</p>
+            </div>
+            <div class="kpi">
+              <p class="kpi-label">Leads este mês</p>
+              <p class="kpi-val" style="color:#A855F7">14</p>
+              <p class="kpi-delta delta-up">▲ +6 vs último mês</p>
+            </div>
+            <div class="kpi">
+              <p class="kpi-label">Reuniões agendadas</p>
+              <p class="kpi-val" style="color:#C4B5FD">3</p>
+              <p class="kpi-delta" style="color:#888">Esta semana</p>
+            </div>
+            <div class="kpi">
+              <p class="kpi-label">Taxa de conversão</p>
+              <p class="kpi-val" style="color:#6D28D9">57%</p>
+              <p class="kpi-delta delta-up">▲ +8pp</p>
+            </div>
+          </div>
+          <div class="section-row">
+            <div class="mini-card">
+              <h4>Próximas reuniões hoje</h4>
+              <div class="appt-item"><span class="appt-time">09:00</span>
+                <div class="appt-info">
+                  <p>Hamburgeria Central</p><span>Onboarding — Google Ads</span>
+                </div>
+                <div class="appt-dot" style="background:#7C3AED"></div>
+              </div>
+              <div class="appt-item"><span class="appt-time">11:30</span>
+                <div class="appt-info">
+                  <p>Salão da Cris</p><span>Reunião de resultados</span>
+                </div>
+                <div class="appt-dot" style="background:#6D28D9"></div>
+              </div>
+              <div class="appt-item"><span class="appt-time">15:00</span>
+                <div class="appt-info">
+                  <p>Ótica Visão Clara</p><span>Diagnóstico gratuito</span>
+                </div>
+                <div class="appt-dot" style="background:#C4B5FD"></div>
+              </div>
+            </div>
+            <div class="mini-card">
+              <h4>Atividade recente</h4>
+              <div class="activity-item">
+                <div class="act-icon" style="background:#e8f5e9">&#127919;</div>
+                <div>
+                  <p class="act-text"><strong>Novo lead:</strong> Farmácia Vida+ Saúde</p>
+                  <p class="act-time">há 12 min</p>
+                </div>
+              </div>
+              <div class="activity-item">
+                <div class="act-icon" style="background:#e3f2fd">&#128197;</div>
+                <div>
+                  <p class="act-text"><strong>Reunião confirmada:</strong> Salão da Cris</p>
+                  <p class="act-time">há 1 hora</p>
+                </div>
+              </div>
+              <div class="activity-item">
+                <div class="act-icon" style="background:#fff8e1">&#128200;</div>
+                <div>
+                  <p class="act-text"><strong>Relatório enviado:</strong> PH Maceió — março</p>
+                  <p class="act-time">ontem</p>
+                </div>
+              </div>
+              <div class="activity-item">
+                <div class="act-icon" style="background:#fce4ec">&#9989;</div>
+                <div>
+                  <p class="act-text"><strong>Campanha ativada:</strong> KiDelícia Instagram</p>
+                  <p class="act-time">ontem</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="dash-section" id="dash-clientes">
+          <p class="page-title">Clientes</p>
+          <p class="page-sub">Gerencie todos os clientes ativos e seus procedimentos</p>
+          <div class="table-wrap">
+            <div class="table-header">
+              <h3>Todos os clientes (8)</h3><button class="t-btn primary">+ Novo cliente</button>
+            </div>
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Cliente</th>
+                  <th>Tipo</th>
+                  <th>Serviço</th>
+                  <th>Status</th>
+                  <th>Progresso</th>
+                  <th>Próx. entrega</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>
+                    <div class="client-row">
+                      <div class="client-init" style="background:#7C3AED">PH</div>
+                      <div>
+                        <p style="font-weight:600">PH Maceió</p>
+                        <p style="font-size:.75rem;color:#888">Restaurante</p>
+                      </div>
+                    </div>
+                  </td>
+                  <td style="font-size:.83rem">Delivery</td>
+                  <td style="font-size:.83rem">Google + Insta</td>
+                  <td><span class="status-pill s-ativo">Ativo</span></td>
+                  <td>
+                    <div style="font-size:.78rem;color:#888">Mês 4</div>
+                    <div class="progress-bar">
+                      <div class="progress-fill" style="width:75%;background:#7C3AED"></div>
+                    </div>
+                  </td>
+                  <td style="font-size:.83rem;color:#555">Rel. semanal — Sex</td>
+                </tr>
+                <tr>
+                  <td>
+                    <div class="client-row">
+                      <div class="client-init" style="background:#6D28D9">KD</div>
+                      <div>
+                        <p style="font-weight:600">KiDelícia Pizzaria</p>
+                        <p style="font-size:.75rem;color:#888">Pizzaria</p>
+                      </div>
+                    </div>
+                  </td>
+                  <td style="font-size:.83rem">Delivery</td>
+                  <td style="font-size:.83rem">Instagram Ads</td>
+                  <td><span class="status-pill s-ativo">Ativo</span></td>
+                  <td>
+                    <div style="font-size:.78rem;color:#888">Mês 2</div>
+                    <div class="progress-bar">
+                      <div class="progress-fill" style="width:40%;background:#6D28D9"></div>
+                    </div>
+                  </td>
+                  <td style="font-size:.83rem;color:#555">Criativo — Ter</td>
+                </tr>
+                <tr>
+                  <td>
+                    <div class="client-row">
+                      <div class="client-init" style="background:#A855F7">SC</div>
+                      <div>
+                        <p style="font-weight:600">Salão da Cris</p>
+                        <p style="font-size:.75rem;color:#888">Beleza</p>
+                      </div>
+                    </div>
+                  </td>
+                  <td style="font-size:.83rem">Local</td>
+                  <td style="font-size:.83rem">Google Ads</td>
+                  <td><span class="status-pill s-reuniao">Reunião</span></td>
+                  <td>
+                    <div style="font-size:.78rem;color:#888">Mês 1</div>
+                    <div class="progress-bar">
+                      <div class="progress-fill" style="width:15%;background:#A855F7"></div>
+                    </div>
+                  </td>
+                  <td style="font-size:.83rem;color:#555">Onboarding — Hoje</td>
+                </tr>
+                <tr>
+                  <td>
+                    <div class="client-row">
+                      <div class="client-init" style="background:#C4B5FD;color:#333">HC</div>
+                      <div>
+                        <p style="font-weight:600">Hamburgeria Central</p>
+                        <p style="font-size:.75rem;color:#888">Delivery</p>
+                      </div>
+                    </div>
+                  </td>
+                  <td style="font-size:.83rem">Delivery</td>
+                  <td style="font-size:.83rem">Google + Insta</td>
+                  <td><span class="status-pill s-reuniao">Reunião</span></td>
+                  <td>
+                    <div style="font-size:.78rem;color:#888">Início</div>
+                    <div class="progress-bar">
+                      <div class="progress-fill" style="width:5%;background:#C4B5FD"></div>
+                    </div>
+                  </td>
+                  <td style="font-size:.83rem;color:#555">Setup — Qua</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="dash-section" id="dash-leads">
+          <p class="page-title">Leads</p>
+          <p class="page-sub">Gerencie os leads capturados pelo site e formulários</p>
+          <div style="display:flex;gap:1rem;margin-bottom:1.5rem">
+            <button class="t-btn primary" onclick="document.getElementById('new-lead-form').style.display='block'">+
+              Cadastrar lead</button>
+            <button class="t-btn">Importar lista</button>
+          </div>
+          <div id="new-lead-form" style="display:none;margin-bottom:1.5rem">
+            <div class="lead-form-dash">
+              <p style="font-weight:700;font-size:.95rem;margin-bottom:1rem;color:#111">Novo lead</p>
+              <div class="lf-grid">
+                <div class="lf-group"><label>Nome</label><input type="text" placeholder="Nome do responsável"></div>
+                <div class="lf-group"><label>WhatsApp</label><input type="tel" placeholder="(00) 00000-0000"></div>
+                <div class="lf-group"><label>Negócio</label><input type="text" placeholder="Nome do negócio"></div>
+                <div class="lf-group"><label>Segmento</label><select>
+                    <option>Delivery</option>
+                    <option>Loja física</option>
+                    <option>Serviços</option>
+                    <option>Outro</option>
+                  </select></div>
+                <div class="lf-group full"><label>Observação</label><textarea rows="2"
+                    placeholder="Como chegou, interesse principal..."></textarea></div>
+              </div>
+              <div class="lf-actions">
+                <button class="lf-submit"
+                  onclick="alert('Lead cadastrado!');document.getElementById('new-lead-form').style.display='none'">Salvar
+                  lead</button>
+                <button class="lf-cancel"
+                  onclick="document.getElementById('new-lead-form').style.display='none'">Cancelar</button>
+              </div>
+            </div>
+          </div>
+          <div class="table-wrap">
+            <div class="table-header">
+              <h3>Leads recentes (3 novos)</h3>
+            </div>
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Nome</th>
+                  <th>Negócio</th>
+                  <th>Origem</th>
+                  <th>Status</th>
+                  <th>Data</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td style="font-weight:600">Marcos Lima</td>
+                  <td>Farmácia Vida+ Saúde</td>
+                  <td><span style="font-size:.78rem;color:#7C3AED;font-weight:600">Site</span></td>
+                  <td><span class="status-pill s-prospect">Novo</span></td>
+                  <td style="font-size:.83rem;color:#888">02/04/2026</td>
+                </tr>
+                <tr>
+                  <td style="font-weight:600">Ana Beatriz</td>
+                  <td>Espaço Glow Beauty</td>
+                  <td><span style="font-size:.78rem;color:#A855F7;font-weight:600">Instagram</span></td>
+                  <td><span class="status-pill s-reuniao">Contatado</span></td>
+                  <td style="font-size:.83rem;color:#888">01/04/2026</td>
+                </tr>
+                <tr>
+                  <td style="font-weight:600">Roberto Neto</td>
+                  <td>Auto Peças Neto</td>
+                  <td><span style="font-size:.78rem;color:#6D28D9;font-weight:600">WhatsApp</span></td>
+                  <td><span class="status-pill s-ativo">Proposta</span></td>
+                  <td style="font-size:.83rem;color:#888">31/03/2026</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="dash-section" id="dash-agenda">
+          <p class="page-title">Agenda da equipe</p>
+          <p class="page-sub">Reuniões agendadas pelos clientes e prospects</p>
+          <div class="table-wrap">
+            <div class="table-header">
+              <h3>Próximas reuniões</h3><button class="t-btn primary">+ Agendar</button>
+            </div>
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Data</th>
+                  <th>Horário</th>
+                  <th>Cliente / Lead</th>
+                  <th>Tipo</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>Hoje, 02/04</td>
+                  <td>09:00</td>
+                  <td style="font-weight:600">Hamburgeria Central</td>
+                  <td style="font-size:.83rem">Onboarding</td>
+                  <td><span class="status-pill s-ativo">Confirmado</span></td>
+                </tr>
+                <tr>
+                  <td>Hoje, 02/04</td>
+                  <td>11:30</td>
+                  <td style="font-weight:600">Salão da Cris</td>
+                  <td style="font-size:.83rem">Resultados</td>
+                  <td><span class="status-pill s-ativo">Confirmado</span></td>
+                </tr>
+                <tr>
+                  <td>Hoje, 02/04</td>
+                  <td>15:00</td>
+                  <td style="font-weight:600">Ótica Visão Clara</td>
+                  <td style="font-size:.83rem">Diagnóstico</td>
+                  <td><span class="status-pill s-reuniao">Pendente</span></td>
+                </tr>
+                <tr>
+                  <td>04/04</td>
+                  <td>10:00</td>
+                  <td style="font-weight:600">Marcos Lima — Farmácia</td>
+                  <td style="font-size:.83rem">Proposta</td>
+                  <td><span class="status-pill s-prospect">Aguardando</span></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="dash-section" id="dash-tarefas">
+          <p class="page-title">Tarefas</p>
+          <p class="page-sub">Procedimentos e entregas para os clientes ativos</p>
+          <div class="table-wrap">
+            <div class="table-header">
+              <h3>Esta semana</h3><button class="t-btn primary">+ Nova tarefa</button>
+            </div>
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Tarefa</th>
+                  <th>Cliente</th>
+                  <th>Prazo</th>
+                  <th>Responsável</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td style="font-weight:600">Relatório semanal</td>
+                  <td>PH Maceió</td>
+                  <td>06/04</td>
+                  <td>Time</td>
+                  <td><span class="status-pill s-reuniao">Em andamento</span></td>
+                </tr>
+                <tr>
+                  <td style="font-weight:600">Criar criativo Stories</td>
+                  <td>KiDelícia</td>
+                  <td>04/04</td>
+                  <td>Design</td>
+                  <td><span class="status-pill s-prospect">A fazer</span></td>
+                </tr>
+                <tr>
+                  <td style="font-weight:600">Otimizar palavras-chave</td>
+                  <td>Salão da Cris</td>
+                  <td>03/04</td>
+                  <td>Mídia</td>
+                  <td><span class="status-pill s-ativo">Concluído</span></td>
+                </tr>
+                <tr>
+                  <td style="font-weight:600">Setup campanha Google</td>
+                  <td>Hamburgeria Central</td>
+                  <td>05/04</td>
+                  <td>Mídia</td>
+                  <td><span class="status-pill s-reuniao">Em andamento</span></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="dash-section" id="dash-relatorios">
+          <p class="page-title">Relatórios</p>
+          <p class="page-sub">Resultados consolidados de todos os clientes</p>
+          <div class="kpi-row">
+            <div class="kpi">
+              <p class="kpi-label">Investimento gerenciado</p>
+              <p class="kpi-val" style="color:#7C3AED">R$18.4k</p>
+              <p class="kpi-delta delta-up">▲ +22% vs março</p>
+            </div>
+            <div class="kpi">
+              <p class="kpi-label">Leads gerados (abril)</p>
+              <p class="kpi-val" style="color:#6D28D9">347</p>
+              <p class="kpi-delta delta-up">▲ +41 leads</p>
+            </div>
+            <div class="kpi">
+              <p class="kpi-label">ROAS médio</p>
+              <p class="kpi-val" style="color:#C4B5FD">4.2x</p>
+              <p class="kpi-delta delta-up">▲ +0.6x</p>
+            </div>
+            <div class="kpi">
+              <p class="kpi-label">Satisfação dos clientes</p>
+              <p class="kpi-val" style="color:#A855F7">100%</p>
+              <p class="kpi-delta" style="color:#888">NPS 9.4</p>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
 </body>
+
 </html>

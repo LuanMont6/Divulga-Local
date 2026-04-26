@@ -4,6 +4,8 @@ import cors from 'cors';
 import bcrypt from 'bcryptjs';
 import { initDb } from './db.js';
 import { authRequired, createToken } from './auth.js';
+import { sendWelcomeEmail } from './emailService.js';
+import { createPaymentPreference } from './paymentService.js';
 
 dotenv.config();
 
@@ -13,7 +15,33 @@ const JWT_SECRET  = process.env.JWT_SECRET || 'dev-secret-change-me';
 const CORS_ORIGIN = process.env.CORS_ORIGIN || '*';
 
 const app = express();
-app.use(cors({ origin: CORS_ORIGIN === '*' ? true : CORS_ORIGIN }));
+
+// CORS: aceita múltiplas origens (separadas por vírgula na env var)
+// Sempre inclui localhost para desenvolvimento
+const allowedOrigins = CORS_ORIGIN === '*'
+  ? null // null = aceitar qualquer origem
+  : [
+      ...CORS_ORIGIN.split(',').map(s => s.trim()),
+      'http://localhost:5500',
+      'http://localhost:5501',
+      'http://localhost:5502',
+      'http://127.0.0.1:5500',
+      'http://127.0.0.1:5501',
+      'http://127.0.0.1:5502',
+      'http://localhost:3000',
+      'http://127.0.0.1:3000',
+    ];
+
+app.use(cors({
+  origin: allowedOrigins === null
+    ? true
+    : function (origin, callback) {
+        // Permitir requests sem origin (ex: Postman, curl, server-to-server)
+        if (!origin) return callback(null, true);
+        if (allowedOrigins.includes(origin)) return callback(null, true);
+        callback(new Error('Bloqueado pelo CORS: ' + origin));
+      }
+}));
 app.use(express.json({ limit: '4mb' }));
 
 function toSlug(v) {
@@ -34,6 +62,7 @@ app.get('/api/health', (_req, res) => res.json({ ok: true }));
 app.post('/api/auth/register', async (req, res) => {
   const email    = safeEmail(req.body?.email);
   const password = req.body?.password;
+  const slug     = toSlug(req.body?.slug || ''); // Pegamos o slug do corpo da requisição
   const plan     = ['basico','pro','business'].includes(req.body?.plan) ? req.body.plan : 'basico';
 
   if (!email || !validPwd(password))
@@ -43,7 +72,13 @@ app.post('/api/auth/register', async (req, res) => {
 
   const hash   = await bcrypt.hash(password, 10);
   const result = await db.run('INSERT INTO users (email,password_hash,plan) VALUES (?,?,?)', email, hash, plan);
-  const token  = createToken(result.lastID, JWT_SECRET);
+  const token  = createToken(result.lastID, plan, JWT_SECRET);
+
+  // Enviar e-mail de boas-vindas (assíncrono para não travar a resposta)
+  if (slug) {
+    sendWelcomeEmail(email, slug).catch(err => console.error('[DEBUG] Falha ao disparar e-mail:', err));
+  }
+
   return res.status(201).json({ token, user: { id: result.lastID, email, plan } });
 });
 
@@ -57,7 +92,7 @@ app.post('/api/auth/login', async (req, res) => {
   const ok = await bcrypt.compare(String(password || ''), user.password_hash);
   if (!ok)  return res.status(401).json({ error: 'Credenciais inválidas.' });
 
-  const token = createToken(user.id, JWT_SECRET);
+  const token = createToken(user.id, user.plan, JWT_SECRET);
   return res.json({ token, user: { id: user.id, email: user.email, plan: user.plan } });
 });
 
@@ -139,6 +174,23 @@ app.put('/api/public/menu/:slug', async (req, res) => {
     title, JSON.stringify({ ...data, _ownerKey: ownerKey }), s
   );
   return res.json({ slug: s, title, created: false });
+});
+
+
+// ── PAYMENTS (Mercado Pago) ──────────────────────────────────
+app.post('/api/payments/create-preference', async (req, res) => {
+  const { items, orderId } = req.body;
+
+  if (!items || !Array.isArray(items) || items.length === 0) {
+    return res.status(400).json({ error: 'Itens do pedido não fornecidos.' });
+  }
+
+  try {
+    const preference = await createPaymentPreference(items, orderId || `order_${Date.now()}`);
+    return res.json(preference);
+  } catch (error) {
+    return res.status(500).json({ error: 'Erro ao gerar link de pagamento.' });
+  }
 });
 
 app.listen(PORT, () =>

@@ -10,10 +10,30 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="styles.css">
-<!-- API config: set window.API_BASE_URL to point to your production backend -->
 <script>
-  window.API_BASE_URL = 'https://divulga-local-production.up.railway.app';
+  window.API_BASE_URL = (location.hostname === 'localhost' || location.hostname === '127.0.0.1')
+    ? 'http://localhost:3001'
+    : 'https://divulga-local-production.up.railway.app';
 </script>
+
+<!-- Facebook Pixel -->
+<!-- TROCAR 'SEU_PIXEL_ID_AQUI' pelo ID real do pixel (ex: 123456789012345) -->
+<script>
+  !function(f,b,e,v,n,t,s)
+  {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+  n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+  if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+  n.queue=[];t=b.createElement(e);t.async=!0;
+  t.src=v;s=b.getElementsByTagName(e)[0];
+  s.parentNode.insertBefore(t,s)}(window, document,'script',
+  'https://connect.facebook.net/en_US/fbevents.js');
+  fbq('init', 'SEU_PIXEL_ID_AQUI');
+  fbq('track', 'PageView');
+</script>
+<noscript><img height="1" width="1" style="display:none"
+  src="https://www.facebook.com/tr?id=SEU_PIXEL_ID_AQUI&ev=PageView&noscript=1"/></noscript>
+<!-- End Facebook Pixel -->
+
 </head>
 <body>
 
@@ -385,13 +405,6 @@
     </div>
   </div>
 
-  <button class="btn-wa" onclick="sendToWhatsApp()">
-    <svg viewBox="0 0 24 24" fill="currentColor">
-      <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/>
-      <path d="M12 0C5.373 0 0 5.373 0 12c0 2.122.551 4.116 1.515 5.847L.057 23.547a.5.5 0 0 0 .604.635l5.882-1.542A11.944 11.944 0 0 0 12 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 22c-1.885 0-3.656-.493-5.193-1.359l-.37-.217-3.84 1.007 1.026-3.748-.237-.386A9.951 9.951 0 0 1 2 12C2 6.477 6.477 2 12 2s10 4.477 10 10-4.477 10-10 10z"/>
-    </svg>
-    Fazer pedido pelo WhatsApp
-  </button>
 
   <p class="powered" id="powered-by">Feito com <a href="#">Web Cardápio</a> — seu cardápio digital</p>
 
@@ -422,6 +435,11 @@
     <div class="editor-form-row">
       <label for="editor-desc">Descricao</label>
       <textarea id="editor-desc" rows="3" placeholder="Descricao curta do item"></textarea>
+    </div>
+    <div class="editor-form-row">
+      <label for="editor-imageUrl">Foto do item (link direto da imagem)</label>
+      <input id="editor-imageUrl" type="url" placeholder="https://i.imgur.com/exemplo.jpg">
+      <small style="font-size:11px;color:var(--text-hint);margin-top:2px">Cole o link de uma imagem. Use <a href="https://imgur.com" target="_blank" style="color:var(--blue)">Imgur</a> para hospedar.</small>
     </div>
     <div class="editor-form-actions">
       <button class="editor-btn editor-btn-ghost" onclick="closeAddItemModal()">Cancelar</button>
