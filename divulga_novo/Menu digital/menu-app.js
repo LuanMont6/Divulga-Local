@@ -23,6 +23,26 @@ function fbTrack(event, data = {}) {
   }
 }
 
+/** Rastreamento de acessos reais no backend */
+function trackAnalytics() {
+  const slug = runtimeConfig.store;
+  if (!slug || sessionStorage.getItem(`tracked:${slug}`)) return;
+
+  const apiBase = (typeof window.API_BASE_URL === 'string' && window.API_BASE_URL)
+    ? window.API_BASE_URL
+    : (location.hostname === 'localhost' || location.hostname === '127.0.0.1')
+      ? 'http://localhost:3001'
+      : 'https://divulga-local-production.up.railway.app';
+
+  fetch(`${apiBase}/api/analytics/track`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ slug })
+  }).then(() => {
+    sessionStorage.setItem(`tracked:${slug}`, '1');
+  }).catch(e => console.warn('[Analytics] Fail:', e));
+}
+
 
 const TEMPLATE_THEMES = {
   clean: {
@@ -301,7 +321,10 @@ const _planFromToken = _storedToken ? _parsePlanFromToken(_storedToken) : null;
 const currentPlan = normalizePlan(runtimeConfig.plan || _planFromToken || (ownerModeEnabled() ? 'pro' : 'basico'));
 const canUseProFeatures = currentPlan === 'pro' || currentPlan === 'business';
 const canUseBusinessFeatures = currentPlan === 'business';
-function canEdit() { return ownerModeEnabled(); }
+function canEdit() { 
+  if (currentPlan === 'basico') return false;
+  return ownerModeEnabled(); 
+}
 let removeMode = false;
 let editMode = false;
 let customMenuState = { added: [], removed: [], updated: {} };
@@ -701,6 +724,21 @@ function formatWhatsForOwner() {
 }
 
 function ownerMainContent(items, filteredItems, isOpen, deliveryLabel) {
+  if (currentPlan === 'basico' && ownerView !== 'plano') {
+    return `
+      <div style="padding:60px 20px;text-align:center;background:var(--surface);border-radius:12px;border:1px solid var(--border-md);margin:20px">
+        <div style="width:64px;height:64px;background:var(--blue-bg);color:var(--blue);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 24px">
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20m0-20l-7 7m7-7l7 7"/></svg>
+        </div>
+        <h3 style="font-size:20px;margin-bottom:12px;color:var(--text)">Painel Gerencial Bloqueado</h3>
+        <p style="color:var(--text-muted);font-size:14px;margin-bottom:32px;max-width:320px;margin-left:auto;margin-right:auto;line-height:1.6">
+          O **Plano Básico** permite apenas que o seu cardápio seja visualizado pelos clientes. <br><br>
+          Faça o upgrade para o **Plano Pro** para editar itens, trocar templates, ver relatórios e muito mais!
+        </p>
+        <button class="owner-btn" onclick="ownerView='plano';renderOwnerDashboard()" style="background:var(--blue);color:#fff;padding:12px 32px;font-weight:600">Upgrade Agora</button>
+      </div>`;
+  }
+
   if (ownerView === 'templates') {
     const tpls = [
       { id:'clean',  label:'Clean & moderno', desc:'Restaurante, café',    bg:'#F7F5F0', accent:'#1a1a18' },
@@ -777,6 +815,25 @@ function ownerMainContent(items, filteredItems, isOpen, deliveryLabel) {
       </div>`;
   }
 
+  if (ownerView === 'qrcode') {
+    const pub = window.location.href.split('?')[0] + '?store=' + runtimeConfig.store;
+    return `
+      <div class="owner-top">
+        <h3 class="owner-title">QR Code do Cardápio</h3>
+      </div>
+      <div style="background:var(--surface);border:1px solid var(--border-md);border-radius:16px;padding:32px;text-align:center;max-width:400px;margin:0 auto">
+        <div id="qrcode-display" style="background:#fff;padding:16px;border-radius:12px;display:inline-block;margin-bottom:24px;box-shadow:0 10px 25px rgba(0,0,0,0.05)"></div>
+        <h4 style="margin-bottom:8px">${escapeHtml(getConfiguredStoreName())}</h4>
+        <p style="font-size:13px;color:var(--text-muted);margin-bottom:24px;word-break:break-all">${pub}</p>
+        <div style="display:flex;gap:10px;justify-content:center">
+          <button class="owner-btn" onclick="generateMenuQRCode()" style="background:var(--blue);color:#fff">Gerar QR Code</button>
+          <button class="owner-btn" id="download-qr-btn" onclick="downloadQRCode()" style="display:none">Baixar PNG</button>
+        </div>
+        <p style="font-size:11px;color:var(--text-hint);margin-top:16px">Dica: Imprima e cole nas mesas ou no balcão!</p>
+      </div>`;
+  }
+
+
   if (ownerView === 'pedidos') {
     return `
       <div class="owner-top">
@@ -788,9 +845,9 @@ function ownerMainContent(items, filteredItems, isOpen, deliveryLabel) {
         </div>
       </div>
       <div class="owner-stats-grid">
-        <div class="owner-stat-card"><p>Pedidos hoje</p><strong>14</strong><span>+3 vs ontem</span></div>
-        <div class="owner-stat-card"><p>Acessos hoje</p><strong>87</strong><span>+12% esta semana</span></div>
-        <div class="owner-stat-card"><p>Conversao</p><strong>16%</strong><span>acesso > pedido</span></div>
+        <div class="owner-stat-card"><p>Pedidos (simulados)</p><strong>14</strong><span>Pronto em breve</span></div>
+        <div class="owner-stat-card" id="stat-real-views"><p>Acessos (reais)</p><strong>...</strong><span>Carregando...</span></div>
+        <div class="owner-stat-card"><p>Conversao</p><strong>--</strong><span>...</span></div>
       </div>
       <p class="owner-section-title">Atividade recente</p>
       <div class="owner-activity-list">
@@ -806,9 +863,9 @@ function ownerMainContent(items, filteredItems, isOpen, deliveryLabel) {
 
   if (ownerView === 'plano') {
     const plans = [
-      { id:'basico',   label:'Básico',    price:'R$29', period:'/mês', feats:['Link público','Botão WhatsApp','1 template','Até 20 itens'] },
-      { id:'pro',      label:'Pro',       price:'R$59', period:'/mês', feats:['Tudo do Básico','Templates ilimitados','Itens ilimitados','Painel do dono','Busca e filtros','Aparência (logo/capa)','Pedidos recentes'] },
-      { id:'business', label:'Business',  price:'R$99', period:'/mês', feats:['Tudo do Pro','Relatórios avançados','Multi-unidades','Domínio próprio','Ocultar "Feito com"','Suporte prioritário'] },
+      { id:'basico',   label:'Básico',    price:'Grátis', period:' para sempre', feats:['Link público','Botão WhatsApp','1 template','Até 20 itens'] },
+      { id:'pro',      label:'Pro',       price:'R$40', period:'/mês', feats:['Tudo do Básico','Templates ilimitados','Itens ilimitados','Painel do dono','Busca e filtros','Aparência (logo/capa)','Pedidos recentes'] },
+      { id:'business', label:'Business',  price:'R$50', period:'/mês', feats:['Tudo do Pro','Relatórios avançados','Multi-unidades','Domínio próprio','Ocultar "Feito com"','Suporte prioritário'] },
     ];
     return `
       <div class="owner-top">
@@ -893,6 +950,7 @@ function renderOwnerDashboard() {
             <button class="owner-nav-item ${ownerView === 'templates' ? 'active' : ''}" data-owner-view="templates">Templates</button>
             ${canUseProFeatures ? `<button class="owner-nav-item ${ownerView === 'aparencia' ? 'active' : ''}" data-owner-view="aparencia">Aparência</button>` : ''}
             <button class="owner-nav-item ${ownerView === 'pedidos' ? 'active' : ''}" data-owner-view="pedidos">Pedidos recentes</button>
+            <button class="owner-nav-item ${ownerView === 'qrcode' ? 'active' : ''}" data-owner-view="qrcode">QR Code</button>
             ${canUseBusinessFeatures ? `<button class="owner-nav-item ${ownerView === 'relatorios' ? 'active' : ''}" data-owner-view="relatorios">Relatórios</button>` : ''}
             ${canUseBusinessFeatures ? `<button class="owner-nav-item ${ownerView === 'multi' ? 'active' : ''}" data-owner-view="multi">Multi-unidades</button>` : ''}
             <button class="owner-nav-item ${ownerView === 'plano' ? 'active' : ''}" data-owner-view="plano">Plano</button>
@@ -1011,6 +1069,10 @@ function renderOwnerDashboard() {
     const deliveryMode = document.getElementById('delivery-mode');
     if (deliveryMode) deliveryMode.textContent = event.target.value;
   });
+
+  if (ownerView === 'pedidos') {
+    fetchRealStats();
+  }
 }
 
 function applySectionLabels(segment) {
@@ -1212,7 +1274,59 @@ function normalizeSection(input) {
   return null;
 }
 
+
+function fetchRealStats() {
+  const slug = runtimeConfig.store;
+  const apiBase = (typeof window.API_BASE_URL === 'string' && window.API_BASE_URL)
+    ? window.API_BASE_URL
+    : (location.hostname === 'localhost' || location.hostname === '127.0.0.1')
+      ? 'http://localhost:3001'
+      : 'https://divulga-local-production.up.railway.app';
+
+  fetch(`${apiBase}/api/analytics/stats/${slug}`)
+    .then(r => r.json())
+    .then(data => {
+      const el = document.getElementById('stat-real-views');
+      if (el) {
+        el.querySelector('strong').textContent = data.total || 0;
+        const last7 = data.days && data.days.length > 0 ? data.days[data.days.length-1].views : 0;
+        el.querySelector('span').textContent = `${last7} hoje`;
+      }
+    }).catch(e => console.warn('[Stats] Fail:', e));
+}
+
+function generateMenuQRCode() {
+  const display = document.getElementById('qrcode-display');
+  if (!display) return;
+  display.innerHTML = '';
+  const pub = window.location.href.split('?')[0] + '?store=' + runtimeConfig.store;
+  
+  new QRCode(display, {
+    text: pub,
+    width: 200,
+    height: 200,
+    colorDark : "#000000",
+    colorLight : "#ffffff",
+    correctLevel : QRCode.CorrectLevel.H
+  });
+  
+  setTimeout(() => {
+    const btn = document.getElementById('download-qr-btn');
+    if (btn) btn.style.display = 'inline-block';
+  }, 100);
+}
+
+function downloadQRCode() {
+  const canvas = document.querySelector('#qrcode-display canvas');
+  if (!canvas) return;
+  const link = document.createElement('a');
+  link.download = `qrcode-${runtimeConfig.store}.png`;
+  link.href = canvas.toDataURL('image/png');
+  link.click();
+}
+
 function openAddItemModal(preset = 'item') {
+
   if (!canEdit()) {
     return;
   }
@@ -2012,6 +2126,9 @@ async function init() {
   applySegmentCatalog(segment);
   applyCustomCatalogFromConfig();
   applySavedMenuCustomizations();
+  
+  // Track analytics (once per session)
+  trackAnalytics();
 
   if (canEdit()) {
     document.body.classList.add('editor-enabled');
@@ -2070,6 +2187,8 @@ window.renderOwnerDashboard = renderOwnerDashboard;
 window.ownerSetView = ownerSetView;
 window.ownerLogout = ownerLogout;
 window.ownerFilterSearch = ownerFilterSearch;
+window.generateMenuQRCode = generateMenuQRCode;
+window.downloadQRCode = downloadQRCode;
 
 window.__MENU_APP_READY__ = 'booting';
 init();

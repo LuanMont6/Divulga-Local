@@ -176,20 +176,98 @@ app.put('/api/public/menu/:slug', async (req, res) => {
   return res.json({ slug: s, title, created: false });
 });
 
-
 // ── PAYMENTS (Mercado Pago) ──────────────────────────────────
 app.post('/api/payments/create-preference', async (req, res) => {
   const { items, orderId } = req.body;
-
-  if (!items || !Array.isArray(items) || items.length === 0) {
+  if (!items || !Array.isArray(items) || items.length === 0)
     return res.status(400).json({ error: 'Itens do pedido não fornecidos.' });
-  }
-
   try {
     const preference = await createPaymentPreference(items, orderId || `order_${Date.now()}`);
     return res.json(preference);
   } catch (error) {
     return res.status(500).json({ error: 'Erro ao gerar link de pagamento.' });
+  }
+});
+
+// ── ANALYTICS ────────────────────────────────────────────────
+
+// Track: registra um acesso ao cardápio (chamado pelo menu-app.js)
+app.post('/api/analytics/track', async (req, res) => {
+  const slug = toSlug(req.body?.slug || '');
+  if (!slug) return res.status(400).json({ error: 'slug obrigatório.' });
+  await db.run("INSERT INTO page_views (slug) VALUES (?)", slug);
+  return res.json({ ok: true });
+});
+
+// Stats: retorna acessos dos últimos 7 dias agrupados por dia
+app.get('/api/analytics/stats/:slug', async (req, res) => {
+  const slug = toSlug(req.params.slug);
+  if (!slug) return res.status(400).json({ error: 'slug obrigatório.' });
+
+  const rows = await db.all(`
+    SELECT date(viewed_at) as day, COUNT(*) as views
+    FROM page_views
+    WHERE slug = ? AND viewed_at >= datetime('now', '-7 days')
+    GROUP BY day
+    ORDER BY day ASC
+  `, slug);
+
+  const total = await db.get(
+    "SELECT COUNT(*) as total FROM page_views WHERE slug=?", slug
+  );
+
+  return res.json({ slug, days: rows, total: total?.total || 0 });
+});
+
+// ── WEBHOOK MERCADO PAGO ─────────────────────────────────────
+app.post('/api/payments/webhook', async (req, res) => {
+  const { type, data } = req.body || {};
+  console.log('[WEBHOOK] Notificação recebida:', type, data?.id);
+
+  // MP envia type="payment" quando um pagamento é criado/atualizado
+  if (type !== 'payment' || !data?.id) {
+    return res.sendStatus(200); // Aceita mas ignora outros tipos
+  }
+
+  try {
+    const MP_TOKEN = process.env.MP_ACCESS_TOKEN;
+    const mpRes = await fetch(`https://api.mercadopago.com/v1/payments/${data.id}`, {
+      headers: { 'Authorization': `Bearer ${MP_TOKEN}` }
+    });
+    const payment = await mpRes.json();
+
+    console.log('[WEBHOOK] Status do pagamento:', payment.status, '| Ref:', payment.external_reference);
+
+    if (payment.status !== 'approved') {
+      return res.sendStatus(200); // Pago, mas não aprovado ainda
+    }
+
+    // external_reference = "sub_SLUG_timestamp" → extrai o slug
+    const ref = String(payment.external_reference || '');
+    const slugMatch = ref.match(/^sub_(.+?)_\d+$/);
+    if (!slugMatch) {
+      console.warn('[WEBHOOK] external_reference fora do padrão:', ref);
+      return res.sendStatus(200);
+    }
+    const slug = slugMatch[1];
+
+    // Descobre o plano pelo valor pago
+    const amount = Number(payment.transaction_amount || 0);
+    const plan = amount >= 50 ? 'business' : 'pro';
+
+    // Busca o owner_id pelo slug do menu
+    const menu = await db.get('SELECT owner_id FROM menus WHERE slug=?', slug);
+    if (menu && menu.owner_id) {
+      await db.run('UPDATE users SET plan=? WHERE id=?', plan, menu.owner_id);
+      console.log(`[WEBHOOK] Plano atualizado: user ${menu.owner_id} → ${plan}`);
+    } else {
+      console.warn('[WEBHOOK] Menu/owner não encontrado para slug:', slug);
+    }
+
+    return res.sendStatus(200);
+  } catch (err) {
+    console.error('[WEBHOOK] Erro:', err.message);
+    return res.sendStatus(500);
   }
 });
 

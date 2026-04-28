@@ -25,6 +25,12 @@ export async function initDb(dbPath) {
       created_at  TEXT NOT NULL DEFAULT (datetime('now')),
       updated_at  TEXT NOT NULL DEFAULT (datetime('now'))
     );
+    CREATE TABLE IF NOT EXISTS page_views (
+      id        INTEGER PRIMARY KEY AUTOINCREMENT,
+      slug      TEXT NOT NULL,
+      viewed_at TEXT NOT NULL DEFAULT (datetime('now'))
+    );
+    CREATE INDEX IF NOT EXISTS idx_pv_slug ON page_views(slug);
   `);
   return db;
 }
