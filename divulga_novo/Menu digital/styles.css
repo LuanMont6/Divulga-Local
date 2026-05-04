@@ -949,28 +949,34 @@ body.edit-mode .edit-item-btn {
   color: var(--text);
 }
 
+.price-container {
+  display: flex;
+  flex-direction: column;
+}
+
 .price-old {
-  font-size: 12px;
-  color: var(--text-hint);
+  font-size: 0.8em;
+  color: #999;
   text-decoration: line-through;
-  margin-right: 4px;
+  margin-bottom: 2px;
 }
 
 .btn-add {
-  width: 32px;
-  height: 32px;
+  width: 36px;
+  height: 36px;
   border-radius: 50%;
   background: var(--accent);
   border: none;
   color: #fff;
-  font-size: 20px;
-  line-height: 1;
+  font-size: 22px;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
   transition: transform .12s, opacity .12s;
   flex-shrink: 0;
+  padding: 0;
+  line-height: 0;
 }
 
 .btn-add:active { transform: scale(0.9); opacity: 0.8; }

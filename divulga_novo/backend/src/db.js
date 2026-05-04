@@ -31,6 +31,16 @@ export async function initDb(dbPath) {
       viewed_at TEXT NOT NULL DEFAULT (datetime('now'))
     );
     CREATE INDEX IF NOT EXISTS idx_pv_slug ON page_views(slug);
+    CREATE TABLE IF NOT EXISTS leads (
+      id          INTEGER PRIMARY KEY AUTOINCREMENT,
+      nome        TEXT NOT NULL,
+      whatsapp    TEXT NOT NULL,
+      negocio     TEXT NOT NULL DEFAULT '',
+      tipo        TEXT NOT NULL DEFAULT '',
+      faturamento TEXT NOT NULL DEFAULT '',
+      mensagem    TEXT NOT NULL DEFAULT '',
+      created_at  TEXT NOT NULL DEFAULT (datetime('now'))
+    );
   `);
   return db;
 }

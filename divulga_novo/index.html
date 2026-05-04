@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="pt-BR">
 
 <head>
@@ -7,33 +7,47 @@
   <title>MAIND | Estratégia & Conteúdo</title>
   <meta name="theme-color" content="#0f111a">
   <link rel="icon" type="image/svg+xml" href="MAIND favicon.svg?v=2">
+  <link rel="icon" href="favicon.ico" sizes="any">
+  <meta name="description" content="Estratégias de tráfego pago no Google e Instagram para negócios locais e deliverys que querem escalar o faturamento.">
+  <meta property="og:title" content="MAIND | Estratégia & Conteúdo">
+  <meta property="og:description" content="Seu negócio local aparecendo, crescendo e vendendo mais. Google Ads e Instagram Ads para negócios locais.">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://maind.com.br">
+  <meta property="og:image" content="https://maind.com.br/MAIND%20favicon.svg">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="canonical" href="https://maind.com.br">
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap"
     rel="stylesheet">
   <link rel="stylesheet" href="styles.css">
   <script>
     // Backend: usa localhost em dev, Railway em produção
     window.API_BASE_URL = (location.hostname === 'localhost' || location.hostname === '127.0.0.1')
-      ? 'http://localhost:3001'
+      ? location.protocol + '//' + location.hostname + ':3001'
       : 'https://divulga-local-production.up.railway.app';
+    // TROCAR pelo número real do WhatsApp MAIND (somente dígitos, com código do país)
+    window.MAIND_WHATSAPP = '5582999999999';
     console.log('[API] Base URL:', window.API_BASE_URL);
   </script>
 
   <!-- Facebook Pixel -->
   <!-- TROCAR 'SEU_PIXEL_ID_AQUI' pelo ID real do pixel (ex: 123456789012345) -->
   <script>
-    !function(f,b,e,v,n,t,s)
-    {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
-    n.callMethod.apply(n,arguments):n.queue.push(arguments)};
-    if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
-    n.queue=[];t=b.createElement(e);t.async=!0;
-    t.src=v;s=b.getElementsByTagName(e)[0];
-    s.parentNode.insertBefore(t,s)}(window, document,'script',
-    'https://connect.facebook.net/en_US/fbevents.js');
+    !function (f, b, e, v, n, t, s) {
+      if (f.fbq) return; n = f.fbq = function () {
+        n.callMethod ?
+          n.callMethod.apply(n, arguments) : n.queue.push(arguments)
+      };
+      if (!f._fbq) f._fbq = n; n.push = n; n.loaded = !0; n.version = '2.0';
+      n.queue = []; t = b.createElement(e); t.async = !0;
+      t.src = v; s = b.getElementsByTagName(e)[0];
+      s.parentNode.insertBefore(t, s)
+    }(window, document, 'script',
+      'https://connect.facebook.net/en_US/fbevents.js');
     fbq('init', 'SEU_PIXEL_ID_AQUI');
     fbq('track', 'PageView');
   </script>
   <noscript><img height="1" width="1" style="display:none"
-    src="https://www.facebook.com/tr?id=SEU_PIXEL_ID_AQUI&ev=PageView&noscript=1"/></noscript>
+      src="https://www.facebook.com/tr?id=SEU_PIXEL_ID_AQUI&ev=PageView&noscript=1" /></noscript>
   <!-- End Facebook Pixel -->
 </head>
 
@@ -225,27 +239,27 @@
       <h2 class="s-title" style="color:#fff">Pronto para <span style="color:#A855F7">começar</span>?</h2>
       <div class="form-wrap">
         <div class="form-grid">
-          <div class="form-group"><label>Nome</label><input type="text" placeholder="Seu nome"></div>
-          <div class="form-group"><label>WhatsApp</label><input type="tel" placeholder="(00) 00000-0000"></div>
-          <div class="form-group"><label>Nome do negócio</label><input type="text" placeholder="Ex: Pizzaria do João">
+          <div class="form-group"><label>Nome</label><input id="lead-nome" type="text" placeholder="Seu nome"></div>
+          <div class="form-group"><label>WhatsApp</label><input id="lead-wa" type="tel" placeholder="(00) 00000-0000"></div>
+          <div class="form-group"><label>Nome do negócio</label><input id="lead-negocio" type="text" placeholder="Ex: Pizzaria do João">
           </div>
-          <div class="form-group"><label>Tipo de negócio</label><select>
+          <div class="form-group"><label>Tipo de negócio</label><select id="lead-tipo">
               <option>Restaurante / Delivery</option>
               <option>Loja física</option>
               <option>Serviços locais</option>
               <option>E-commerce</option>
               <option>Outro</option>
             </select></div>
-          <div class="form-group full"><label>Faturamento mensal aproximado</label><select>
+          <div class="form-group full"><label>Faturamento mensal aproximado</label><select id="lead-faturamento">
               <option>Até R$10 mil</option>
               <option>R$10k–R$30k</option>
               <option>R$30k–R$100k</option>
               <option>Acima de R$100k</option>
             </select></div>
-          <div class="form-group full"><label>Como podemos ajudar?</label><textarea rows="3"
+          <div class="form-group full"><label>Como podemos ajudar?</label><textarea id="lead-mensagem" rows="3"
               placeholder="Conte um pouco sobre seu negócio e objetivos..."></textarea></div>
         </div>
-        <button class="submit-btn" onclick="alert('Lead enviado! Entraremos em contato em breve.')">Quero meu
+        <button id="lead-submit-btn" class="submit-btn" onclick="submitLeadForm()">Quero meu
           diagnóstico gratuito →</button>
       </div>
     </div>
@@ -271,7 +285,7 @@
       </div>
       <h1
         style="font-size:clamp(2rem,5vw,3.2rem);font-weight:800;color:#fff;line-height:1.1;max-width:700px;margin:0 auto 20px">
-        Cardápio digital bonito,<br><span style="color:#6D28D9">em 5 minutos</span>, com pedidos<br>direto no seu
+        Seu cardápio digital,<br><span style="color:#6D28D9">em 5 minutos</span>, com pedidos<br>direto no seu
         WhatsApp
       </h1>
       <p style="font-size:1.05rem;color:rgba(255,255,255,.55);max-width:480px;margin:0 auto 36px;line-height:1.6">
@@ -279,7 +293,7 @@
         pronto — sem precisar de ninguém.
       </p>
       <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap">
-        <button onclick="showPage('cardapio-onboarding')"
+        <button onclick="resetOnboarding(); showPage('cardapio-onboarding')"
           style="background:#6D28D9;color:#fff;border:none;border-radius:10px;padding:14px 32px;font-family:inherit;font-size:1rem;font-weight:700;cursor:pointer">Criar
           meu cardápio grátis →</button>
         <button onclick="document.getElementById('cd-demo').scrollIntoView({behavior:'smooth'})"
@@ -347,7 +361,7 @@
       <div
         style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:16px;max-width:860px;margin:0 auto 40px">
         <div style="border-radius:14px;overflow:hidden;border:1px solid #eee;cursor:pointer"
-          onclick="showPage('cardapio-onboarding')">
+          onclick="resetOnboarding(); showPage('cardapio-onboarding')">
           <div
             style="height:100px;background:#F7F5F0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px">
             <div style="width:36px;height:5px;background:#1a1a18;border-radius:3px"></div>
@@ -360,7 +374,7 @@
           </div>
         </div>
         <div style="border-radius:14px;overflow:hidden;border:1px solid #eee;cursor:pointer"
-          onclick="showPage('cardapio-onboarding')">
+          onclick="resetOnboarding(); showPage('cardapio-onboarding')">
           <div
             style="height:100px;background:#1a1a18;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px">
             <div style="width:36px;height:5px;background:#fff;border-radius:3px;opacity:.9"></div>
@@ -373,7 +387,7 @@
           </div>
         </div>
         <div style="border-radius:14px;overflow:hidden;border:1px solid #eee;cursor:pointer"
-          onclick="showPage('cardapio-onboarding')">
+          onclick="resetOnboarding(); showPage('cardapio-onboarding')">
           <div
             style="height:100px;background:#FFF0F0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px">
             <div style="width:36px;height:5px;background:#C0392B;border-radius:3px"></div>
@@ -386,7 +400,7 @@
           </div>
         </div>
         <div style="border-radius:14px;overflow:hidden;border:1px solid #eee;cursor:pointer"
-          onclick="showPage('cardapio-onboarding')">
+          onclick="resetOnboarding(); showPage('cardapio-onboarding')">
           <div
             style="height:100px;background:#F0FFF4;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px">
             <div style="width:36px;height:5px;background:#1B5E20;border-radius:3px"></div>
@@ -399,7 +413,7 @@
           </div>
         </div>
         <div style="border-radius:14px;overflow:hidden;border:1px solid #eee;cursor:pointer"
-          onclick="showPage('cardapio-onboarding')">
+          onclick="resetOnboarding(); showPage('cardapio-onboarding')">
           <div
             style="height:100px;background:#FFFDE7;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px">
             <div style="width:36px;height:5px;background:#F57F17;border-radius:3px"></div>
@@ -421,9 +435,10 @@
         Simples, sem surpresas</h2>
       <div
         style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:20px;max-width:780px;margin:0 auto">
-        <div style="background:#fff;border-radius:16px;padding:28px 24px;border:1px solid #eee">
-          <p style="font-size:1.8rem;font-weight:800;color:#111">Grátis<span
-              style="font-size:1rem;font-weight:400;color:#888"> para sempre</span></p>
+        <div class="landing-plan-card"
+          style="background:#fff;border-radius:16px;padding:28px 24px;border:1px solid #eee">
+          <p style="font-size:1.8rem;font-weight:800;color:#111">R$50<span
+              style="font-size:1rem;font-weight:400;color:#888">/mês</span></p>
           <p style="font-weight:700;color:#111;margin:8px 0 16px">Básico</p>
           <div style="display:flex;flex-direction:column;gap:8px;font-size:.88rem;color:#555">
             <div>✓ 1 template</div>
@@ -431,41 +446,41 @@
             <div>✓ Link público</div>
             <div>✓ Botão WhatsApp</div>
           </div>
-          <button onclick="showPage('cardapio-onboarding')"
+          <button onclick="resetOnboarding(); showPage('cardapio-onboarding')"
             style="width:100%;margin-top:20px;padding:11px;border-radius:8px;border:1.5px solid #111;background:transparent;font-family:inherit;font-size:.9rem;font-weight:700;cursor:pointer">Começar
             grátis</button>
         </div>
-        <div style="background:#111;border-radius:16px;padding:28px 24px;border:2px solid #6D28D9;position:relative">
+        <div class="landing-plan-card"
+          style="background:#fff;border-radius:16px;padding:28px 24px;border:1px solid #eee">
+          <p style="font-size:1.8rem;font-weight:800;color:#111">R$55<span
+              style="font-size:1rem;font-weight:400;color:#888">/mês</span></p>
+          <p style="font-weight:700;color:#111;margin:8px 0 16px">Pro</p>
+          <div style="display:flex;flex-direction:column;gap:8px;font-size:.88rem;color:#555">
+            <div>✓ Todos os templates</div>
+            <div>✓ Itens ilimitados</div>
+            <div>✓ Painel de gestão</div>
+            <div>✓ Estatísticas de acesso</div>
+          </div>
+          <button onclick="resetOnboarding(); showPage('cardapio-onboarding')"
+            style="width:100%;margin-top:20px;padding:11px;border-radius:8px;border:1.5px solid #111;background:transparent;font-family:inherit;font-size:.9rem;font-weight:700;cursor:pointer">Começar
+            grátis</button>
+        </div>
+        <div class="landing-plan-card"
+          style="background:#111;border-radius:16px;padding:28px 24px;border:2px solid #6D28D9;position:relative">
           <div
             style="position:absolute;top:-12px;left:50%;transform:translateX(-50%);background:#6D28D9;color:#fff;font-size:11px;font-weight:700;padding:4px 14px;border-radius:20px;white-space:nowrap">
             MAIS POPULAR</div>
-          <p style="font-size:1.8rem;font-weight:800;color:#fff">R$40<span
+          <p style="font-size:1.8rem;font-weight:800;color:#fff">R$60<span
               style="font-size:1rem;font-weight:400;color:rgba(255,255,255,.5)">/mês</span></p>
-          <p style="font-weight:700;color:#fff;margin:8px 0 16px">Pro</p>
+          <p style="font-weight:700;color:#fff;margin:8px 0 16px">Business</p>
           <div style="display:flex;flex-direction:column;gap:8px;font-size:.88rem;color:rgba(255,255,255,.7)">
-            <div>✓ Todos os templates</div>
-            <div>✓ Itens ilimitados</div>
-            <div>✓ Link personalizado</div>
-            <div>✓ Painel de pedidos</div>
-            <div>✓ Estatísticas</div>
-          </div>
-          <button onclick="showPage('cardapio-onboarding')"
-            style="width:100%;margin-top:20px;padding:11px;border-radius:8px;border:none;background:#6D28D9;color:#fff;font-family:inherit;font-size:.9rem;font-weight:700;cursor:pointer">Começar
-            grátis</button>
-        </div>
-        <div style="background:#fff;border-radius:16px;padding:28px 24px;border:1px solid #eee">
-          <p style="font-size:1.8rem;font-weight:800;color:#111">R$50<span
-              style="font-size:1rem;font-weight:400;color:#888">/mês</span></p>
-          <p style="font-weight:700;color:#111;margin:8px 0 16px">Business</p>
-          <div style="display:flex;flex-direction:column;gap:8px;font-size:.88rem;color:#555">
             <div>✓ Tudo do Pro</div>
-            <div>✓ Domínio próprio</div>
-            <div>✓ Multi-unidades</div>
-            <div>✓ Relatórios avançados</div>
+            <div>✓ Sem marca "Web Cardápio"</div>
             <div>✓ Suporte prioritário</div>
+            <div>✓ Cupons ilimitados</div>
           </div>
-          <button onclick="showPage('cardapio-onboarding')"
-            style="width:100%;margin-top:20px;padding:11px;border-radius:8px;border:1.5px solid #111;background:transparent;font-family:inherit;font-size:.9rem;font-weight:700;cursor:pointer">Começar
+          <button onclick="resetOnboarding(); showPage('cardapio-onboarding')"
+            style="width:100%;margin-top:20px;padding:11px;border-radius:8px;border:none;background:#6D28D9;color:#fff;font-family:inherit;font-size:.9rem;font-weight:700;cursor:pointer">Começar
             grátis</button>
         </div>
       </div>
@@ -485,265 +500,214 @@
   </div>
 
   <!-- CARDÁPIO ONBOARDING -->
-  <div id="page-cardapio-onboarding" class="page" style="display:none">
-    <div style="max-width:560px;margin:0 auto;padding:48px 20px 80px">
-      <button onclick="obBackToLanding()"
-        style="background:none;border:none;color:rgba(255,255,255,.78);font-size:.88rem;cursor:pointer;margin-bottom:28px;font-family:inherit">←
-        Voltar</button>
+  <div id="page-cardapio-onboarding" class="page"
+    style="display:none;min-height:100vh;flex-direction:column;align-items:center;justify-content:center;background:#0f1115">
+    <div id="ob-inner-container"
+      style="width:100%;max-width:440px;margin:0 auto;padding:20px 40px;position:relative;transition:max-width 0.4s ease">
 
-      <div style="display:flex;gap:8px;margin-bottom:32px" id="ob-steps">
-        <div class="ob-step active" data-step="1">1</div>
-        <div style="flex:1;height:2px;background:#eee;margin:auto;border-radius:2px">
-          <div id="ob-bar" style="height:100%;width:0%;background:#6D28D9;border-radius:2px;transition:width .3s"></div>
-        </div>
-        <div class="ob-step" data-step="2">2</div>
-        <div style="flex:1;height:2px;background:#eee;margin:auto;border-radius:2px"></div>
-        <div class="ob-step" data-step="3">3</div>
-        <div style="flex:1;height:2px;background:#eee;margin:auto;border-radius:2px"></div>
-        <div class="ob-step" data-step="4">4</div>
-        <div style="flex:1;height:2px;background:#eee;margin:auto;border-radius:2px"></div>
-        <div class="ob-step" data-step="5">5</div>
+      <div class="ob-progress-container">
+        <div id="ob-bar" class="ob-progress-fill"></div>
       </div>
-
       <div id="ob-panel-1">
-        <p style="font-size:.75rem;font-weight:700;letter-spacing:.1em;color:#6D28D9;margin-bottom:8px">PASSO 1 DE 4</p>
-        <h2 style="font-size:1.6rem;font-weight:800;color:#111;margin-bottom:6px">Sobre o seu negócio</h2>
-        <p style="color:#888;font-size:.9rem;margin-bottom:28px">Vamos configurar seu cardápio em minutos.</p>
-        <div style="display:flex;flex-direction:column;gap:16px">
+        <h2 class="ob-section-title">Sobre o seu negócio</h2>
+        <p class="ob-section-sub">Configure seu cardápio em minutos.</p>
+        <div style="display:flex;flex-direction:column;gap:18px">
           <div>
-            <label style="display:block;font-size:.83rem;font-weight:600;color:#444;margin-bottom:6px">Nome do
-              estabelecimento</label>
+            <label
+              style="display:block;font-size:.75rem;font-weight:700;color:rgba(255,255,255,.6);margin-bottom:8px;text-transform:uppercase">Nome
+              do estabelecimento</label>
             <input id="ob-nome" type="text" placeholder="Ex: Burguer do Zé"
-              style="width:100%;padding:12px 14px;border:1.5px solid #ddd;border-radius:10px;font-size:.95rem;font-family:inherit;outline:none"
-              onfocus="this.style.borderColor='#6D28D9'" onblur="this.style.borderColor='#ddd'">
+              style="width:100%;padding:14px;border:1.5px solid #333;border-radius:12px;font-size:.95rem;font-family:inherit;background:transparent;color:#f5f7ff;outline:none;box-sizing:border-box"
+              onfocus="this.style.borderColor='#6D28D9'" onblur="this.style.borderColor='#333'">
           </div>
           <div>
-            <label style="display:block;font-size:.83rem;font-weight:600;color:#444;margin-bottom:6px">WhatsApp (com
-              DDD)</label>
+            <label
+              style="display:block;font-size:.75rem;font-weight:700;color:rgba(255,255,255,.6);margin-bottom:8px;text-transform:uppercase">WhatsApp
+              (com DDD)</label>
             <input id="ob-wa" type="tel" placeholder="(82) 99999-9999"
-              style="width:100%;padding:12px 14px;border:1.5px solid #ddd;border-radius:10px;font-size:.95rem;font-family:inherit;outline:none"
-              onfocus="this.style.borderColor='#6D28D9'" onblur="this.style.borderColor='#ddd'">
+              style="width:100%;padding:14px;border:1.5px solid #333;border-radius:12px;font-size:.95rem;font-family:inherit;background:transparent;color:#f5f7ff;outline:none;box-sizing:border-box"
+              onfocus="this.style.borderColor='#6D28D9'" onblur="this.style.borderColor='#333'">
           </div>
           <div>
-            <label style="display:block;font-size:.83rem;font-weight:600;color:#444;margin-bottom:8px">Tipo de
-              negócio</label>
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px" id="ob-tipos">
+            <label
+              style="display:block;font-size:.75rem;font-weight:700;color:rgba(255,255,255,.6);margin-bottom:8px;text-transform:uppercase">Tipo
+              de negócio</label>
+            <div class="ob-grid-3" id="ob-tipos">
               <button class="ob-tipo active" data-val="restaurante">Restaurante</button>
-              <button class="ob-tipo" data-val="hamburgueria">Hamburgueria</button>
+              <button class="ob-tipo" data-val="hamburgueria">Hambúrguer</button>
               <button class="ob-tipo" data-val="pizzaria">Pizzaria</button>
-              <button class="ob-tipo" data-val="cafe">Café / Confeitaria</button>
-              <button class="ob-tipo" data-val="bar">Bar / Boteco</button>
+              <button class="ob-tipo" data-val="cafe">Café</button>
+              <button class="ob-tipo" data-val="bar">Bar</button>
               <button class="ob-tipo" data-val="outro">Outro</button>
             </div>
           </div>
         </div>
         <button onclick="obNext(2)"
-          style="width:100%;margin-top:28px;padding:14px;border-radius:10px;background:#6D28D9;color:#fff;border:none;font-family:inherit;font-size:1rem;font-weight:700;cursor:pointer">Continuar
-          →</button>
+          style="width:100%;margin-top:28px;padding:16px;border-radius:12px;background:#6D28D9;color:#fff;border:none;font-family:inherit;font-size:1rem;font-weight:700;cursor:pointer">Próximo
+          passo →</button>
+
+        <div style="margin-top:20px;display:flex;align-items:center;justify-content:space-between;opacity:0.4">
+          <button onclick="obBackToLanding()"
+            style="background:transparent;border:none;color:#fff;font-size:.75rem;cursor:pointer;padding:0">← Sair do
+            onboarding</button>
+          <span style="color:#fff;font-size:9px;font-weight:700;letter-spacing:1px">MAIND</span>
+        </div>
       </div>
 
       <div id="ob-panel-2" style="display:none">
-        <p style="font-size:.75rem;font-weight:700;letter-spacing:.1em;color:#6D28D9;margin-bottom:8px">PASSO 2 DE 4</p>
-        <h2 style="font-size:1.6rem;font-weight:800;color:#f5f7ff;margin-bottom:6px">Escolha o seu template</h2>
-        <p style="color:rgba(255,255,255,.68);font-size:.9rem;margin-bottom:24px">Pode trocar depois, sem perder os
-          dados.</p>
-        <div style="display:flex;flex-direction:column;gap:12px" id="ob-templates">
-          <div class="ob-tpl active" data-tpl="clean"
-            style="display:flex;align-items:center;gap:14px;border:1.5px solid #eee;border-radius:12px;padding:14px 16px;cursor:pointer"
-            onclick="selectTplOb(this)">
-            <div
-              style="width:48px;height:48px;border-radius:8px;background:#F7F5F0;flex-shrink:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px">
-              <div style="width:28px;height:4px;background:#1a1a18;border-radius:2px"></div>
-              <div style="width:36px;height:2px;background:#ccc;border-radius:2px"></div>
+        <div class="ob-split-layout">
+          <div class="ob-selection-col">
+            <h2 class="ob-section-title">Personalize o estilo</h2>
+            <p class="ob-section-sub">Escolha um template e veja a mágica acontecer ao lado.</p>
+
+            <div style="display:flex;flex-direction:column;gap:10px" id="ob-templates">
+              <div class="ob-tpl" data-tpl="clean"
+                style="display:flex;align-items:center;gap:14px;border:1.5px solid #eee;border-radius:12px;padding:12px;cursor:pointer"
+                onclick="selectTplOb(this)">
+                <div style="width:40px;height:40px;border-radius:8px;background:#F7F5F0;flex-shrink:0"></div>
+                <div>
+                  <p style="font-weight:700;color:#f5f7ff;font-size:.85rem">Clean & moderno</p>
+                  <p style="font-size:.75rem;color:rgba(255,255,255,.6)">Minimalista</p>
+                </div>
+                <div class="ob-tpl-check"
+                  style="margin-left:auto;width:18px;height:18px;border-radius:50%;background:#6D28D9;display:flex;align-items:center;justify-content:center">
+                  <svg width="8" height="8" viewBox="0 0 10 10">
+                    <path d="M2 5l2.5 2.5L8 3" stroke="#fff" stroke-width="2" fill="none" />
+                  </svg>
+                </div>
+              </div>
+              <div class="ob-tpl" data-tpl="dark"
+                style="display:flex;align-items:center;gap:14px;border:1.5px solid #eee;border-radius:12px;padding:12px;cursor:pointer"
+                onclick="selectTplOb(this)">
+                <div style="width:40px;height:40px;border-radius:8px;background:#1a1a18;flex-shrink:0"></div>
+                <div>
+                  <p style="font-weight:700;color:#f5f7ff;font-size:.85rem">Dark premium</p>
+                  <p style="font-size:.75rem;color:rgba(255,255,255,.6)">Elegante</p>
+                </div>
+                <div class="ob-tpl-check"
+                  style="margin-left:auto;width:18px;height:18px;border-radius:50%;background:#6D28D9;display:flex;align-items:center;justify-content:center">
+                  <svg width="8" height="8" viewBox="0 0 10 10">
+                    <path d="M2 5l2.5 2.5L8 3" stroke="#fff" stroke-width="2" fill="none" />
+                  </svg>
+                </div>
+              </div>
+              <div class="ob-tpl" data-tpl="red"
+                style="display:flex;align-items:center;gap:14px;border:1.5px solid #eee;border-radius:12px;padding:12px;cursor:pointer"
+                onclick="selectTplOb(this)">
+                <div style="width:40px;height:40px;border-radius:8px;background:#FFF0F0;flex-shrink:0"></div>
+                <div>
+                  <p style="font-weight:700;color:#f5f7ff;font-size:.85rem">Vibrante</p>
+                  <p style="font-size:.75rem;color:rgba(255,255,255,.6)">Delivery, Food</p>
+                </div>
+                <div class="ob-tpl-check"
+                  style="margin-left:auto;width:18px;height:18px;border-radius:50%;background:#6D28D9;display:flex;align-items:center;justify-content:center">
+                  <svg width="8" height="8" viewBox="0 0 10 10">
+                    <path d="M2 5l2.5 2.5L8 3" stroke="#fff" stroke-width="2" fill="none" />
+                  </svg>
+                </div>
+              </div>
+              <div class="ob-tpl" data-tpl="green"
+                style="display:flex;align-items:center;gap:14px;border:1.5px solid #eee;border-radius:12px;padding:12px;cursor:pointer"
+                onclick="selectTplOb(this)">
+                <div style="width:40px;height:40px;border-radius:8px;background:#E8F5E9;flex-shrink:0"></div>
+                <div>
+                  <p style="font-weight:700;color:#f5f7ff;font-size:.85rem">Verde Natural</p>
+                  <p style="font-size:.75rem;color:rgba(255,255,255,.6)">Saudável, Açaí</p>
+                </div>
+                <div class="ob-tpl-check"
+                  style="margin-left:auto;width:18px;height:18px;border-radius:50%;background:#6D28D9;display:flex;align-items:center;justify-content:center">
+                  <svg width="8" height="8" viewBox="0 0 10 10">
+                    <path d="M2 5l2.5 2.5L8 3" stroke="#fff" stroke-width="2" fill="none" />
+                  </svg>
+                </div>
+              </div>
             </div>
-            <div>
-              <p style="font-weight:700;color:#f5f7ff;font-size:.9rem">Clean & moderno</p>
-              <p style="font-size:.8rem;color:rgba(255,255,255,.68)">Restaurante, café</p>
-            </div>
-            <div class="ob-tpl-check"
-              style="margin-left:auto;width:20px;height:20px;border-radius:50%;background:#6D28D9;display:flex;align-items:center;justify-content:center;flex-shrink:0">
-              <svg width="10" height="10" viewBox="0 0 10 10">
-                <path d="M2 5l2.5 2.5L8 3" stroke="#fff" stroke-width="1.5" fill="none" />
-              </svg>
-            </div>
-          </div>
-          <div class="ob-tpl" data-tpl="dark"
-            style="display:flex;align-items:center;gap:14px;border:1.5px solid #eee;border-radius:12px;padding:14px 16px;cursor:pointer"
-            onclick="selectTplOb(this)">
-            <div
-              style="width:48px;height:48px;border-radius:8px;background:#1a1a18;flex-shrink:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px">
-              <div style="width:28px;height:4px;background:#fff;border-radius:2px;opacity:.9"></div>
-              <div style="width:36px;height:2px;background:#555;border-radius:2px"></div>
-            </div>
-            <div>
-              <p style="font-weight:700;color:#f5f7ff;font-size:.9rem">Dark premium</p>
-              <p style="font-size:.8rem;color:rgba(255,255,255,.68)">Bar, hamburgueria</p>
-            </div>
-            <div class="ob-tpl-check"
-              style="margin-left:auto;width:20px;height:20px;border-radius:50%;background:#6D28D9;display:flex;align-items:center;justify-content:center;flex-shrink:0">
-              <svg width="10" height="10" viewBox="0 0 10 10">
-                <path d="M2 5l2.5 2.5L8 3" stroke="#fff" stroke-width="1.5" fill="none" />
-              </svg>
-            </div>
-          </div>
-          <div class="ob-tpl" data-tpl="red"
-            style="display:flex;align-items:center;gap:14px;border:1.5px solid #eee;border-radius:12px;padding:14px 16px;cursor:pointer"
-            onclick="selectTplOb(this)">
-            <div
-              style="width:48px;height:48px;border-radius:8px;background:#FFF0F0;flex-shrink:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px">
-              <div style="width:28px;height:4px;background:#C0392B;border-radius:2px"></div>
-              <div style="width:36px;height:2px;background:#ddd;border-radius:2px"></div>
-            </div>
-            <div>
-              <p style="font-weight:700;color:#f5f7ff;font-size:.9rem">Vermelho & bold</p>
-              <p style="font-size:.8rem;color:rgba(255,255,255,.68)">Pizzaria, delivery</p>
-            </div>
-            <div class="ob-tpl-check"
-              style="margin-left:auto;width:20px;height:20px;border-radius:50%;background:#6D28D9;display:flex;align-items:center;justify-content:center;flex-shrink:0">
-              <svg width="10" height="10" viewBox="0 0 10 10">
-                <path d="M2 5l2.5 2.5L8 3" stroke="#fff" stroke-width="1.5" fill="none" />
-              </svg>
-            </div>
-          </div>
-          <div class="ob-tpl" data-tpl="green"
-            style="display:flex;align-items:center;gap:14px;border:1.5px solid #eee;border-radius:12px;padding:14px 16px;cursor:pointer"
-            onclick="selectTplOb(this)">
-            <div
-              style="width:48px;height:48px;border-radius:8px;background:#F0FFF4;flex-shrink:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px">
-              <div style="width:28px;height:4px;background:#1B5E20;border-radius:2px"></div>
-              <div style="width:36px;height:2px;background:#ccc;border-radius:2px"></div>
-            </div>
-            <div>
-              <p style="font-weight:700;color:#f5f7ff;font-size:.9rem">Verde natural</p>
-              <p style="font-size:.8rem;color:rgba(255,255,255,.68)">Açaí, saudável</p>
-            </div>
-            <div class="ob-tpl-check"
-              style="margin-left:auto;width:20px;height:20px;border-radius:50%;background:#6D28D9;display:flex;align-items:center;justify-content:center;flex-shrink:0">
-              <svg width="10" height="10" viewBox="0 0 10 10">
-                <path d="M2 5l2.5 2.5L8 3" stroke="#fff" stroke-width="1.5" fill="none" />
-              </svg>
+
+            <div style="margin-top:24px;display:flex;flex-direction:column;gap:12px">
+              <button onclick="obNext(4)"
+                style="width:100%;padding:14px;border-radius:10px;background:#6D28D9;color:#fff;border:none;font-family:inherit;font-size:1rem;font-weight:700;cursor:pointer">Ficou
+                ótimo! Ver planos →</button>
+              <button onclick="obNext(1)"
+                style="width:100%;padding:10px;background:transparent;border:none;color:rgba(255,255,255,.5);font-size:.85rem;cursor:pointer">←
+                Voltar para dados</button>
             </div>
           </div>
-        </div>
-        <div style="display:flex;gap:12px;margin-top:28px">
-          <button onclick="obNext(1)"
-            style="padding:14px 20px;border-radius:10px;border:1.5px solid rgba(255,255,255,.72);background:transparent;color:#f5f7ff;font-family:inherit;font-size:.95rem;cursor:pointer">←
-            Voltar</button>
-          <button onclick="obNext(3)"
-            style="flex:1;padding:14px;border-radius:10px;background:#6D28D9;color:#fff;border:none;font-family:inherit;font-size:1rem;font-weight:700;cursor:pointer">Continuar
-            →</button>
+
+          <div class="ob-preview-col" style="margin-top:-30px">
+            <div id="ob-preview-wrap"
+              style="position:relative;border-radius:24px;overflow:hidden;box-shadow:0 15px 40px rgba(0,0,0,.6);background:#111;border:6px solid #222">
+              <div
+                style="background:#111;padding:5px 12px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #222">
+                <span style="color:#fff;font-size:.55rem;font-weight:700">9:41</span>
+                <div style="display:flex;gap:3px;align-items:center">
+                  <div style="width:10px;height:5px;background:#fff;border-radius:1px"></div>
+                </div>
+              </div>
+              <iframe id="ob-preview-iframe" style="width:100%;height:440px;border:none;display:block;background:#fff"
+                src="about:blank" sandbox="allow-scripts allow-same-origin"></iframe>
+              <div id="ob-preview-loading"
+                style="position:absolute;inset:0;top:30px;background:rgba(17,17,17,.95);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px">
+                <div
+                  style="width:24px;height:24px;border:2px solid rgba(255,255,255,.1);border-top-color:#6D28D9;border-radius:50%;animation:ob-spin 0.8s linear infinite">
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 
-      <div id="ob-panel-3" style="display:none">
-        <p style="font-size:.75rem;font-weight:700;letter-spacing:.1em;color:#6D28D9;margin-bottom:8px">PASSO 3 DE 5</p>
-        <h2 style="font-size:1.4rem;font-weight:800;color:#f5f7ff;margin-bottom:6px">Veja como ficou seu cardápio 👀
-        </h2>
-        <p style="color:rgba(255,255,255,.68);font-size:.85rem;margin-bottom:16px">É exatamente assim que seus clientes
-          vão ver. Gostou? Escolha seu plano e publique.</p>
-        <div id="ob-preview-wrap"
-          style="position:relative;border-radius:16px;overflow:hidden;box-shadow:0 4px 32px rgba(0,0,0,.45);background:#111;margin-bottom:20px">
-          <div
-            style="background:#111;padding:8px 16px 4px;display:flex;align-items:center;justify-content:space-between">
-            <span style="color:#fff;font-size:.7rem;font-weight:700">9:41</span>
-            <div style="display:flex;gap:5px;align-items:center">
-              <svg width="12" height="10" viewBox="0 0 12 10" fill="white">
-                <rect x="0" y="4" width="2" height="6" rx="1" />
-                <rect x="3" y="2" width="2" height="8" rx="1" />
-                <rect x="6" y="0" width="2" height="10" rx="1" />
-                <rect x="9" y="1" width="2" height="9" rx="1" opacity=".4" />
-              </svg>
-              <svg width="14" height="10" viewBox="0 0 14 10" fill="white">
-                <rect x="1" y="2" width="10" height="7" rx="1" stroke="white" stroke-width="1.2" fill="none" />
-                <rect x="11" y="4" width="2" height="3" rx="1" />
-                <rect x="2" y="3" width="7" height="5" rx=".5" />
-              </svg>
-            </div>
-          </div>
-          <div style="background:#1c1c1e;padding:5px 12px;display:flex;align-items:center;gap:8px">
-            <div
-              style="flex:1;background:#2c2c2e;border-radius:6px;padding:5px 10px;font-size:.7rem;color:rgba(255,255,255,.5);white-space:nowrap;overflow:hidden;text-overflow:ellipsis"
-              id="ob-preview-url">webcardapio.com/seu-negocio</div>
-          </div>
-          <iframe id="ob-preview-iframe" style="width:100%;height:480px;border:none;display:block;background:#fff"
-            src="about:blank" title="Preview do cardápio" sandbox="allow-scripts allow-same-origin"></iframe>
-          <div id="ob-preview-loading"
-            style="position:absolute;inset:0;top:56px;background:rgba(17,17,17,.85);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px">
-            <div
-              style="width:36px;height:36px;border:3px solid rgba(255,255,255,.15);border-top-color:#6D28D9;border-radius:50%;animation:ob-spin 0.8s linear infinite">
-            </div>
-            <span style="color:rgba(255,255,255,.6);font-size:.85rem">Carregando seu cardápio…</span>
-          </div>
-        </div>
-        <div style="display:flex;gap:12px">
-          <button onclick="obNext(2)"
-            style="padding:14px 20px;border-radius:10px;border:1.5px solid rgba(255,255,255,.72);background:transparent;color:#f5f7ff;font-family:inherit;font-size:.95rem;cursor:pointer">←
-            Ajustar</button>
-          <button onclick="obNext(4)"
-            style="flex:1;padding:14px;border-radius:10px;background:#6D28D9;color:#fff;border:none;font-family:inherit;font-size:1rem;font-weight:700;cursor:pointer">Ficou
-            ótimo! Ver planos →</button>
-        </div>
-      </div>
-
-      <!-- STEP 4: PLANO -->
       <div id="ob-panel-4" style="display:none">
-        <p style="font-size:.75rem;font-weight:700;letter-spacing:.1em;color:#6D28D9;margin-bottom:8px">PASSO 4 DE 5</p>
-        <h2 style="font-size:1.6rem;font-weight:800;color:#f5f7ff;margin-bottom:6px">Escolha seu plano</h2>
-        <p style="color:rgba(255,255,255,.7);font-size:.9rem;margin-bottom:24px">7 dias grátis em todos. Sem cartão de
-          crédito.</p>
+        <h2 class="ob-section-title">Escolha seu plano</h2>
+        <p class="ob-benefits-list" style="margin-bottom:12px !important">
+          ✓ 7 dias grátis em todos · Sem cartão de crédito<br>
+          ✓ Pague via Pix ou cartão · Cancele quando quiser
+        </p>
         <div style="display:flex;flex-direction:column;gap:10px">
           <div class="ob-plan" data-plan="basico" onclick="selectPlan(this)"
             style="border:1.5px solid #eee;border-radius:12px;padding:16px;cursor:pointer;display:flex;justify-content:space-between;align-items:center">
             <div>
               <p class="ob-plan-title">Básico</p>
-              <p class="ob-plan-sub">1 template · 20 itens · botão WhatsApp</p>
-            </div>
-            <p class="ob-plan-price">Grátis<span> para sempre</span></p>
-          </div>
-          <div class="ob-plan active" data-plan="pro" onclick="selectPlan(this)"
-            style="border:1.5px solid #eee;border-radius:12px;padding:16px;cursor:pointer;display:flex;justify-content:space-between;align-items:center">
-            <div>
-              <div style="display:flex;align-items:center;gap:8px;margin-bottom:2px">
-                <p class="ob-plan-title">Pro</p><span
-                  style="font-size:10px;background:#6D28D9;color:#fff;padding:2px 8px;border-radius:10px;font-weight:700">RECOMENDADO</span>
-              </div>
-              <p class="ob-plan-sub">Templates ilimitados · itens ilimitados · painel</p>
-            </div>
-            <p class="ob-plan-price">R$40<span>/mês</span></p>
-          </div>
-          <div class="ob-plan" data-plan="business" onclick="selectPlan(this)"
-            style="border:1.5px solid #eee;border-radius:12px;padding:16px;cursor:pointer;display:flex;justify-content:space-between;align-items:center">
-            <div>
-              <p class="ob-plan-title">Business</p>
-              <p class="ob-plan-sub">Tudo do Pro + domínio próprio + multi-unidades</p>
+              <p class="ob-plan-sub">1 template · 20 itens · WhatsApp</p>
             </div>
             <p class="ob-plan-price">R$50<span>/mês</span></p>
           </div>
+          <div class="ob-plan" data-plan="pro" onclick="selectPlan(this)"
+            style="border:1.5px solid #eee;border-radius:12px;padding:16px;cursor:pointer;display:flex;justify-content:space-between;align-items:center">
+            <div>
+              <p class="ob-plan-title">Pro</p>
+              <p class="ob-plan-sub">Todos templates · itens ilimitados · painel</p>
+            </div>
+            <p class="ob-plan-price">R$55<span>/mês</span></p>
+          </div>
+          <div class="ob-plan active" data-plan="business" onclick="selectPlan(this)"
+            style="border:1.5px solid #eee;border-radius:12px;padding:16px;cursor:pointer;display:flex;justify-content:space-between;align-items:center">
+            <div>
+              <div style="display:flex;align-items:center;gap:8px;margin-bottom:2px">
+                <p class="ob-plan-title">Business</p><span
+                  style="font-size:10px;background:#6D28D9;color:#fff;padding:2px 8px;border-radius:10px;font-weight:700">RECOMENDADO</span>
+              </div>
+              <p class="ob-plan-sub">Tudo do Pro + sem marca + suporte VIP</p>
+            </div>
+            <p class="ob-plan-price">R$60<span>/mês</span></p>
+          </div>
         </div>
-        <div
-          style="background:#f9f9f9;border-radius:10px;padding:14px 16px;margin-top:20px;font-size:.83rem;color:#555;line-height:1.6">
-          ✓ 7 dias grátis, sem cartão &nbsp;·&nbsp; ✓ Pague via Pix ou cartão &nbsp;·&nbsp; ✓ Cancele quando quiser
-        </div>
-        <div style="margin-top:14px">
+        <div style="margin-top:24px">
           <input id="ob-cupom" type="text" placeholder="Tem um cupom? Digite aqui"
             style="width:100%;padding:11px 14px;border:1.5px solid #333;border-radius:10px;font-size:.88rem;font-family:inherit;background:transparent;color:#f5f7ff;outline:none;box-sizing:border-box"
             onfocus="this.style.borderColor='#6D28D9'" onblur="this.style.borderColor='#333'"
-            oninput="this.value=this.value.toUpperCase()">
+            oninput="this.value=this.value.toUpperCase();validarCupomOnboarding()">
         </div>
-        <div style="display:flex;gap:12px;margin-top:20px">
-          <button onclick="obNext(3)"
-            style="padding:14px 20px;border-radius:10px;border:1.5px solid rgba(255,255,255,.72);background:transparent;color:#f5f7ff;font-family:inherit;font-size:.95rem;cursor:pointer">←
-            Voltar</button>
-          <button onclick="obNext(5)"
-            style="flex:1;padding:14px;border-radius:10px;background:#6D28D9;color:#fff;border:none;font-family:inherit;font-size:1rem;font-weight:700;cursor:pointer">Continuar
-            →</button>
+        <p id="ob-cupom-feedback" style="font-size:.8rem;margin-top:6px;min-height:18px"></p>
+        <div style="display:flex;gap:12px;margin-top:24px">
+          <button onclick="obNext(2)"
+            style="width:100%;padding:14px;border-radius:10px;border:1.5px solid rgba(255,255,255,.72);background:transparent;color:#f5f7ff;font-family:inherit;font-size:.95rem;cursor:pointer">←
+            Voltar para o preview</button>
         </div>
       </div>
 
       <div id="ob-panel-5" style="display:none">
-        <h2 style="font-size:1.6rem;font-weight:800;color:#f5f7ff;margin-bottom:6px">Crie sua conta</h2>
-        <p style="color:rgba(255,255,255,.68);font-size:.9rem;margin-bottom:28px">Informe email e senha do dono para
-          acessar e editar o cardápio depois.</p>
+        <h2 class="ob-section-title">Crie sua conta</h2>
+        <p class="ob-section-sub">Para gerenciar seu cardápio e receber pedidos.</p>
         <div style="display:flex;flex-direction:column;gap:16px">
           <div>
             <label
@@ -809,30 +773,74 @@
   </div>
 
   <style>
-    .ob-step {
-      width: 28px;
-      height: 28px;
-      border-radius: 50%;
-      border: 2px solid #ddd;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 12px;
-      font-weight: 700;
-      color: #aaa;
-      flex-shrink: 0;
-      transition: all .2s
+    .ob-progress-container {
+      position: absolute;
+      left: 10px;
+      top: 40px;
+      bottom: 40px;
+      width: 3px;
+      background: rgba(255, 255, 255, 0.08);
+      border-radius: 2px;
+      overflow: hidden;
+      z-index: 10;
     }
 
-    .ob-step.active {
-      border-color: #6D28D9;
-      color: #6D28D9
-    }
-
-    .ob-step.done {
+    .ob-progress-fill {
+      width: 100%;
       background: #6D28D9;
-      border-color: #6D28D9;
-      color: #fff
+      height: 0%;
+      transition: height 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+      box-shadow: 0 0 10px rgba(109, 40, 217, 0.5);
+    }
+
+    .ob-section-title {
+      font-size: 1.35rem !important;
+      font-weight: 800;
+      color: #f5f7ff;
+      margin-bottom: 4px !important;
+    }
+
+    .ob-section-sub {
+      color: rgba(255, 255, 255, .6);
+      font-size: 0.85rem !important;
+      margin-bottom: 20px !important;
+    }
+
+    .ob-grid-3 {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+    }
+
+    .ob-split-layout {
+      display: flex;
+      gap: 32px;
+      align-items: flex-start;
+      margin-top: 10px;
+    }
+
+    .ob-selection-col {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .ob-preview-col {
+      flex: 0 0 360px;
+      position: sticky;
+      top: 20px;
+    }
+
+    @media (max-width: 768px) {
+      .ob-split-layout {
+        flex-direction: column;
+        align-items: center;
+      }
+
+      .ob-preview-col {
+        position: static;
+        width: 100%;
+        max-width: 320px;
+      }
     }
 
     @keyframes ob-spin {
@@ -861,12 +869,20 @@
     }
 
     .ob-tpl {
-      transition: border-color .15s, background-color .15s
+      transition: all 0.25s ease;
+      border: 1.5px solid #eee !important;
+      background: transparent !important;
     }
 
     .ob-tpl.active {
+      border-color: #eee !important;
+      background: transparent !important;
+    }
+
+    .ob-tpl:hover {
       border-color: #6D28D9 !important;
-      background: rgba(52, 168, 83, .08)
+      transform: translateY(-2px);
+      box-shadow: 0 4px 15px rgba(109, 40, 217, 0.15);
     }
 
     .ob-tpl-check {
@@ -903,19 +919,30 @@
       color: rgba(255, 255, 255, .62)
     }
 
+    .ob-benefits-list {
+      color: #6D28D9;
+      font-size: 0.9rem;
+      font-weight: 600;
+      margin-bottom: 28px;
+      line-height: 1.6;
+      display: block;
+    }
+
+    .ob-plan {
+      transition: all 0.25s ease;
+      border: 1.5px solid #eee !important;
+      background: transparent !important;
+    }
+
     .ob-plan.active {
+      transform: scale(1);
+      border-color: #eee !important;
+    }
+
+    .ob-plan:hover {
+      transform: translateY(-3px);
       border-color: #6D28D9 !important;
-      background: #f9fff9 !important
-    }
-
-    .ob-plan.active .ob-plan-title,
-    .ob-plan.active .ob-plan-price {
-      color: #111
-    }
-
-    .ob-plan.active .ob-plan-sub,
-    .ob-plan.active .ob-plan-price span {
-      color: #666
+      box-shadow: 0 6px 20px rgba(109, 40, 217, 0.2);
     }
 
     @keyframes pulse-g {
@@ -932,25 +959,108 @@
   </style>
 
   <script>
+    const CUPONS = {
+      'MAIND2024': { tipo: 'gratis', label: '7 dias extras grátis' },
+      'DESCONTO50': { tipo: 'desconto', pct: 50, label: '50% no primeiro mês' },
+      'DEVSKIP': { tipo: 'skip', label: 'Acesso liberado — sem cobrança' }
+    };
+    const CUPONS_VALIDOS = Object.keys(CUPONS);
+    window._cupomOnboardingAtivo = null;
+
+    function validarCupomOnboarding() {
+      const val = (document.getElementById('ob-cupom')?.value || '').toUpperCase().trim();
+      const fb = document.getElementById('ob-cupom-feedback');
+      window._cupomOnboardingAtivo = null;
+
+      if (!val) { fb.textContent = ''; atualizarPrecoPlanos(null); return; }
+
+      if (CUPONS[val]) {
+        window._cupomOnboardingAtivo = val;
+        fb.style.color = '#16A34A';
+        fb.textContent = `✓ ${CUPONS[val].label}`;
+        atualizarPrecoPlanos(CUPONS[val]);
+      } else {
+        fb.style.color = '#DC2626';
+        fb.textContent = '✗ Cupom inválido';
+        atualizarPrecoPlanos(null);
+      }
+    }
+
+    function atualizarPrecoPlanos(cupom) {
+      const precos = { basico: 50, pro: 55, business: 60 };
+      document.querySelectorAll('.ob-plan').forEach(card => {
+        const plano = card.dataset.plan;
+        const priceEl = card.querySelector('.ob-plan-price');
+        if (!priceEl) return;
+        const original = precos[plano];
+        if (cupom && cupom.tipo === 'desconto') {
+          const novo = (original * (1 - cupom.pct / 100)).toFixed(0);
+          priceEl.innerHTML = `<span style="text-decoration:line-through;color:#888;font-size:.9rem">R$${original}</span> R$${novo}<span>/mês</span>`;
+        } else {
+          priceEl.innerHTML = `R$${original}<span>/mês</span>`;
+        }
+      });
+    }
+
     function obNext(step) {
+      // Valida campos obrigatórios antes de avançar do painel 1
+      if (step === 2) {
+        var nomeEl = document.getElementById('ob-nome');
+        var waEl   = document.getElementById('ob-wa');
+        var nomeVal = nomeEl ? nomeEl.value.trim() : '';
+        var waVal   = waEl ? waEl.value.replace(/\D/g, '') : '';
+        if (!nomeVal) {
+          if (nomeEl) { nomeEl.style.borderColor = '#DC2626'; nomeEl.focus(); }
+          return;
+        }
+        if (!waVal || waVal.length < 10) {
+          if (waEl) { waEl.style.borderColor = '#DC2626'; waEl.focus(); }
+          return;
+        }
+        if (nomeEl) nomeEl.style.borderColor = '#333';
+        if (waEl)   waEl.style.borderColor   = '#333';
+      }
+      // Mapping progress
+      var pctMap = { 1: 20, 2: 60, 4: 85, 5: 100 };
+
+      // Hide all panels
       ['1', '2', '3', '4', '5', 'sucesso'].forEach(function (s) {
         var p = document.getElementById('ob-panel-' + s);
         if (p) p.style.display = 'none';
       });
-      document.getElementById('ob-panel-' + step).style.display = 'block';
-      var bar = document.getElementById('ob-bar');
-      if (bar && typeof step === 'number') bar.style.width = [0, 0, 25, 50, 75, 100][step] + '%';
-      document.querySelectorAll('.ob-step').forEach(function (el) {
-        var s = parseInt(el.dataset.step);
-        el.classList.remove('active', 'done');
-        if (typeof step === 'number') {
-          if (s < step) el.classList.add('done');
-          else if (s === step) el.classList.add('active');
+
+      // Show current panel
+      var target = document.getElementById('ob-panel-' + step);
+      if (target) target.style.display = 'block';
+
+      // Adjust layout per step type
+      var inner = document.getElementById('ob-inner-container');
+      var page = document.getElementById('page-cardapio-onboarding');
+
+      if (inner && page) {
+        page.style.display = 'flex'; // Force flex to override global showPage
+        if (step === 2) {
+          inner.style.maxWidth = '960px';
+          page.style.justifyContent = 'flex-start';
+          page.style.paddingTop = '20px';
+        } else {
+          inner.style.maxWidth = '440px';
+          page.style.justifyContent = 'center';
+          page.style.paddingTop = '0';
         }
-      });
+      }
+
+      // Update bar height
+      var bar = document.getElementById('ob-bar');
+      if (bar && pctMap[step]) {
+        bar.style.height = pctMap[step] + '%';
+        bar.style.width = '100%';
+      }
+
       window.scrollTo({ top: 0, behavior: 'smooth' });
-      // load preview iframe when entering step 3
-      if (step === 3) { obLoadPreview(); }
+
+      // If combined step, load preview
+      if (step === 2) { obLoadPreview(); }
     }
 
     function obLoadPreview() {
@@ -963,12 +1073,12 @@
       var template = templateAtivo ? templateAtivo.dataset.tpl : 'clean';
       var plano = planoAtivo ? planoAtivo.dataset.plan : 'pro';
       var tipo = tipoAtivo ? tipoAtivo.dataset.val : 'restaurante';
+
       var slug = nome.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '').replace(/-+/g, '-').replace(/^-|-$/g, '') || 'meu-negocio';
       var url = buildCardapioUrl(slug, nome, wa, template, plano, tipo);
+
       var iframe = document.getElementById('ob-preview-iframe');
       var loading = document.getElementById('ob-preview-loading');
-      var urlLabel = document.getElementById('ob-preview-url');
-      if (urlLabel) urlLabel.textContent = 'webcardapio.com/' + slug;
       if (loading) loading.style.display = 'flex';
       if (iframe) {
         iframe.onload = function () {
@@ -981,22 +1091,29 @@
     function normalizeWhatsApp(raw) {
       var digits = (raw || '').replace(/\D/g, '');
       if (!digits) return '';
-
       if (digits.startsWith('55')) return digits;
       if (digits.length === 10 || digits.length === 11) return '55' + digits;
-
       return digits;
     }
 
     function buildCardapioUrl(slug, storeName, wa, template, plan, businessType) {
       var url = new URL('Menu digital/menu.html', window.location.href);
       url.searchParams.set('store', slug);
+      url.searchParams.set('preview', '1');
       if (storeName) url.searchParams.set('storeName', storeName);
       if (wa) url.searchParams.set('wa', wa);
       if (template) url.searchParams.set('tpl', template);
       if (plan) url.searchParams.set('plan', plan);
       if (businessType) url.searchParams.set('segmento', businessType);
       return url.toString();
+    }
+
+    function selectTplOb(el) {
+      document.querySelectorAll('.ob-tpl').forEach(function (t) {
+        t.classList.remove('active');
+      });
+      el.classList.add('active');
+      obLoadPreview();
     }
 
     function markOwnerSlug(slug) {
@@ -1010,18 +1127,14 @@
       }
     }
 
-    function selectTplOb(el) {
-      document.querySelectorAll('.ob-tpl').forEach(function (t) {
-        t.classList.remove('active');
-      });
-      el.classList.add('active');
-    }
-
     function selectPlan(el) {
       document.querySelectorAll('.ob-plan').forEach(function (p) {
         p.classList.remove('active');
       });
       el.classList.add('active');
+      setTimeout(function () {
+        obNext(5);
+      }, 350);
     }
 
     document.querySelectorAll('.ob-tipo').forEach(function (btn) {
@@ -1064,8 +1177,8 @@
       if (tplPadrao) tplPadrao.classList.add('active');
 
       document.querySelectorAll('.ob-plan').forEach(function (plan) { plan.classList.remove('active'); });
-      var planoPadrao = document.querySelector('.ob-plan[data-plan="pro"]');
-      if (planoPadrao) planoPadrao.classList.add('active');
+      var planPadrao = document.querySelector('.ob-plan[data-plan="business"]');
+      if (planPadrao) planPadrao.classList.add('active');
     }
 
     function obBackToLanding() {
@@ -1108,8 +1221,8 @@
         alert('Informe um e-mail valido.');
         return;
       }
-      if (!senha || senha.length < 1) {
-        alert('Preencha a senha.');
+      if (!senha || senha.length < 6) {
+        alert('A senha deve ter pelo menos 6 caracteres.');
         return;
       }
       if (senha !== senha2) {
@@ -1145,9 +1258,7 @@
       // Register account on backend
       var apiBase = (typeof window.API_BASE_URL === 'string' && window.API_BASE_URL)
         ? window.API_BASE_URL
-        : (location.hostname === 'localhost' || location.hostname === '127.0.0.1')
-          ? 'http://localhost:3001'
-          : location.protocol + '//' + location.hostname + ':3001';
+        : location.protocol + '//' + location.hostname + ':3001';
 
       var btnFinish = document.querySelector('[onclick="obFinish()"]');
       if (btnFinish) { btnFinish.disabled = true; btnFinish.textContent = 'Criando conta...'; }
@@ -1177,14 +1288,13 @@
           }
           // Verifica se há cupom válido ou flag de dev para pular pagamento
           var cupom = (document.getElementById('ob-cupom') ? document.getElementById('ob-cupom').value : '').trim().toUpperCase();
-          var CUPONS_VALIDOS = ['MAIND2024', 'TESTE', 'ADMIN'];
           var skipPayment = new URLSearchParams(location.search).get('skip_payment') === '1';
-          var cupomValido = skipPayment || CUPONS_VALIDOS.indexOf(cupom) !== -1;
+          var cupomValido = skipPayment || (CUPONS[cupom] !== undefined);
 
           if (!cupomValido && (plano === 'pro' || plano === 'business')) {
-            var preco = (plano === 'business') ? 50 : 40;
+            var preco = (plano === 'business') ? 60 : (plano === 'pro' ? 55 : 50);
             var desc = 'Assinatura Web Cardápio - Plano ' + (plano === 'business' ? 'Business' : 'Pro');
-            
+
             fetch(apiBase + '/api/payments/create-preference', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
@@ -1193,28 +1303,29 @@
                 orderId: 'sub_' + slug + '_' + Date.now()
               })
             })
-            .then(function(r) { return r.json(); })
-            .then(function(payData) {
-              console.log('[PAYMENT] Resposta:', payData);
-              if (payData.init_point) {
-                alert('Conta criada com sucesso! Para ativar seu ' + desc + ', finalize o pagamento no Mercado Pago.');
-                window.location.href = payData.init_point;
-              } else {
-                console.warn('[PAYMENT] init_point não retornado:', payData);
+              .then(function (r) { return r.json(); })
+              .then(function (payData) {
+                console.log('[PAYMENT] Resposta:', payData);
+                if (payData.init_point) {
+                  alert('Conta criada com sucesso! Para ativar seu ' + desc + ', finalize o pagamento no Mercado Pago.');
+                  window.location.href = payData.init_point;
+                } else {
+                  console.warn('[PAYMENT] init_point não retornado:', payData);
+                  completeOnboardingFlow(slug, cardapioUrl);
+                }
+              })
+              .catch(function (err) {
+                console.error('[PAYMENT] Erro ao criar preferência:', err);
                 completeOnboardingFlow(slug, cardapioUrl);
-              }
-            })
-            .catch(function(err) {
-              console.error('[PAYMENT] Erro ao criar preferência:', err);
-              completeOnboardingFlow(slug, cardapioUrl);
-            });
+              });
             return;
           }
 
           completeOnboardingFlow(slug, cardapioUrl);
         })
         .catch(function (err) {
-          alert('Erro de conexão com o servidor.');
+          alert('Erro de conexão com o servidor: ' + err.message);
+          console.error('[AUTH ERROR]', err);
           if (btnFinish) { btnFinish.disabled = false; btnFinish.textContent = 'Criar meu cardápio grátis →'; }
         });
     }

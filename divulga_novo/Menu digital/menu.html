@@ -78,6 +78,7 @@
       <button class="menu-editor-btn" onclick="openAddItemModal('item')">+ Item</button>
       <button class="menu-editor-btn" onclick="openAddItemModal('combo')">+ Combo</button>
       <button class="menu-editor-btn" onclick="openAddItemModal('drink')">+ Bebida</button>
+      <button class="menu-editor-btn" onclick="openCouponsModal()">+ Cupons</button>
       <button class="menu-editor-btn menu-editor-edit" onclick="toggleEditMode()" id="btn-edit-mode">Editar itens</button>
       <button class="menu-editor-btn menu-editor-danger" onclick="toggleRemoveMode()" id="btn-remove-mode">Remover itens</button>
     </div>
@@ -100,7 +101,10 @@
           <div class="card-tags"><span class="tag tag-dest">Chef indica</span></div>
           <p class="card-desc">Frango grelhado, arroz, feijão, salada e farofa. Acompanha suco da fruta do dia.</p>
           <div class="card-bottom">
-            <div><span class="price-old">R$ 34,00</span><span class="price">R$ 28,90</span></div>
+            <div class="price-container">
+              <span class="price-old">R$ 34,00</span>
+              <span class="price">R$ 28,90</span>
+            </div>
             <div id="ctrl-prato-dia"></div>
           </div>
         </div>
@@ -433,8 +437,13 @@
       <input id="editor-name" type="text" placeholder="Nome do item">
     </div>
     <div class="editor-form-row">
-      <label for="editor-price">Preco</label>
+      <label for="editor-price">Preco de Venda (Promocional)</label>
       <input id="editor-price" type="number" min="0" step="0.01" placeholder="24.90">
+    </div>
+    <div class="editor-form-row">
+      <label for="editor-priceOld">Preco Original (Sem desconto)</label>
+      <input id="editor-priceOld" type="number" min="0" step="0.01" placeholder="34.00">
+      <small style="font-size:11px;color:var(--text-hint)">Deixe em branco se não houver desconto.</small>
     </div>
     <div class="editor-form-row">
       <label for="editor-desc">Descricao</label>
@@ -472,6 +481,19 @@
 <script src="menu-app.js"></script>
 <script>
   (function () {
+    // Mostra mensagem amigável quando a página é acessada sem ?store=
+    var _storeParam = new URLSearchParams(location.search).get('store') || '';
+    if (!_storeParam && !localStorage.getItem('webcardapio:last-store')) {
+      document.addEventListener('DOMContentLoaded', function () {
+        var hero = document.querySelector('.hero-info');
+        if (hero) {
+          hero.innerHTML = '<h1 style="font-size:1.2rem">Cardápio não encontrado</h1>'
+            + '<p style="margin-top:6px">Acesse o link completo do seu cardápio, incluindo o slug da loja.<br>'
+            + '<code style="font-size:.8rem;opacity:.6">?store=nome-da-loja</code></p>';
+        }
+      });
+    }
+
     function initFallbackMenu() {
       if (window.__MENU_APP_READY__) {
         return;
@@ -599,6 +621,7 @@ body.owner-dashboard-enabled #owner-fab{display:none!important}
       </div>
       <p id="ol-error" class="ol-err"></p>
       <button id="ol-login-btn" class="ol-btn">Entrar no painel</button>
+      <button id="ol-register-btn" class="ol-btn" style="background:transparent;border:1.5px solid rgba(255,255,255,.2);color:rgba(255,255,255,.7);margin-top:6px">Criar conta / Primeiro acesso</button>
       <button id="ol-logout-btn" class="ol-logout">Sair do painel</button>
     </div>
   </div>
@@ -614,7 +637,7 @@ body.owner-dashboard-enabled #owner-fab{display:none!important}
   var API = (new URLSearchParams(location.search).get('api') ||
              localStorage.getItem('webcardapio:api-base') ||
              (typeof window.API_BASE_URL === 'string' && window.API_BASE_URL ? window.API_BASE_URL : null) ||
-             'http://localhost:3001').replace(/\/+$/,'');
+             (location.protocol + '//' + location.hostname + ':3001')).replace(/\/+$/,'');
 
   var SLUG = (new URLSearchParams(location.search).get('store')||'')
     .toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'')
@@ -623,7 +646,8 @@ body.owner-dashboard-enabled #owner-fab{display:none!important}
   var overlay   = document.getElementById('owner-overlay');
   var fab       = document.getElementById('owner-fab');
   var loginBtn  = document.getElementById('ol-login-btn');
-  var regBtn    = null; // register disabled on menu page
+  var regBtn    = document.getElementById('ol-register-btn');
+  var _loginInFlight = false;
   var logoutBtn = document.getElementById('ol-logout-btn');
   var errEl     = document.getElementById('ol-error');
 
@@ -643,14 +667,26 @@ body.owner-dashboard-enabled #owner-fab{display:none!important}
   }
   function closeOverlay(){ overlay.classList.remove('open'); }
 
-  fab.addEventListener('click', function(){
+  fab.addEventListener('click', async function(){
     var token = getToken();
     if(token && new URLSearchParams(location.search).get('owner')==='1'){
       // already in owner mode — show overlay to logout
       openOverlay(); return;
     }
     if(token){
-      // has token but not in owner mode — activate
+      // validate token with backend before activating
+      try{
+        var r = await fetch(API+'/api/me/menus',{
+          headers:{'Authorization':'Bearer '+token}
+        });
+        if(!r.ok){
+          localStorage.removeItem('webcardapio:owner-token');
+          localStorage.removeItem('webcardapio:owner-slug');
+          localStorage.removeItem('webcardapio:plan');
+          updateFabState();
+          openOverlay(); return;
+        }
+      }catch{ openOverlay(); return; }
       activateOwner(); return;
     }
     openOverlay();
@@ -660,6 +696,9 @@ body.owner-dashboard-enabled #owner-fab{display:none!important}
   overlay.addEventListener('click', function(e){ if(e.target===overlay) closeOverlay(); });
   document.addEventListener('keydown', function(e){ if(e.key==='Escape') closeOverlay(); });
 
+  document.getElementById('ol-email').addEventListener('keydown', function(e){
+    if(e.key==='Enter') document.getElementById('ol-password').focus();
+  });
   document.getElementById('ol-password').addEventListener('keydown', function(e){
     if(e.key==='Enter') doLogin();
   });
@@ -675,9 +714,11 @@ body.owner-dashboard-enabled #owner-fab{display:none!important}
   });
 
   async function doLogin(){
+    if(_loginInFlight) return;
     var email    = document.getElementById('ol-email').value.trim();
     var password = document.getElementById('ol-password').value;
     if(!email||!password){ showErr('Preencha e-mail e senha.'); return; }
+    _loginInFlight = true;
     setLoading(true);
     try{
       var r = await fetch(API+'/api/auth/login',{
@@ -688,23 +729,24 @@ body.owner-dashboard-enabled #owner-fab{display:none!important}
       if(!r.ok) throw new Error(b.error||'Erro ao entrar.');
       localStorage.setItem('webcardapio:owner-token', b.token);
       localStorage.setItem('webcardapio:owner-slug', runtimeConfig.store || '');
-      // store plan in runtimeConfig if available
       if(b.user && b.user.plan) localStorage.setItem('webcardapio:plan', b.user.plan);
       closeOverlay();
       activateOwner();
-    }catch(e){ showErr(e.message); }
-    finally{ setLoading(false); }
+    }catch(e){ showErr(e.message==='Credenciais inválidas.'?'E-mail ou senha incorretos. Se for seu primeiro acesso aqui, clique em "Criar conta".':e.message); }
+    finally{ setLoading(false); _loginInFlight = false; }
   }
 
   async function doRegister(){
+    if(_loginInFlight) return;
     var email    = document.getElementById('ol-email').value.trim();
     var password = document.getElementById('ol-password').value;
     if(!email||!password){ showErr('Preencha e-mail e senha.'); return; }
+    _loginInFlight = true;
     setLoading(true,'Criando conta...');
     try{
       var r = await fetch(API+'/api/auth/register',{
         method:'POST', headers:{'Content-Type':'application/json'},
-        body: JSON.stringify({email, password, plan:'pro'})
+        body: JSON.stringify({email, password, plan:'basico'})
       });
       var b = await r.json();
       if(r.status===409){ // already exists — try login
@@ -713,7 +755,7 @@ body.owner-dashboard-enabled #owner-fab{display:none!important}
           body: JSON.stringify({email,password})
         });
         var b2 = await r2.json();
-        if(!r2.ok) throw new Error('Email já cadastrado com outra senha.');
+        if(!r2.ok) throw new Error('Este e-mail já tem conta. Clique em "Entrar no painel" e use sua senha cadastrada.');
         b = b2;
       } else if(!r.ok) throw new Error(b.error||'Erro ao criar conta.');
       localStorage.setItem('webcardapio:owner-token', b.token);
@@ -721,7 +763,7 @@ body.owner-dashboard-enabled #owner-fab{display:none!important}
       closeOverlay();
       activateOwner();
     }catch(e){ showErr(e.message); }
-    finally{ setLoading(false); }
+    finally{ setLoading(false); _loginInFlight = false; }
   }
 
   function activateOwner(){
@@ -757,7 +799,7 @@ body.owner-dashboard-enabled #owner-fab{display:none!important}
     loginBtn.disabled=on; if(regBtn) regBtn.disabled=on;
     if(on) loginBtn.textContent=label||'Entrando...';
     else   loginBtn.textContent='Entrar no painel';
-    errEl.style.display='none';
+    if(on) errEl.style.display='none'; // só limpa o erro ao INICIAR uma nova tentativa
   }
 
   function showToast(msg){
@@ -787,9 +829,57 @@ body.owner-dashboard-enabled #owner-fab{display:none!important}
     }, 30000);
   }
 
+  // If page loaded with ?owner=1, validate stored token before enabling dashboard
+  if(new URLSearchParams(location.search).get('owner')==='1'){
+    var _t = getToken();
+    if(_t){
+      fetch(API+'/api/me/menus',{ headers:{'Authorization':'Bearer '+_t} })
+        .then(function(r){
+          if(!r.ok){
+            localStorage.removeItem('webcardapio:owner-token');
+            localStorage.removeItem('webcardapio:owner-slug');
+            localStorage.removeItem('webcardapio:plan');
+            var u = new URL(location.href);
+            u.searchParams.delete('owner');
+            location.replace(u.toString());
+          }
+        })
+        .catch(function(){});
+    } else {
+      // No token but ?owner=1 in URL — strip it
+      var u = new URL(location.href);
+      u.searchParams.delete('owner');
+      location.replace(u.toString());
+    }
+  }
+
   updateFabState();
 })();
 </script>
+
+<!-- MODAL GERENCIAR CUPONS -->
+<div id="coupons-modal" class="editor-modal" aria-hidden="true" style="z-index:9200">
+  <div class="editor-modal-content" style="max-width: 400px;">
+    <div class="editor-modal-header">
+      <h3 style="color:#f5f7ff;font-size:1.1rem;margin:0">Gerenciar Cupons</h3>
+      <button class="editor-modal-close" onclick="closeCouponsModal()">&times;</button>
+    </div>
+    
+    <div style="margin-bottom:20px;">
+      <h4 style="color:var(--text-hint);font-size:0.8rem;margin-bottom:10px;text-transform:uppercase">Novo Cupom</h4>
+      <div style="display:flex;gap:8px">
+        <input id="coupon-name" type="text" placeholder="Código (ex: VERAO20)" style="flex:2;padding:10px;border-radius:6px;border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.05);color:#fff;font-family:inherit;text-transform:uppercase">
+        <input id="coupon-pct" type="number" placeholder="%" min="1" max="100" style="flex:1;padding:10px;border-radius:6px;border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.05);color:#fff;font-family:inherit">
+        <button onclick="addCoupon()" style="background:#34A853;color:#fff;border:none;border-radius:6px;padding:0 15px;font-weight:bold;cursor:pointer">Add</button>
+      </div>
+    </div>
+
+    <h4 style="color:var(--text-hint);font-size:0.8rem;margin-bottom:10px;text-transform:uppercase">Cupons Ativos</h4>
+    <div id="coupons-list" style="max-height: 300px; overflow-y: auto; padding-right: 5px;">
+      <!-- Lista renderizada via JS -->
+    </div>
+  </div>
+</div>
 
 </body>
 </html>

@@ -17,7 +17,7 @@ function showDash(s,el){
   document.querySelectorAll('.sidebar-item').forEach(function(x){x.classList.remove('active')});
   el.classList.add('active');
 }
-var calDate=new Date(2026,3,1),selDay=null,selTime=null;
+var _todayInit=new Date();var calDate=new Date(_todayInit.getFullYear(),_todayInit.getMonth(),1),selDay=null,selTime=null;
 var unavailTimes=['10:30','12:00','14:00'];
 function renderCal(){
   var months=['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
@@ -54,6 +54,58 @@ function showTimes(day){
   });
   document.getElementById('confirm-btn-wrap').style.display='none';
 }
-function changeMonth(d){calDate.setMonth(calDate.getMonth()+d);selDay=null;selTime=null;document.getElementById('time-section').style.display='none';renderCal();}
-function confirmBooking(){if(selDay&&selTime)alert('Reunião agendada para '+selDay+'/04/2026 às '+selTime+'!\nVocê receberá uma confirmação por WhatsApp.');}
+function changeMonth(d){
+  var today=new Date();
+  var newDate=new Date(calDate.getFullYear(),calDate.getMonth()+d,1);
+  if(newDate<new Date(today.getFullYear(),today.getMonth(),1))return;
+  calDate.setMonth(calDate.getMonth()+d);selDay=null;selTime=null;document.getElementById('time-section').style.display='none';renderCal();
+}
+function confirmBooking(){
+  if(!selDay||!selTime)return;
+  var months=['janeiro','fevereiro','março','abril','maio','junho','julho','agosto','setembro','outubro','novembro','dezembro'];
+  var msg='Olá! Gostaria de agendar uma reunião com a MAIND para o dia '+selDay+' de '+months[calDate.getMonth()]+' de '+calDate.getFullYear()+' às '+selTime+'.';
+  var wa=(window.MAIND_WHATSAPP||'5582999999999').replace(/\D/g,'');
+  window.open('https://wa.me/'+wa+'?text='+encodeURIComponent(msg),'_blank','noopener,noreferrer');
+}
+function submitLeadForm(){
+  var nome     =(document.getElementById('lead-nome')||{value:''}).value.trim();
+  var waRaw    =(document.getElementById('lead-wa')||{value:''}).value.trim();
+  var negocio  =(document.getElementById('lead-negocio')||{value:''}).value.trim();
+  var tipo     =(document.getElementById('lead-tipo')||{value:''}).value;
+  var fat      =(document.getElementById('lead-faturamento')||{value:''}).value;
+  var mensagem =(document.getElementById('lead-mensagem')||{value:''}).value.trim();
+  var waDigits =waRaw.replace(/\D/g,'');
+  var nomeEl=document.getElementById('lead-nome');
+  var waEl  =document.getElementById('lead-wa');
+  if(!nome){
+    if(nomeEl){nomeEl.focus();nomeEl.style.borderColor='#DC2626';}
+    return;
+  }
+  if(!waDigits||waDigits.length<10||waDigits.length>11){
+    alert('Informe um WhatsApp válido com DDD.');
+    if(waEl){waEl.focus();waEl.style.borderColor='#DC2626';}
+    return;
+  }
+  if(nomeEl)nomeEl.style.borderColor='';
+  if(waEl)waEl.style.borderColor='';
+  var btn=document.getElementById('lead-submit-btn');
+  if(btn){btn.disabled=true;btn.textContent='Enviando...';}
+  var apiBase=(typeof window.API_BASE_URL==='string'&&window.API_BASE_URL)
+    ?window.API_BASE_URL
+    :location.protocol+'//'+location.hostname+':3001';
+  fetch(apiBase+'/api/leads',{
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({nome:nome,whatsapp:waDigits,negocio:negocio,tipo:tipo,faturamento:fat,mensagem:mensagem})
+  }).then(function(r){return r.json();}).then(function(){
+    if(btn){btn.disabled=false;btn.textContent='Quero meu diagnóstico gratuito →';}
+    var wrap=document.querySelector('.form-wrap');
+    if(wrap)wrap.innerHTML='<div style="text-align:center;padding:2rem 0"><div style="font-size:2.5rem;margin-bottom:1rem">✅</div><h3 style="font-size:1.2rem;font-weight:700;margin-bottom:.5rem;color:#fff">Mensagem enviada!</h3><p style="color:rgba(255,255,255,0.6)">Entraremos em contato em breve pelo WhatsApp.</p></div>';
+    if(typeof fbq==='function'){fbq('track','Lead');}
+  }).catch(function(err){
+    console.error('[LEAD]',err);
+    if(btn){btn.disabled=false;btn.textContent='Quero meu diagnóstico gratuito →';}
+    alert('Erro de conexão. Tente novamente ou nos chame pelo WhatsApp.');
+  });
+}
 renderCal();

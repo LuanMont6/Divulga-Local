@@ -4,6 +4,7 @@ if (typeof window.WA_NUMBER === 'undefined') window.WA_NUMBER = '5582999004440';
 if (typeof window.ITEMS === 'undefined') window.ITEMS = {};
 const WA_NUMBER = window.WA_NUMBER;
 const ITEMS = window.ITEMS;
+let currentCoupon = null;
 
 const CART_STORAGE_KEY = 'webcardapio:cart';
 const PROFILE_STORAGE_KEY = 'webcardapio:profiles';
@@ -206,6 +207,18 @@ const SEGMENT_OVERRIDES = {
 
 const cart = {};
 const urlParams = new URLSearchParams(window.location.search);
+const urlColor = urlParams.get('color');
+const urlLogo = urlParams.get('logo');
+
+if (urlColor) {
+  document.documentElement.style.setProperty('--brand', decodeURIComponent(urlColor));
+}
+if (urlLogo) {
+  const logoEl = document.getElementById('store-logo') || document.querySelector('.store-header-logo') || document.querySelector('.logo');
+  if (logoEl) {
+    logoEl.innerHTML = `<img src="${escapeHtml(decodeURIComponent(urlLogo))}" alt="Logo" style="height:48px;object-fit:contain;border-radius:8px">`;
+  }
+}
 
 function decodeConfigPayload(rawValue) {
   if (!rawValue) {
@@ -258,12 +271,12 @@ function buildRuntimeConfig() {
     store: slug || fallbackStore || '',
     storeName: (urlParams.get('storeName') || '').trim() || configFromUrl.storeName || configFromStorage.storeName || '',
     wa: (urlParams.get('wa') || '').trim() || configFromUrl.wa || configFromStorage.wa || '',
-    tpl: (urlParams.get('tpl') || '').trim() || configFromUrl.tpl || configFromStorage.tpl || '',
-    plan: (urlParams.get('plan') || '').trim() || configFromUrl.plan || configFromStorage.plan || '',
-    segmento: (urlParams.get('segmento') || '').trim() || configFromUrl.segmento || configFromStorage.segmento || '',
+    tpl: (urlParams.get('tpl') || '').trim() || configFromUrl.tpl || configFromStorage.tpl || 'clean',
+    plan: (urlParams.get('plan') || '').trim() || configFromUrl.plan || configFromStorage.plan || 'basico',
+    segmento: (urlParams.get('segmento') || '').trim() || configFromUrl.segmento || configFromStorage.segmento || 'restaurante',
     logoUrl: configFromUrl.logoUrl || configFromStorage.logoUrl || '',
     coverUrl: configFromUrl.coverUrl || configFromStorage.coverUrl || '',
-    items: Array.isArray(configFromUrl.items) ? configFromUrl.items : (Array.isArray(configFromStorage.items) ? configFromStorage.items : [])
+    items: Array.isArray(configFromUrl.items) && configFromUrl.items.length ? configFromUrl.items : (Array.isArray(configFromStorage.items) && configFromStorage.items.length ? configFromStorage.items : [])
   };
 }
 
@@ -318,16 +331,21 @@ function _parsePlanFromToken(token) {
   } catch { return null; }
 }
 const _planFromToken = _storedToken ? _parsePlanFromToken(_storedToken) : null;
-const currentPlan = normalizePlan(runtimeConfig.plan || _planFromToken || (ownerModeEnabled() ? 'pro' : 'basico'));
-const canUseProFeatures = currentPlan === 'pro' || currentPlan === 'business';
-const canUseBusinessFeatures = currentPlan === 'business';
-function canEdit() { 
+let currentPlan = normalizePlan(runtimeConfig.plan || _planFromToken || (ownerModeEnabled() ? 'pro' : 'basico'));
+let canUseProFeatures = currentPlan === 'pro' || currentPlan === 'business';
+let canUseBusinessFeatures = currentPlan === 'business';
+
+function updatePlanPermissions() {
+  canUseProFeatures = currentPlan === 'pro' || currentPlan === 'business';
+  canUseBusinessFeatures = currentPlan === 'business';
+}
+function canEdit() {
   if (currentPlan === 'basico') return false;
-  return ownerModeEnabled(); 
+  return ownerModeEnabled();
 }
 let removeMode = false;
 let editMode = false;
-let customMenuState = { added: [], removed: [], updated: {} };
+let customMenuState = { added: [], removed: [], updated: {}, coupons: {} };
 let currentAddPreset = 'item';
 let editingItemId = null;
 let ownerFilter = 'todos';
@@ -336,9 +354,7 @@ let ownerView = 'cardapio';
 // window.API_BASE_URL can be set before this script loads to point to production backend
 const DEFAULT_API_BASE = (typeof window.API_BASE_URL === 'string' && window.API_BASE_URL)
   ? window.API_BASE_URL
-  : (location.hostname === 'localhost' || location.hostname === '127.0.0.1')
-    ? 'http://localhost:3001'
-    : `${location.protocol}//${location.hostname}:3001`;
+  : `${location.protocol}//${location.hostname}:3001`;
 
 function getApiBaseUrl() {
   const fromQuery = (urlParams.get('api') || '').trim();
@@ -358,7 +374,7 @@ function getPublicMenuUrl() {
   clean.searchParams.delete('ownerKey');
   clean.searchParams.delete('api');
   // Build a minimal public URL: only keep store, storeName, wa, tpl, plan, segmento
-  const keep = new Set(['store','storeName','wa','tpl','plan','segmento','cfg']);
+  const keep = new Set(['store', 'storeName', 'wa', 'tpl', 'plan', 'segmento', 'cfg']);
   Array.from(clean.searchParams.keys()).forEach(k => {
     if (!keep.has(k)) clean.searchParams.delete(k);
   });
@@ -369,7 +385,8 @@ function sanitizeCustomMenuState(input) {
   return {
     added: Array.isArray(input?.added) ? input.added : [],
     removed: Array.isArray(input?.removed) ? input.removed : [],
-    updated: input?.updated && typeof input.updated === 'object' ? input.updated : {}
+    updated: input?.updated && typeof input.updated === 'object' ? input.updated : {},
+    coupons: input?.coupons && typeof input.coupons === 'object' ? input.coupons : {}
   };
 }
 
@@ -390,17 +407,17 @@ async function fetchRemoteMenuData() {
 
     const settings = remoteData.settings && typeof remoteData.settings === 'object' ? remoteData.settings : {};
 
-    if (typeof settings.storeName === 'string' && settings.storeName.trim()) {
+    if (!urlParams.has('storeName') && typeof settings.storeName === 'string' && settings.storeName.trim()) {
       runtimeConfig.storeName = settings.storeName.trim();
     }
-    if (typeof settings.wa === 'string' && settings.wa.trim()) {
+    if (!urlParams.has('wa') && typeof settings.wa === 'string' && settings.wa.trim()) {
       runtimeConfig.wa = settings.wa.trim();
       configuredWaNumber = runtimeConfig.wa.replace(/\D/g, '') || configuredWaNumber;
     }
-    if (typeof settings.tpl === 'string' && settings.tpl.trim()) {
+    if (!urlParams.has('tpl') && typeof settings.tpl === 'string' && settings.tpl.trim()) {
       runtimeConfig.tpl = settings.tpl.trim();
     }
-    if (typeof settings.segmento === 'string' && settings.segmento.trim()) {
+    if (!urlParams.has('segmento') && typeof settings.segmento === 'string' && settings.segmento.trim()) {
       runtimeConfig.segmento = settings.segmento.trim();
     }
     if (typeof settings.logoUrl === 'string') {
@@ -410,7 +427,7 @@ async function fetchRemoteMenuData() {
       runtimeConfig.coverUrl = settings.coverUrl.trim();
     }
 
-    if (Array.isArray(remoteData.items)) {
+    if (Array.isArray(remoteData.items) && remoteData.items.length > 0) {
       runtimeConfig.items = remoteData.items;
     }
 
@@ -425,19 +442,19 @@ async function fetchRemoteMenuData() {
 async function syncRemoteMenuData() {
   if (!ownerModeEnabled() || !runtimeConfig.store) return;
 
-  const token    = localStorage.getItem('webcardapio:owner-token');
+  const token = localStorage.getItem('webcardapio:owner-token');
   const ownerKey = getOwnerKey();
-  const apiBase  = getApiBaseUrl();
-  const slug     = runtimeConfig.store;
+  const apiBase = getApiBaseUrl();
+  const slug = runtimeConfig.store;
 
   const data = {
     settings: {
       storeName: getConfiguredStoreName(),
-      wa:        configuredWaNumber,
-      tpl:       getConfiguredTemplate(),
-      segmento:  getConfiguredSegment(),
-      logoUrl:   runtimeConfig.logoUrl || '',
-      coverUrl:  runtimeConfig.coverUrl || ''
+      wa: configuredWaNumber,
+      tpl: getConfiguredTemplate(),
+      segmento: getConfiguredSegment(),
+      logoUrl: runtimeConfig.logoUrl || '',
+      coverUrl: runtimeConfig.coverUrl || ''
     },
     customMenuState: sanitizeCustomMenuState(customMenuState)
   };
@@ -705,12 +722,12 @@ function collectOwnerItems() {
     .filter((id) => ITEMS[id])
     .map((id) => {
       const updated = customMenuState.updated?.[id] || {};
-      const added   = customMenuState.added?.find((a) => a.id === id) || {};
+      const added = customMenuState.added?.find((a) => a.id === id) || {};
       return {
         id,
-        name:    updated.name    || added.name    || ITEMS[id].name,
-        price:   updated.price   !== undefined ? updated.price : (added.price || ITEMS[id].price),
-        desc:    updated.desc    || added.desc    || '',
+        name: updated.name || added.name || ITEMS[id].name,
+        price: updated.price !== undefined ? updated.price : (added.price || ITEMS[id].price),
+        desc: updated.desc || added.desc || '',
         section: updated.section || added.section || resolveItemSection(id)
       };
     })
@@ -741,11 +758,11 @@ function ownerMainContent(items, filteredItems, isOpen, deliveryLabel) {
 
   if (ownerView === 'templates') {
     const tpls = [
-      { id:'clean',  label:'Clean & moderno', desc:'Restaurante, café',    bg:'#F7F5F0', accent:'#1a1a18' },
-      { id:'dark',   label:'Dark premium',    desc:'Bar, hamburgueria',    bg:'#1a1a18', accent:'#fff' },
-      { id:'red',    label:'Vermelho & bold', desc:'Pizzaria, delivery',   bg:'#FFF0F0', accent:'#C0392B' },
-      { id:'green',  label:'Verde natural',   desc:'Açaí, saudável',      bg:'#F0FFF4', accent:'#1B5E20' },
-      { id:'yellow', label:'Amarelo vibrante',desc:'Lanchonete',           bg:'#FFFDE7', accent:'#F57F17' },
+      { id: 'clean', label: 'Clean & moderno', desc: 'Restaurante, café', bg: '#F7F5F0', accent: '#1a1a18' },
+      { id: 'dark', label: 'Dark premium', desc: 'Bar, hamburgueria', bg: '#1a1a18', accent: '#fff' },
+      { id: 'red', label: 'Vermelho & bold', desc: 'Pizzaria, delivery', bg: '#FFF0F0', accent: '#C0392B' },
+      { id: 'green', label: 'Verde natural', desc: 'Açaí, saudável', bg: '#F0FFF4', accent: '#1B5E20' },
+      { id: 'yellow', label: 'Amarelo vibrante', desc: 'Lanchonete', bg: '#FFFDE7', accent: '#F57F17' },
     ];
     const cur = getConfiguredTemplate();
     return `
@@ -776,7 +793,7 @@ function ownerMainContent(items, filteredItems, isOpen, deliveryLabel) {
         </div>
       </div>
       <div class="owner-grid">
-        <div class="owner-field full"><label>URL da logo (link direto para imagem)</label><input id="brand-logo" placeholder="https://..." value="${escapeHtml(runtimeConfig.logoUrl||'')}"></div>
+        <div class="owner-field full"><label>URL da logo (link direto para imagem)</label><input id="brand-logo" placeholder="https://..." value="${escapeHtml(runtimeConfig.logoUrl || '')}"></div>
       </div>
       <p style="font-size:.78rem;color:#aaa;margin-top:8px">Dica: use o Google Fotos ou Imgur para hospedar suas imagens e copie o link direto.</p>`;
   }
@@ -805,7 +822,7 @@ function ownerMainContent(items, filteredItems, isOpen, deliveryLabel) {
       </div>
       <div style="display:flex;flex-direction:column;gap:10px">
         <div class="owner-row" style="justify-content:space-between">
-          <div><span class="owner-row-name">Matriz</span><br><span style="font-size:.78rem;color:#888">webcardapio.com/${escapeHtml(runtimeConfig.store||'loja')}</span></div>
+          <div><span class="owner-row-name">Matriz</span><br><span style="font-size:.78rem;color:#888">webcardapio.com/${escapeHtml(runtimeConfig.store || 'loja')}</span></div>
           <span style="font-size:.75rem;background:#E8F5E9;color:#1B5E20;padding:3px 10px;border-radius:12px;font-weight:600">Ativa</span>
         </div>
         <div class="owner-row" style="justify-content:space-between;opacity:.6">
@@ -830,6 +847,35 @@ function ownerMainContent(items, filteredItems, isOpen, deliveryLabel) {
           <button class="owner-btn" id="download-qr-btn" onclick="downloadQRCode()" style="display:none">Baixar PNG</button>
         </div>
         <p style="font-size:11px;color:var(--text-hint);margin-top:16px">Dica: Imprima e cole nas mesas ou no balcão!</p>
+      </div>`;
+  }
+
+  if (ownerView === 'cupons') {
+    return `
+      <div class="owner-top">
+        <h3 class="owner-title">Gerenciar Cupons</h3>
+        <div class="owner-actions">
+          <button class="owner-btn" onclick="openCouponsModal()">+ Novo cupom</button>
+        </div>
+      </div>
+      <div style="background:var(--surface);border:1px solid var(--border-md);border-radius:16px;padding:24px;max-width:500px">
+        <p style="font-size:0.85rem;color:var(--text-hint);margin-bottom:16px">Crie códigos de desconto para os clientes usarem no momento de fechar o pedido no WhatsApp.</p>
+        <div style="min-height: 100px;">
+          ${(function() {
+            const coupons = customMenuState.coupons || {};
+            const keys = Object.keys(coupons);
+            if (keys.length === 0) return '<p style="text-align:center;color:var(--text-muted);font-size:0.9rem;padding:20px 0;">Nenhum cupom ativo no momento.</p>';
+            return keys.map(k => `
+              <div style="display:flex;justify-content:space-between;align-items:center;background:var(--bg);padding:12px;border-radius:8px;margin-bottom:8px;border:1px solid var(--border)">
+                <div>
+                  <span style="font-weight:bold;color:var(--text)">${k}</span>
+                  <span style="display:inline-block;margin-left:8px;background:var(--green-bg);color:var(--green);padding:2px 8px;border-radius:12px;font-size:0.75rem;font-weight:bold">-${coupons[k]}%</span>
+                </div>
+                <button onclick="removeCoupon('${k}')" style="background:transparent;border:none;color:#DC2626;cursor:pointer;padding:6px;font-size:1.1rem" title="Remover cupom">×</button>
+              </div>
+            `).join('');
+          })()}
+        </div>
       </div>`;
   }
 
@@ -863,22 +909,22 @@ function ownerMainContent(items, filteredItems, isOpen, deliveryLabel) {
 
   if (ownerView === 'plano') {
     const plans = [
-      { id:'basico',   label:'Básico',    price:'Grátis', period:' para sempre', feats:['Link público','Botão WhatsApp','1 template','Até 20 itens'] },
-      { id:'pro',      label:'Pro',       price:'R$40', period:'/mês', feats:['Tudo do Básico','Templates ilimitados','Itens ilimitados','Painel do dono','Busca e filtros','Aparência (logo/capa)','Pedidos recentes'] },
-      { id:'business', label:'Business',  price:'R$50', period:'/mês', feats:['Tudo do Pro','Relatórios avançados','Multi-unidades','Domínio próprio','Ocultar "Feito com"','Suporte prioritário'] },
+      { id: 'basico', label: 'Básico', price: 'R$50', period: '/mês', feats: ['Link público', 'Botão WhatsApp', '1 template', 'Até 20 itens'] },
+      { id: 'pro', label: 'Pro', price: 'R$55', period: '/mês', feats: ['Tudo do Básico', 'Templates ilimitados', 'Itens ilimitados', 'Painel do dono', 'Logo e Capa'] },
+      { id: 'business', label: 'Business', price: 'R$60', period: '/mês', feats: ['Tudo do Pro', 'Sem marca "Web Cardápio"', 'Suporte prioritário', 'Cupons ilimitados'] },
     ];
     return `
       <div class="owner-top">
-        <h3 class="owner-title">Plano atual: <strong>${currentPlan.charAt(0).toUpperCase()+currentPlan.slice(1)}</strong></h3>
+        <h3 class="owner-title">Plano atual: <strong>${currentPlan.charAt(0).toUpperCase() + currentPlan.slice(1)}</strong></h3>
       </div>
       <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px">
-        ${plans.map(p=>`
-          <div style="border-radius:12px;padding:16px;border:${p.id===currentPlan?'2px solid #34A853':'1px solid var(--border-md)'};background:${p.id===currentPlan?'rgba(52,168,83,.07)':'var(--surface)'}">
-            ${p.id===currentPlan?'<span style="font-size:10px;background:#34A853;color:#fff;padding:2px 8px;border-radius:8px;font-weight:700">ATUAL</span><br>':''}
+        ${plans.map(p => `
+          <div style="border-radius:12px;padding:16px;border:${p.id === currentPlan ? '2px solid #34A853' : '1px solid var(--border-md)'};background:${p.id === currentPlan ? 'rgba(52,168,83,.07)' : 'var(--surface)'}">
+            ${p.id === currentPlan ? '<span style="font-size:10px;background:#34A853;color:#fff;padding:2px 8px;border-radius:8px;font-weight:700">ATUAL</span><br>' : ''}
             <p style="font-size:.85rem;font-weight:700;color:var(--text);margin:8px 0 2px">${p.label}</p>
             <p style="font-size:1.3rem;font-weight:800;color:var(--text)">${p.price}<span style="font-size:.75rem;font-weight:400;color:var(--text-muted)">${p.period}</span></p>
             <div style="margin-top:10px;display:flex;flex-direction:column;gap:5px">
-              ${p.feats.map(f=>`<span style="font-size:.75rem;color:var(--text-muted)">✓ ${f}</span>`).join('')}
+              ${p.feats.map(f => `<span style="font-size:.75rem;color:var(--text-muted)">✓ ${f}</span>`).join('')}
             </div>
           </div>`).join('')}
       </div>
@@ -950,6 +996,7 @@ function renderOwnerDashboard() {
             <button class="owner-nav-item ${ownerView === 'templates' ? 'active' : ''}" data-owner-view="templates">Templates</button>
             ${canUseProFeatures ? `<button class="owner-nav-item ${ownerView === 'aparencia' ? 'active' : ''}" data-owner-view="aparencia">Aparência</button>` : ''}
             <button class="owner-nav-item ${ownerView === 'pedidos' ? 'active' : ''}" data-owner-view="pedidos">Pedidos recentes</button>
+            <button class="owner-nav-item ${ownerView === 'cupons' ? 'active' : ''}" data-owner-view="cupons">Cupons</button>
             <button class="owner-nav-item ${ownerView === 'qrcode' ? 'active' : ''}" data-owner-view="qrcode">QR Code</button>
             ${canUseBusinessFeatures ? `<button class="owner-nav-item ${ownerView === 'relatorios' ? 'active' : ''}" data-owner-view="relatorios">Relatórios</button>` : ''}
             ${canUseBusinessFeatures ? `<button class="owner-nav-item ${ownerView === 'multi' ? 'active' : ''}" data-owner-view="multi">Multi-unidades</button>` : ''}
@@ -990,22 +1037,22 @@ function renderOwnerDashboard() {
 
   // aparencia save
   document.getElementById('owner-save-brand')?.addEventListener('click', async () => {
-    runtimeConfig.logoUrl  = (document.getElementById('brand-logo')?.value||'').trim();
+    runtimeConfig.logoUrl = (document.getElementById('brand-logo')?.value || '').trim();
     runtimeConfig.coverUrl = ''; // Campo removido — sempre limpa
-    
+
     applyMediaBranding();
     saveCustomMenuState(); // Salva local
-    
+
     const b = document.getElementById('owner-save-brand');
-    if(b){ b.disabled = true; b.textContent = 'Salvando...'; }
-    
+    if (b) { b.disabled = true; b.textContent = 'Salvando...'; }
+
     try {
       await syncRemoteMenuData(); // Força sincronização com o banco
-      if(b){ b.textContent = 'Salvo! ✅'; }
+      if (b) { b.textContent = 'Salvo! ✅'; }
     } catch (e) {
-      if(b){ b.textContent = 'Erro ao salvar'; }
+      if (b) { b.textContent = 'Erro ao salvar'; }
     } finally {
-      setTimeout(()=>{ if(b){ b.disabled = false; b.textContent = 'Salvar'; } }, 2000);
+      setTimeout(() => { if (b) { b.disabled = false; b.textContent = 'Salvar'; } }, 2000);
     }
   });
 
@@ -1073,6 +1120,9 @@ function renderOwnerDashboard() {
   if (ownerView === 'pedidos') {
     fetchRealStats();
   }
+  if (ownerView === 'qrcode') {
+    generateMenuQRCode();
+  }
 }
 
 function applySectionLabels(segment) {
@@ -1136,10 +1186,24 @@ function applyItemOverride(itemId, patch) {
     }
   }
 
-  if (typeof patch.price === 'number') {
-    const priceEl = card.querySelector('.price');
-    if (priceEl) {
-      priceEl.textContent = formatBRL(patch.price);
+  if (typeof patch.price === 'number' || patch.priceOld !== undefined) {
+    const container = card.querySelector('.price-container');
+    if (container) {
+      const price = patch.price !== undefined ? patch.price : (ITEMS[itemId]?.price || 0);
+      const priceOld = patch.priceOld !== undefined ? patch.priceOld : (ITEMS[itemId]?.priceOld || 0);
+
+      if (priceOld > price) {
+        container.innerHTML = `
+          <span class="price-old">${formatBRL(priceOld)}</span>
+          <span style="background: #e74c3c; color: #fff; padding: 2px 6px; border-radius: 4px; font-size: 0.75em; margin-left: 6px; font-weight: bold; vertical-align: middle;">${Math.round((1 - price / priceOld) * 100)}% OFF</span>
+          <span class="price">${formatBRL(price)}</span>
+        `;
+      } else {
+        container.innerHTML = `<span class="price">${formatBRL(price)}</span>`;
+      }
+    } else {
+      const priceEl = card.querySelector('.price');
+      if (priceEl) priceEl.textContent = formatBRL(patch.price);
     }
   }
 
@@ -1175,6 +1239,16 @@ function loadCustomMenuState() {
     }
 
     const parsed = JSON.parse(raw);
+
+    // Update plan if found in token/config
+    const token = localStorage.getItem('webcardapio:owner-token');
+    if (token) {
+      const planFromToken = _parsePlanFromToken(token);
+      if (planFromToken) {
+        currentPlan = normalizePlan(planFromToken);
+        updatePlanPermissions();
+      }
+    }
     if (!parsed || typeof parsed !== 'object') {
       return;
     }
@@ -1182,7 +1256,8 @@ function loadCustomMenuState() {
     customMenuState = {
       added: Array.isArray(parsed.added) ? parsed.added : [],
       removed: Array.isArray(parsed.removed) ? parsed.removed : [],
-      updated: parsed.updated && typeof parsed.updated === 'object' ? parsed.updated : {}
+      updated: parsed.updated && typeof parsed.updated === 'object' ? parsed.updated : {},
+      coupons: parsed.coupons && typeof parsed.coupons === 'object' ? parsed.coupons : {}
     };
   } catch {
     customMenuState = { added: [], removed: [], updated: {} };
@@ -1199,6 +1274,14 @@ function sectionContainer(section) {
 }
 
 function cardMarkup(item) {
+  const hasDiscount = item.priceOld && item.priceOld > item.price;
+  const discountPct = hasDiscount ? Math.round((1 - item.price / item.priceOld) * 100) : 0;
+  const priceHtml = hasDiscount
+    ? `<span style="text-decoration:line-through;color:#999;font-size:0.8em">R$ ${item.priceOld.toFixed(2)}</span>
+       <span style="background:#DC2626;color:#fff;font-size:0.72em;padding:2px 6px;border-radius:4px;margin-left:4px">${discountPct}% OFF</span>
+       <br><strong>R$ ${item.price.toFixed(2)}</strong>`
+    : `<strong>R$ ${item.price.toFixed(2)}</strong>`;
+
   const imgHtml = item.imageUrl
     ? `<img src="${escapeHtml(item.imageUrl)}" alt="${escapeHtml(item.name)}" class="card-img-photo" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
        <div class="card-img card-img-fallback" style="display:none"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2"><circle cx="12" cy="12" r="9"/><path d="M8 12h8"/></svg></div>`
@@ -1211,7 +1294,9 @@ function cardMarkup(item) {
       <p class="card-name">${escapeHtml(item.name)}</p>
       <p class="card-desc">${escapeHtml(item.desc)}</p>
       <div class="card-bottom">
-        <span class="price">${formatBRL(item.price)}</span>
+        <div class="price-container">
+          ${priceHtml}
+        </div>
         <div id="ctrl-${item.id}"></div>
       </div>
     </div>`;
@@ -1277,6 +1362,7 @@ function normalizeSection(input) {
 
 function fetchRealStats() {
   const slug = runtimeConfig.store;
+  if (!slug) return;
   const apiBase = (typeof window.API_BASE_URL === 'string' && window.API_BASE_URL)
     ? window.API_BASE_URL
     : (location.hostname === 'localhost' || location.hostname === '127.0.0.1')
@@ -1289,7 +1375,7 @@ function fetchRealStats() {
       const el = document.getElementById('stat-real-views');
       if (el) {
         el.querySelector('strong').textContent = data.total || 0;
-        const last7 = data.days && data.days.length > 0 ? data.days[data.days.length-1].views : 0;
+        const last7 = data.days && data.days.length > 0 ? data.days[data.days.length - 1].views : 0;
         el.querySelector('span').textContent = `${last7} hoje`;
       }
     }).catch(e => console.warn('[Stats] Fail:', e));
@@ -1300,16 +1386,16 @@ function generateMenuQRCode() {
   if (!display) return;
   display.innerHTML = '';
   const pub = window.location.href.split('?')[0] + '?store=' + runtimeConfig.store;
-  
+
   new QRCode(display, {
     text: pub,
     width: 200,
     height: 200,
-    colorDark : "#000000",
-    colorLight : "#ffffff",
-    correctLevel : QRCode.CorrectLevel.H
+    colorDark: "#000000",
+    colorLight: "#ffffff",
+    correctLevel: QRCode.CorrectLevel.H
   });
-  
+
   setTimeout(() => {
     const btn = document.getElementById('download-qr-btn');
     if (btn) btn.style.display = 'inline-block';
@@ -1344,6 +1430,7 @@ function openAddItemModal(preset = 'item') {
   const sectionEl = document.getElementById('editor-section');
   const nameEl = document.getElementById('editor-name');
   const priceEl = document.getElementById('editor-price');
+  const priceOldEl = document.getElementById('editor-priceOld');
   const descEl = document.getElementById('editor-desc');
   const titleEl = document.getElementById('editor-modal-title');
   const submitBtn = document.querySelector('.editor-btn-primary');
@@ -1351,6 +1438,7 @@ function openAddItemModal(preset = 'item') {
   if (sectionEl) sectionEl.value = presetData.section;
   if (nameEl) nameEl.value = presetData.name;
   if (priceEl) priceEl.value = presetData.price;
+  if (priceOldEl) priceOldEl.value = '';
   if (descEl) descEl.value = presetData.desc;
   if (titleEl) {
     titleEl.textContent = preset === 'combo' ? 'Adicionar combo' : (preset === 'drink' ? 'Adicionar bebida' : 'Adicionar item');
@@ -1374,33 +1462,37 @@ function openEditItemModal(itemId) {
   editingItemId = itemId;
 
   // Resolve data from state (works even when menu sections are hidden in owner mode)
-  const key     = canonicalItemId(itemId);
+  const key = canonicalItemId(itemId);
   const updated = customMenuState.updated?.[key] || {};
-  const added   = customMenuState.added?.find((a) => a.id === key) || {};
-  const base    = ITEMS[key] || ITEMS[itemId] || {};
+  const added = customMenuState.added?.find((a) => a.id === key) || {};
+  const base = ITEMS[key] || ITEMS[itemId] || {};
 
-  const name      = updated.name     || added.name     || base.name     || '';
-  const price     = updated.price    !== undefined ? updated.price
-                    : (added.price   !== undefined ? added.price : (base.price || 0));
-  const desc      = updated.desc     || added.desc     || '';
-  const section   = updated.section  || added.section  || resolveItemSection(itemId) || 'pratos';
-  const imageUrl  = updated.imageUrl || added.imageUrl || base.imageUrl || '';
+  const name = updated.name || added.name || base.name || '';
+  const price = updated.price !== undefined ? updated.price
+    : (added.price !== undefined ? added.price : (base.price || 0));
+  const desc = updated.desc || added.desc || '';
+  const priceOld = updated.priceOld !== undefined ? updated.priceOld
+    : (added.priceOld !== undefined ? added.priceOld : (base.priceOld || ''));
+  const section = updated.section || added.section || resolveItemSection(itemId) || 'pratos';
+  const imageUrl = updated.imageUrl || added.imageUrl || base.imageUrl || '';
 
-  const sectionInput   = document.getElementById('editor-section');
-  const nameInput      = document.getElementById('editor-name');
-  const priceInput     = document.getElementById('editor-price');
-  const descInput      = document.getElementById('editor-desc');
-  const imageUrlInput  = document.getElementById('editor-imageUrl');
-  const titleEl        = document.getElementById('editor-modal-title');
-  const submitBtn      = document.querySelector('.editor-btn-primary');
+  const sectionInput = document.getElementById('editor-section');
+  const nameInput = document.getElementById('editor-name');
+  const priceInput = document.getElementById('editor-price');
+  const priceOldInput = document.getElementById('editor-priceOld');
+  const descInput = document.getElementById('editor-desc');
+  const imageUrlInput = document.getElementById('editor-imageUrl');
+  const titleEl = document.getElementById('editor-modal-title');
+  const submitBtn = document.querySelector('.editor-btn-primary');
 
-  if (sectionInput)  sectionInput.value  = normalizeSection(section) || 'pratos';
-  if (nameInput)     nameInput.value     = name;
-  if (priceInput)    priceInput.value    = Number.isFinite(Number(price)) ? Number(price).toFixed(2) : '';
-  if (descInput)     descInput.value     = desc;
+  if (sectionInput) sectionInput.value = normalizeSection(section) || 'pratos';
+  if (nameInput) nameInput.value = name;
+  if (priceInput) priceInput.value = Number.isFinite(Number(price)) ? Number(price).toFixed(2) : '';
+  if (priceOldInput) priceOldInput.value = Number.isFinite(Number(priceOld)) ? Number(priceOld).toFixed(2) : '';
+  if (descInput) descInput.value = desc;
   if (imageUrlInput) imageUrlInput.value = imageUrl;
-  if (titleEl)       titleEl.textContent = 'Editar item';
-  if (submitBtn)     submitBtn.textContent = 'Salvar alteracoes';
+  if (titleEl) titleEl.textContent = 'Editar item';
+  if (submitBtn) submitBtn.textContent = 'Salvar alteracoes';
 
   const modal = document.getElementById('editor-modal');
   if (modal) {
@@ -1420,10 +1512,11 @@ function closeAddItemModal() {
 }
 
 function submitAddItemModal() {
-  const sectionValue  = (document.getElementById('editor-section')?.value  || '').trim();
-  const nameValue     = (document.getElementById('editor-name')?.value     || '').trim();
-  const priceRaw      = (document.getElementById('editor-price')?.value    || '').replace(',', '.').trim();
-  const descValue     = (document.getElementById('editor-desc')?.value     || '').trim();
+  const sectionValue = (document.getElementById('editor-section')?.value || '').trim();
+  const nameValue = (document.getElementById('editor-name')?.value || '').trim();
+  const priceRaw = (document.getElementById('editor-price')?.value || '').replace(',', '.').trim();
+  const priceOldRaw = (document.getElementById('editor-priceOld')?.value || '').replace(',', '.').trim();
+  const descValue = (document.getElementById('editor-desc')?.value || '').trim();
   const imageUrlValue = (document.getElementById('editor-imageUrl')?.value || '').trim();
 
   const section = normalizeSection(sectionValue);
@@ -1442,12 +1535,14 @@ function submitAddItemModal() {
     alert('Preco invalido.');
     return;
   }
+  const priceOld = priceOldRaw ? Number(priceOldRaw) : null;
 
   if (editingItemId) {
     updateMenuItem(editingItemId, {
       section,
       name: nameValue,
       price,
+      priceOld,
       desc: descValue || 'Novo item do cardapio',
       imageUrl: imageUrlValue
     });
@@ -1456,6 +1551,7 @@ function submitAddItemModal() {
       section,
       name: nameValue,
       price,
+      priceOld,
       desc: descValue || 'Novo item do cardapio',
       imageUrl: imageUrlValue
     });
@@ -1483,9 +1579,27 @@ function updateMenuItem(itemId, patch) {
       const descEl = card.querySelector('.card-desc');
       if (descEl) descEl.textContent = patch.desc;
     }
-    if (typeof patch.price === 'number') {
-      const priceEl = card.querySelector('.price');
-      if (priceEl) priceEl.textContent = formatBRL(patch.price);
+    if (typeof patch.price === 'number' || patch.priceOld !== undefined) {
+      const container = card.querySelector('.price-container');
+      if (container) {
+        const price = patch.price !== undefined ? patch.price : (ITEMS[relatedId]?.price || 0);
+        const priceOld = patch.priceOld !== undefined ? patch.priceOld : (ITEMS[relatedId]?.priceOld || 0);
+
+        if (priceOld > price) {
+          container.innerHTML = `
+            <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 2px;">
+              <span class="price-old" style="text-decoration: line-through; color: #999; font-size: 0.8em;">${formatBRL(priceOld)}</span>
+              <span style="background: #e74c3c; color: #fff; padding: 2px 6px; border-radius: 4px; font-size: 0.75em; font-weight: bold;">${Math.round((1 - price / priceOld) * 100)}% OFF</span>
+            </div>
+            <span class="price">${formatBRL(price)}</span>
+          `;
+        } else {
+          container.innerHTML = `<span class="price">${formatBRL(price)}</span>`;
+        }
+      } else {
+        const priceEl = card.querySelector('.price');
+        if (priceEl) priceEl.textContent = formatBRL(patch.price);
+      }
     }
 
     const newSectionContainer = sectionContainer(patch.section);
@@ -1508,7 +1622,7 @@ function updateMenuItem(itemId, patch) {
       // Rebuild image area
       const oldImg = card2.querySelector('.card-img-photo');
       const oldFallback = card2.querySelector('.card-img-fallback');
-      const oldDefault  = card2.querySelector('.card-img:not(.card-img-fallback)');
+      const oldDefault = card2.querySelector('.card-img:not(.card-img-fallback)');
       if (oldImg) oldImg.remove();
       if (oldFallback) oldFallback.remove();
       if (oldDefault) oldDefault.remove();
@@ -1518,7 +1632,7 @@ function updateMenuItem(itemId, patch) {
         img.src = patch.imageUrl;
         img.alt = patch.name || '';
         img.className = 'card-img-photo';
-        img.onerror = function() { this.style.display = 'none'; };
+        img.onerror = function () { this.style.display = 'none'; };
         card2.insertBefore(img, firstChild);
       } else {
         const fallback = document.createElement('div');
@@ -1533,17 +1647,21 @@ function updateMenuItem(itemId, patch) {
   if (key.startsWith('custom-')) {
     customMenuState.added = customMenuState.added.map((item) => {
       if (item.id !== key) return item;
-      return { ...item, section: patch.section, name: patch.name, desc: patch.desc, price: patch.price, imageUrl: patch.imageUrl };
+      return { ...item, section: patch.section, name: patch.name, desc: patch.desc, price: patch.price, priceOld: patch.priceOld, imageUrl: patch.imageUrl };
     });
   } else {
     customMenuState.updated[key] = {
-      section:  patch.section,
-      name:     patch.name,
-      desc:     patch.desc,
-      price:    patch.price,
+      section: patch.section,
+      name: patch.name,
+      desc: patch.desc,
+      price: patch.price,
+      priceOld: patch.priceOld,
       imageUrl: patch.imageUrl
     };
   }
+
+  if (ITEMS[key]) ITEMS[key].priceOld = patch.priceOld;
+  related.forEach(rid => { if (ITEMS[rid]) ITEMS[rid].priceOld = patch.priceOld; });
 
   saveCustomMenuState();
   updateCartBar();
@@ -1572,14 +1690,15 @@ function addCustomItem(itemInput) {
   const id = `custom-${Date.now()}-${Math.floor(Math.random() * 10000)}`;
   const item = {
     id,
-    section:  itemInput.section,
-    name:     itemInput.name,
-    price:    itemInput.price,
-    desc:     itemInput.desc,
+    section: itemInput.section,
+    name: itemInput.name,
+    price: itemInput.price,
+    priceOld: itemInput.priceOld || null,
+    desc: itemInput.desc,
     imageUrl: itemInput.imageUrl || ''
   };
 
-  ITEMS[id] = { name: item.name, price: item.price, imageUrl: item.imageUrl };
+  ITEMS[id] = { name: item.name, price: item.price, priceOld: item.priceOld, imageUrl: item.imageUrl };
   addCardToSection(item);
   renderCtrl(id);
 
@@ -1656,13 +1775,17 @@ function addDrinkPrompt() {
 }
 
 function applySavedMenuCustomizations() {
-  customMenuState.removed.forEach((itemId) => {
-    const related = relatedItemIds(itemId);
-    related.forEach((relatedId) => {
-      removeCardsByItemId(relatedId);
-      delete ITEMS[relatedId];
+  const isPreview = urlParams.get('preview') === '1';
+  
+  if (!isPreview) {
+    customMenuState.removed.forEach((itemId) => {
+      const related = relatedItemIds(itemId);
+      related.forEach((relatedId) => {
+        removeCardsByItemId(relatedId);
+        delete ITEMS[relatedId];
+      });
     });
-  });
+  }
 
   customMenuState.added.forEach((item) => {
     if (!item || !item.id || !item.section || !item.name || !item.price) {
@@ -1673,7 +1796,7 @@ function applySavedMenuCustomizations() {
       return;
     }
 
-    ITEMS[item.id] = { name: item.name, price: Number(item.price) };
+    ITEMS[item.id] = { name: item.name, price: Number(item.price), priceOld: item.priceOld ? Number(item.priceOld) : null };
     addCardToSection(item);
   });
 
@@ -1686,7 +1809,8 @@ function applySavedMenuCustomizations() {
       section: normalizeSection(patch.section) || 'pratos',
       name: patch.name || ITEMS[itemId]?.name || 'Item',
       desc: patch.desc || 'Descricao do item',
-      price: typeof patch.price === 'number' ? patch.price : (ITEMS[itemId]?.price || 0)
+      price: typeof patch.price === 'number' ? patch.price : (ITEMS[itemId]?.price || 0),
+      priceOld: patch.priceOld !== undefined ? patch.priceOld : (ITEMS[itemId]?.priceOld || null)
     });
   });
 
@@ -1838,6 +1962,11 @@ function showAddressModal(entries) {
   entries.forEach(([id, qty]) => {
     total += (ITEMS[id].price || 0) * qty;
   });
+  currentCoupon = null; // Reset coupon on open
+  window.currentOrderTotal = total;
+  window._totalPedidoBruto = total;
+  window._cupomAtivoDesconto = 0;
+  window._cupomAtivoNome = '';
 
   const modal = document.createElement('div');
   modal.id = 'address-modal';
@@ -1850,7 +1979,7 @@ function showAddressModal(entries) {
       </div>
 
       <div class="address-summary">
-        <p>${entries.length} ${entries.length === 1 ? 'item' : 'itens'} · <strong>${formatBRL(total)}</strong></p>
+        <p id="total-original">${entries.length} ${entries.length === 1 ? 'item' : 'itens'} · <strong>${formatBRL(total)}</strong></p>
       </div>
 
       <div class="address-toggle-wrap">
@@ -1905,6 +2034,14 @@ function showAddressModal(entries) {
         <div class="address-row">
           <label>Observação do pedido</label>
           <input type="text" id="addr-obs" placeholder="Sem cebola, sem gelo, etc...">
+        </div>
+
+        <div style="margin:12px 0">
+          <input id="addr-cupom" type="text" placeholder="Cupom de desconto"
+            style="width:100%;padding:10px;border:1.5px solid #ddd;border-radius:8px;font-size:.9rem;box-sizing:border-box"
+            oninput="this.value=this.value.toUpperCase();aplicarCupomPedido()">
+          <p id="cupom-feedback" style="font-size:.82rem;margin-top:5px;min-height:16px"></p>
+          <p id="total-com-desconto" style="font-weight:700;margin-top:4px"></p>
         </div>
       </div>
 
@@ -2000,7 +2137,7 @@ function showAddressModal(entries) {
           localStorage.setItem('pending_order_info', JSON.stringify({
             nome, deliveryMode, pagamento, items: orderItems
           }));
-          
+
           window.location.href = data.init_point;
           return;
         } else {
@@ -2047,7 +2184,7 @@ function showAddressModal(entries) {
       msg += `• ${qty}x ${item.name} — R$ ${subtotal.toFixed(2).replace('.', ',')}\n`;
     });
 
-    msg += `\n*Total: R$ ${orderTotal.toFixed(2).replace('.', ',')}*`;
+    msg += `\n*Total: ${formatBRL(orderTotal)}*`;
     msg += '\n\nPode confirmar meu pedido?';
 
     // Tracking
@@ -2060,10 +2197,134 @@ function showAddressModal(entries) {
     });
     fbTrack('Contact', { method: 'WhatsApp', content_name: getConfiguredStoreName() });
 
+    if (window._cupomAtivoNome) {
+      const desc = window._totalPedidoBruto * window._cupomAtivoDesconto / 100;
+      msg += `\n🏷️ Cupom: ${window._cupomAtivoNome} (-${window._cupomAtivoDesconto}%) | Total com desconto: R$ ${(window._totalPedidoBruto - desc).toFixed(2).replace('.', ',')}`;
+    }
+
     modal.remove();
     window.open('https://wa.me/' + configuredWaNumber + '?text=' + encodeURIComponent(msg), '_blank');
   });
 }
+
+window._cupomAtivoDesconto = 0;
+window._cupomAtivoNome = '';
+
+window.aplicarCupomPedido = function () {
+  const val = (document.getElementById('addr-cupom')?.value || '').toUpperCase().trim();
+  const fb = document.getElementById('cupom-feedback');
+  const totalEl = document.getElementById('total-com-desconto');
+  const totalBruto = window._totalPedidoBruto || 0; // variável que já deve existir com o total
+
+  if (!val) {
+    if (fb) fb.textContent = ''; 
+    window._cupomAtivoDesconto = 0; 
+    window._cupomAtivoNome = '';
+    if (totalEl) totalEl.textContent = '';
+    return;
+  }
+  
+  const activeCoupons = customMenuState.coupons || {};
+
+  if (activeCoupons[val] !== undefined) {
+    const pct = Number(activeCoupons[val]);
+    window._cupomAtivoDesconto = pct;
+    window._cupomAtivoNome = val;
+    if (fb) {
+      fb.style.color = '#16A34A'; 
+      fb.textContent = `✓ Cupom aplicado! ${pct}% de desconto`;
+    }
+    const desc = totalBruto * pct / 100;
+    if (totalEl) totalEl.textContent = `Total com desconto: R$ ${(totalBruto - desc).toFixed(2).replace('.', ',')}`;
+  } else {
+    window._cupomAtivoDesconto = 0; 
+    window._cupomAtivoNome = '';
+    if (fb) {
+      fb.style.color = '#DC2626'; 
+      fb.textContent = '✗ Cupom inválido ou inativo';
+    }
+    if (totalEl) totalEl.textContent = '';
+  }
+};
+
+window.openCouponsModal = function() {
+  if (!canEdit()) return;
+  const modal = document.getElementById('coupons-modal');
+  if (modal) {
+    modal.classList.add('open');
+    modal.setAttribute('aria-hidden', 'false');
+    renderCouponsList();
+  }
+};
+
+window.closeCouponsModal = function() {
+  const modal = document.getElementById('coupons-modal');
+  if (modal) {
+    modal.classList.remove('open');
+    modal.setAttribute('aria-hidden', 'true');
+  }
+};
+
+window.addCoupon = function() {
+  const nomeInput = document.getElementById('coupon-name');
+  const pctInput = document.getElementById('coupon-pct');
+  const nome = (nomeInput?.value || '').toUpperCase().trim();
+  const pct = pctInput ? Number(pctInput.value) : 0;
+
+  if (!nome || !pct || pct <= 0 || pct > 100) {
+    alert('Informe um código válido e um desconto entre 1 e 100%');
+    return;
+  }
+
+  if (!customMenuState.coupons) customMenuState.coupons = {};
+  customMenuState.coupons[nome] = pct;
+  
+  saveCustomMenuState();
+  if (nomeInput) nomeInput.value = '';
+  if (pctInput) pctInput.value = '';
+  renderCouponsList();
+  renderOwnerDashboard();
+  
+  if (!document.getElementById('coupons-modal')?.classList.contains('open')) {
+     alert('Cupom ' + nome + ' adicionado com sucesso!');
+  }
+};
+
+window.removeCoupon = function(nome) {
+  if (customMenuState.coupons && customMenuState.coupons[nome]) {
+    delete customMenuState.coupons[nome];
+    saveCustomMenuState();
+    renderCouponsList();
+    renderOwnerDashboard();
+  }
+};
+
+window.renderCouponsList = function() {
+  const list = document.getElementById('coupons-list');
+  if (!list) return;
+  
+  const coupons = customMenuState.coupons || {};
+  const keys = Object.keys(coupons);
+  
+  if (keys.length === 0) {
+    list.innerHTML = '<p style="text-align:center;color:var(--text-muted);font-size:0.9rem;padding:20px 0;">Nenhum cupom ativo no momento.</p>';
+    return;
+  }
+
+  let html = '';
+  keys.forEach(k => {
+    html += `
+      <div style="display:flex;justify-content:space-between;align-items:center;background:var(--bg);padding:12px;border-radius:8px;margin-bottom:8px;border:1px solid var(--border)">
+        <div>
+          <span style="font-weight:bold;color:var(--text)">${k}</span>
+          <span style="display:inline-block;margin-left:8px;background:var(--green-bg);color:var(--green);padding:2px 8px;border-radius:12px;font-size:0.75rem;font-weight:bold">-${coupons[k]}%</span>
+        </div>
+        <button onclick="removeCoupon('${k}')" style="background:transparent;border:none;color:#DC2626;cursor:pointer;padding:6px;font-size:1.1rem" title="Remover cupom">×</button>
+      </div>
+    `;
+  });
+  list.innerHTML = html;
+};
 
 function setupNavigation() {
   const allSections = new Set(Array.from(document.querySelectorAll('.sec')).map((sec) => sec.id.replace('sec-', '')));
@@ -2114,6 +2375,11 @@ async function init() {
   loadCustomMenuState();
   await fetchRemoteMenuData();
 
+  if (runtimeConfig.plan) {
+    currentPlan = normalizePlan(runtimeConfig.plan);
+    updatePlanPermissions();
+  }
+
   const template = getConfiguredTemplate();
   const segment = getConfiguredSegment();
   const storeName = getConfiguredStoreName();
@@ -2121,12 +2387,12 @@ async function init() {
   applyTemplateTheme(template);
   applyBranding(storeName, segment);
   applyMediaBranding();
-  applyPlanFeatures();
-  applySectionLabels(segment);
-  applySegmentCatalog(segment);
-  applyCustomCatalogFromConfig();
-  applySavedMenuCustomizations();
-  
+  try { applyPlanFeatures(); } catch (e) { console.error('Error in applyPlanFeatures:', e); }
+  try { applySectionLabels(segment); } catch (e) { console.error('Error in applySectionLabels:', e); }
+  try { applySegmentCatalog(segment); } catch (e) { console.error('Error in applySegmentCatalog:', e); }
+  try { applyCustomCatalogFromConfig(); } catch (e) { console.error('Error in applyCustomCatalogFromConfig:', e); }
+  try { applySavedMenuCustomizations(); } catch (e) { console.error('Error in applySavedMenuCustomizations:', e); }
+
   // Track analytics (once per session)
   trackAnalytics();
 
@@ -2147,6 +2413,11 @@ async function init() {
   setupNavigation();
   Object.keys(ITEMS).forEach((id) => renderCtrl(id));
   updateCartBar();
+  
+  if (runtimeConfig.plan === 'business') {
+    const pb = document.getElementById('powered-by');
+    if (pb) pb.style.display = 'none';
+  }
 
   window.__MENU_APP_READY__ = true;
 }
