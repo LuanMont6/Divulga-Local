@@ -356,6 +356,87 @@ app.get('/api/admin/leads', adminLimiter, adminAuth, async (_req, res) => {
   }
 });
 
+// PATCH /api/admin/users/:id/plan — troca o plano de um usuário
+app.patch('/api/admin/users/:id/plan', adminLimiter, adminAuth, async (req, res) => {
+  try {
+    const id   = Number(req.params.id);
+    const plan = req.body?.plan;
+    if (!['basico','pro','business'].includes(plan))
+      return res.status(400).json({ error: 'Plano inválido. Use: basico, pro ou business.' });
+    const user = await db.get('SELECT id FROM users WHERE id=?', id);
+    if (!user) return res.status(404).json({ error: 'Usuário não encontrado.' });
+    await db.run('UPDATE users SET plan=? WHERE id=?', plan, id);
+    return res.json({ ok: true, id, plan });
+  } catch (err) {
+    console.error('[ADMIN PLAN] Erro:', err.message);
+    return res.status(500).json({ error: 'Erro interno.' });
+  }
+});
+
+// PATCH /api/admin/users/:id/password — redefine senha de um usuário
+app.patch('/api/admin/users/:id/password', adminLimiter, adminAuth, async (req, res) => {
+  try {
+    const id       = Number(req.params.id);
+    const password = req.body?.password;
+    if (!validPwd(password))
+      return res.status(400).json({ error: 'Senha deve ter mínimo 6 caracteres.' });
+    const user = await db.get('SELECT id FROM users WHERE id=?', id);
+    if (!user) return res.status(404).json({ error: 'Usuário não encontrado.' });
+    const hash = await bcrypt.hash(password, 10);
+    await db.run('UPDATE users SET password_hash=? WHERE id=?', hash, id);
+    return res.json({ ok: true, id });
+  } catch (err) {
+    console.error('[ADMIN PWD] Erro:', err.message);
+    return res.status(500).json({ error: 'Erro interno.' });
+  }
+});
+
+// PATCH /api/admin/users/:id/email — troca o e-mail de um usuário
+app.patch('/api/admin/users/:id/email', adminLimiter, adminAuth, async (req, res) => {
+  try {
+    const id    = Number(req.params.id);
+    const email = safeEmail(req.body?.email);
+    if (!email) return res.status(400).json({ error: 'E-mail inválido.' });
+    const user = await db.get('SELECT id FROM users WHERE id=?', id);
+    if (!user) return res.status(404).json({ error: 'Usuário não encontrado.' });
+    const exists = await db.get('SELECT id FROM users WHERE email=? AND id!=?', email, id);
+    if (exists) return res.status(409).json({ error: 'E-mail já em uso por outro usuário.' });
+    await db.run('UPDATE users SET email=? WHERE id=?', email, id);
+    return res.json({ ok: true, id, email });
+  } catch (err) {
+    console.error('[ADMIN EMAIL] Erro:', err.message);
+    return res.status(500).json({ error: 'Erro interno.' });
+  }
+});
+
+// DELETE /api/admin/users/:id — deleta um usuário
+app.delete('/api/admin/users/:id', adminLimiter, adminAuth, async (req, res) => {
+  try {
+    const id   = Number(req.params.id);
+    const user = await db.get('SELECT id, email FROM users WHERE id=?', id);
+    if (!user) return res.status(404).json({ error: 'Usuário não encontrado.' });
+    await db.run('DELETE FROM users WHERE id=?', id);
+    return res.json({ ok: true, deleted: { id, email: user.email } });
+  } catch (err) {
+    console.error('[ADMIN DELETE] Erro:', err.message);
+    return res.status(500).json({ error: 'Erro interno.' });
+  }
+});
+
+// DELETE /api/admin/leads/:id — deleta um lead
+app.delete('/api/admin/leads/:id', adminLimiter, adminAuth, async (req, res) => {
+  try {
+    const id   = Number(req.params.id);
+    const lead = await db.get('SELECT id FROM leads WHERE id=?', id);
+    if (!lead) return res.status(404).json({ error: 'Lead não encontrado.' });
+    await db.run('DELETE FROM leads WHERE id=?', id);
+    return res.json({ ok: true, deleted: id });
+  } catch (err) {
+    console.error('[ADMIN DELETE LEAD] Erro:', err.message);
+    return res.status(500).json({ error: 'Erro interno.' });
+  }
+});
+
 // ── WEBHOOK MERCADO PAGO ─────────────────────────────────────
 function verifyMpSignature(req) {
   const secret = process.env.MP_WEBHOOK_SECRET;
